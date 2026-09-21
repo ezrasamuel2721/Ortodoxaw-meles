@@ -1,0 +1,660 @@
+<!DOCTYPE html>
+<html lang="am">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ኦርቶዶክሳዊ መልስ</title>
+
+<style>
+*{
+  box-sizing:border-box;
+}
+
+body{
+  margin:0;
+  background:#f5f7f3;
+  color:#20251f;
+  font-family:
+    system-ui,
+    -apple-system,
+    "Noto Sans Ethiopic",
+    "Noto Sans",
+    sans-serif;
+}
+
+.app{
+  width:100%;
+  max-width:760px;
+  min-height:100vh;
+  margin:auto;
+  padding:18px 15px 40px;
+}
+
+.header{
+  text-align:center;
+  padding:18px 0 20px;
+}
+
+.logo{
+  width:76px;
+  height:76px;
+  margin:auto;
+  border-radius:50%;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  background:#ffffff;
+  border:3px solid #b59645;
+  color:#1d6845;
+  font-size:38px;
+  box-shadow:0 5px 20px rgba(0,0,0,.08);
+}
+
+.title{
+  margin:12px 0 5px;
+  font-size:29px;
+  font-weight:800;
+}
+
+.subtitle{
+  margin:0;
+  color:#687168;
+  font-size:15px;
+}
+
+.languages{
+  display:flex;
+  justify-content:center;
+  flex-wrap:wrap;
+  gap:7px;
+  margin:20px 0 15px;
+}
+
+.languages button{
+  border:1px solid #d2d8d0;
+  background:white;
+  color:#333;
+  border-radius:20px;
+  padding:8px 12px;
+  cursor:pointer;
+  font-size:13px;
+}
+
+.languages button.active{
+  background:#216b47;
+  border-color:#216b47;
+  color:white;
+}
+
+.search-card{
+  background:white;
+  border:1px solid #dfe5dd;
+  border-radius:20px;
+  padding:15px;
+  box-shadow:0 8px 30px rgba(0,0,0,.06);
+}
+
+.question{
+  width:100%;
+  min-height:115px;
+  resize:vertical;
+  border:0;
+  outline:none;
+  font-size:18px;
+  line-height:1.7;
+  font-family:inherit;
+  color:#222;
+}
+
+.question::placeholder{
+  color:#9aa19a;
+}
+
+.search-button{
+  width:100%;
+  border:0;
+  border-radius:13px;
+  padding:14px;
+  background:#216b47;
+  color:white;
+  font-size:17px;
+  font-weight:700;
+  cursor:pointer;
+}
+
+.search-button:active{
+  transform:scale(.99);
+}
+
+.loading{
+  display:none;
+  text-align:center;
+  padding:25px 10px;
+  color:#216b47;
+}
+
+.loading.show{
+  display:block;
+}
+
+.answer{
+  display:none;
+  margin-top:18px;
+  background:white;
+  border:1px solid #dfe5dd;
+  border-radius:20px;
+  padding:20px;
+  line-height:1.9;
+  box-shadow:0 8px 30px rgba(0,0,0,.05);
+}
+
+.answer.show{
+  display:block;
+}
+
+.answer-title{
+  margin-top:0;
+  color:#216b47;
+  font-size:22px;
+}
+
+.question-box{
+  background:#f3f6f1;
+  padding:12px;
+  border-radius:10px;
+  margin:12px 0 18px;
+}
+
+.section{
+  margin:20px 0;
+}
+
+.section h3{
+  margin-bottom:8px;
+  color:#216b47;
+}
+
+.source{
+  background:#faf8f1;
+  border-left:4px solid #b59645;
+  padding:12px;
+  border-radius:8px;
+}
+
+.tools{
+  display:flex;
+  gap:10px;
+  margin-top:20px;
+}
+
+.tools button{
+  flex:1;
+  padding:11px;
+  border-radius:11px;
+  border:1px solid #d0d6ce;
+  background:white;
+  cursor:pointer;
+  font-size:15px;
+}
+
+.footer{
+  text-align:center;
+  margin-top:25px;
+  color:#7a8179;
+  font-size:12px;
+}
+
+@media(max-width:480px){
+
+  .app{
+    padding:10px 12px 30px;
+  }
+
+  .title{
+    font-size:25px;
+  }
+
+  .logo{
+    width:68px;
+    height:68px;
+    font-size:33px;
+  }
+
+  .question{
+    font-size:17px;
+  }
+
+  .languages button{
+    font-size:12px;
+    padding:7px 10px;
+  }
+}
+</style>
+</head>
+
+<body>
+
+<div class="app">
+
+  <header class="header">
+
+    <div class="logo">✝</div>
+
+    <h1 class="title">
+      ኦርቶዶክሳዊ መልስ
+    </h1>
+
+    <p class="subtitle" id="subtitle">
+      መንፈሳዊ ጥያቄዎን ይጠይቁ
+    </p>
+
+    <div class="languages" id="languages"></div>
+
+  </header>
+
+
+  <main>
+
+    <div class="search-card">
+
+      <textarea
+        id="question"
+        class="question"
+        placeholder="ለምሳሌ፦ ታቦት ምንድነው?"
+      ></textarea>
+
+      <button
+        id="searchButton"
+        class="search-button"
+      >
+        መልስ ፈልግ
+      </button>
+
+    </div>
+
+
+    <div
+      id="loading"
+      class="loading"
+    >
+      መረጃውን እየፈለግን ነው…
+    </div>
+
+
+    <article
+      id="answer"
+      class="answer"
+    ></article>
+
+  </main>
+
+
+  <footer class="footer">
+    ኦርቶዶክሳዊ መልስ
+  </footer>
+
+</div>
+
+
+<script>
+
+const languages = [
+
+  {
+    id:"am",
+    name:"አማርኛ",
+    placeholder:"ለምሳሌ፦ ታቦት ምንድነው?",
+    button:"መልስ ፈልግ",
+    subtitle:"መንፈሳዊ ጥያቄዎን ይጠይቁ"
+  },
+
+  {
+    id:"om",
+    name:"Afaan Oromoo",
+    placeholder:"Fakkeenyaaf: Taabota jechuun maali?",
+    button:"Deebii barbaadi",
+    subtitle:"Gaaffii hafuuraa kee gaafadhu"
+  },
+
+  {
+    id:"sid",
+    name:"Sidaamu Afoo",
+    placeholder:"Fakkeenya: Taabote maali?",
+    button:"Deebbi barbaadi",
+    subtitle:"Gaaffii hafuuraa kee addeessi"
+  },
+
+  {
+    id:"ti",
+    name:"ትግርኛ",
+    placeholder:"ንኣብነት፦ ታቦት እንታይ እዩ?",
+    button:"መልሲ ድለ",
+    subtitle:"መንፈሳዊ ሕቶኻ ሕተት"
+  },
+
+  {
+    id:"so",
+    name:"Soomaali",
+    placeholder:"Tusaale: Waa maxay Taabbuut?",
+    button:"Raadi jawaab",
+    subtitle:"Weydii su'aashaada ruuxiga ah"
+  },
+
+  {
+    id:"en",
+    name:"English",
+    placeholder:"For example: What is the Tabot?",
+    button:"Find answer",
+    subtitle:"Ask your spiritual question"
+  },
+
+  {
+    id:"fr",
+    name:"Français",
+    placeholder:"Par exemple : Qu'est-ce que le Tabot ?",
+    button:"Chercher la réponse",
+    subtitle:"Posez votre question spirituelle"
+  },
+
+  {
+    id:"ar",
+    name:"العربية",
+    placeholder:"مثال: ما هو التابوت؟",
+    button:"ابحث عن الإجابة",
+    subtitle:"اطرح سؤالك الروحي"
+  }
+
+];
+
+
+let currentLanguage = "am";
+
+
+const languageBox =
+  document.getElementById("languages");
+
+const question =
+  document.getElementById("question");
+
+const searchButton =
+  document.getElementById("searchButton");
+
+const subtitle =
+  document.getElementById("subtitle");
+
+const answer =
+  document.getElementById("answer");
+
+const loading =
+  document.getElementById("loading");
+
+
+function renderLanguages(){
+
+  languageBox.innerHTML = "";
+
+  languages.forEach(language => {
+
+    const button =
+      document.createElement("button");
+
+    button.textContent = language.name;
+
+    if(language.id === currentLanguage){
+
+      button.classList.add("active");
+
+    }
+
+    button.addEventListener("click", () => {
+
+      currentLanguage = language.id;
+
+      updateLanguage();
+
+    });
+
+    languageBox.appendChild(button);
+
+  });
+
+}
+
+
+function updateLanguage(){
+
+  const language =
+    languages.find(
+      item => item.id === currentLanguage
+    );
+
+  question.placeholder =
+    language.placeholder;
+
+  searchButton.textContent =
+    language.button;
+
+  subtitle.textContent =
+    language.subtitle;
+
+  renderLanguages();
+
+}
+
+
+function escapeHTML(text){
+
+  return text.replace(
+    /[&<>"']/g,
+    function(character){
+
+      const entities = {
+
+        "&":"&amp;",
+        "<":"&lt;",
+        ">":"&gt;",
+        '"':"&quot;",
+        "'":"&#039;"
+
+      };
+
+      return entities[character];
+
+    }
+  );
+
+}
+
+
+function searchQuestion(){
+
+  const userQuestion =
+    question.value.trim();
+
+  if(!userQuestion){
+
+    question.focus();
+
+    return;
+
+  }
+
+
+  answer.classList.remove("show");
+
+  loading.classList.add("show");
+
+
+  setTimeout(() => {
+
+    loading.classList.remove("show");
+
+
+    answer.innerHTML = `
+
+      <h2 class="answer-title">
+        የተፈለገው ጥያቄ
+      </h2>
+
+
+      <div class="question-box">
+
+        <strong>
+          ጥያቄ፦
+        </strong>
+
+        ${escapeHTML(userQuestion)}
+
+      </div>
+
+
+      <div class="section">
+
+        <h3>
+          መልስ
+        </h3>
+
+        <p>
+          ይህ የ“ኦርቶዶክሳዊ መልስ”
+          App የመጀመሪያ የፍለጋ መዋቅር ነው።
+        </p>
+
+        <p>
+          በቀጣዩ የልማት ደረጃ
+          ይህ የመልስ ቦታ ከእውቀት
+          Database ጋር ይገናኛል።
+          ከዚያም AI/RAG በDatabase
+          ውስጥ ካሉ የተረጋገጡ ምንጮች
+          ተመስርቶ የተደራጀ መልስ
+          ያቀርባል።
+        </p>
+
+      </div>
+
+
+      <div class="section">
+
+        <h3>
+          📖 የምንጭ ማጣቀሻ
+        </h3>
+
+        <div class="source">
+
+          የመጽሐፍ ቅዱስ፣
+          የቅዱሳን አባቶች እና
+          የቤተክርስቲያን ትምህርት
+          ምንጮች በDatabase ከተገናኙ
+          በኋላ እዚህ ይታያሉ።
+
+        </div>
+
+      </div>
+
+
+      <div class="tools">
+
+        <button onclick="copyAnswer()">
+          📋 ኮፒ
+        </button>
+
+        <button onclick="shareAnswer()">
+          ↗ ሼር
+        </button>
+
+      </div>
+
+    `;
+
+
+    answer.classList.add("show");
+
+
+  },500);
+
+}
+
+
+async function copyAnswer(){
+
+  const text =
+    answer.innerText;
+
+  try{
+
+    await navigator.clipboard.writeText(text);
+
+    alert("መልሱ ተኮፒ ተደርጓል።");
+
+  }catch(error){
+
+    alert("ኮፒ ማድረግ አልተቻለም።");
+
+  }
+
+}
+
+
+async function shareAnswer(){
+
+  const text =
+    answer.innerText;
+
+  if(navigator.share){
+
+    try{
+
+      await navigator.share({
+
+        title:"ኦርቶዶክሳዊ መልስ",
+
+        text:text
+
+      });
+
+    }catch(error){
+
+      // user cancelled sharing
+
+    }
+
+  }else{
+
+    alert(
+      "በዚህ መሣሪያ Share አልተደገፈም። ኮፒ ማድረግ ይችላሉ።"
+    );
+
+  }
+
+}
+
+
+searchButton.addEventListener(
+  "click",
+  searchQuestion
+);
+
+
+question.addEventListener(
+  "keydown",
+  function(event){
+
+    if(
+      (event.ctrlKey || event.metaKey)
+      &&
+      event.key === "Enter"
+    ){
+
+      searchQuestion();
+
+    }
+
+  }
+);
+
+
+updateLanguage();
+
+</script>
+
+</body>
+</html>
