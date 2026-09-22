@@ -15,6 +15,20 @@
             --bg-light: #FDFBF7;
             --text-dark: #2C2C2C;
             --white: #FFFFFF;
+            --green: #2e7d32; /* Halluu Magariisaa */
+            --card-bg: #FFFFFF;
+            --input-border: #DDD;
+            --answer-bg: #F4F6F9;
+        }
+
+        /* Dark Theme Variables */
+        body.dark-mode {
+            --bg-light: #121212;
+            --text-dark: #E0E0E0;
+            --card-bg: #1E1E1E;
+            --input-border: #444;
+            --answer-bg: #2A2A2A;
+            --royal-blue: #64B5F6;
         }
 
         * {
@@ -30,11 +44,12 @@
             display: flex;
             flex-direction: column;
             min-height: 100vh;
+            transition: background-color 0.3s, color 0.3s;
         }
 
         /* Header & Navigation */
         header {
-            background: linear-gradient(135deg, var(--deep-red), var(--royal-blue));
+            background: linear-gradient(135deg, var(--deep-red), #002366);
             color: var(--gold);
             padding: 1rem 2rem;
             box-shadow: 0 4px 15px rgba(0,0,0,0.3);
@@ -147,8 +162,8 @@
 
         /* Language Selector Bar */
         .lang-container {
-            background-color: rgba(0, 0, 0, 0.15);
-            padding: 0.5rem;
+            background-color: rgba(0, 0, 0, 0.05);
+            padding: 0.6rem;
             display: flex;
             justify-content: center;
             flex-wrap: wrap;
@@ -156,28 +171,30 @@
             border-bottom: 1px solid rgba(212, 175, 55, 0.3);
         }
 
+        /* Fooyya'iinsa Halluu Afaanotaa (Magariisa) */
         .lang-btn {
             background-color: transparent;
-            border: 1px solid var(--gold);
-            color: var(--white);
-            padding: 4px 10px;
+            border: 1.5px solid var(--green);
+            color: var(--green);
+            padding: 5px 12px;
             border-radius: 15px;
             cursor: pointer;
-            font-size: 0.85rem;
+            font-size: 0.9rem;
+            font-weight: bold;
             transition: all 0.3s;
         }
 
         .lang-btn:hover, .lang-btn.active {
-            background-color: var(--gold);
-            color: var(--deep-red);
-            font-weight: bold;
+            background-color: var(--green);
+            color: #FFFFFF;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.2);
         }
 
         /* Hero / Main Title Banner */
         .hero {
             text-align: center;
             padding: 2.5rem 1rem;
-            background: radial-gradient(circle, rgba(212, 175, 55, 0.2) 0%, rgba(253, 251, 247, 1) 70%);
+            background: radial-gradient(circle, rgba(212, 175, 55, 0.15) 0%, rgba(0,0,0,0) 70%);
         }
 
         .hero h1 {
@@ -185,6 +202,10 @@
             color: var(--deep-red);
             margin-bottom: 0.5rem;
             text-shadow: 1px 1px 2px rgba(0,0,0,0.1);
+        }
+
+        body.dark-mode .hero h1 {
+            color: #ff6b6b;
         }
 
         .hero p {
@@ -202,7 +223,7 @@
         }
 
         .question-card {
-            background: var(--white);
+            background: var(--card-bg);
             border-radius: 12px;
             padding: 2rem;
             box-shadow: 0 8px 20px rgba(0,0,0,0.08);
@@ -224,10 +245,12 @@
             width: 100%;
             height: 120px;
             padding: 1rem;
-            border: 2px solid #DDD;
+            border: 2px solid var(--input-border);
             border-radius: 8px;
             font-size: 1rem;
             resize: vertical;
+            background-color: var(--card-bg);
+            color: var(--text-dark);
             transition: border-color 0.3s;
         }
 
@@ -240,7 +263,7 @@
         .answer-box {
             margin-top: 1.5rem;
             padding: 1.5rem;
-            background-color: #F4F6F9;
+            background-color: var(--answer-bg);
             border-left: 5px solid var(--royal-blue);
             border-radius: 4px;
             display: none;
@@ -257,6 +280,10 @@
             display: flex;
             align-items: center;
             gap: 8px;
+        }
+
+        body.dark-mode .answer-box h3 {
+            color: #ff6b6b;
         }
 
         .answer-text {
@@ -279,7 +306,8 @@
         }
 
         .modal-content {
-            background: var(--white);
+            background: var(--card-bg);
+            color: var(--text-dark);
             padding: 2rem;
             border-radius: 8px;
             max-width: 500px;
@@ -360,6 +388,7 @@
     <div class="sidebar" id="sidebar">
         <button class="close-btn" id="menu-close"><i class="fa-solid fa-xmark"></i></button>
         <ul>
+            <li><a href="#" onclick="toggleTheme()"><i class="fa-solid fa-circle-half-stroke"></i> <span id="m-theme">ቀለም መቀየሪያ</span></a></li>
             <li><a href="#" onclick="openModal('about')"><i class="fa-solid fa-church"></i> <span id="m-about">ስለ እኛ</span></a></li>
             <li><a href="#" onclick="shareApp()"><i class="fa-solid fa-share-nodes"></i> <span id="m-share">ለማጋራት</span></a></li>
             <li><a href="#" onclick="openModal('feedback')"><i class="fa-solid fa-comment-dots"></i> <span id="m-feedback">ለአስተያየት</span></a></li>
@@ -378,7 +407,6 @@
         <div class="question-card">
             <div class="input-group">
                 <label for="user-q" id="input-label">እዚህ ይጠይቁ፡</label>
-                <!-- oninput በመጠቀም ሳጥኑ ውስጥ መጻፍ ሲጀምሩ በራሱ ሰርች ያደርጋል -->
                 <textarea id="user-q" placeholder="ጥያቄዎን እዚህ ያስገቡ..." oninput="autoSearch()"></textarea>
             </div>
 
@@ -414,6 +442,7 @@
                 inputLabel: "እዚህ ይጠይቁ፡",
                 placeholder: "ጥያቄዎን እዚህ ያስገቡ...",
                 ansTitle: "ኦርቶዶክሳዊ ምላሽ፡",
+                mTheme: "ቀለም መቀየሪያ",
                 mAbout: "ስለ እኛ",
                 mShare: "ለማጋራት",
                 mFeedback: "ለአስተያየት",
@@ -428,6 +457,7 @@
                 inputLabel: "Ask Here:",
                 placeholder: "Enter your question here...",
                 ansTitle: "Orthodox Response:",
+                mTheme: "Toggle Theme",
                 mAbout: "About Us",
                 mShare: "Share",
                 mFeedback: "Feedback",
@@ -442,6 +472,7 @@
                 inputLabel: "ኣብዚ ሕተቱ፡",
                 placeholder: "ሕቶኹም ኣብዚ ኣእትዉ...",
                 ansTitle: "ኦርቶዶክሳዊ መልሲ፡",
+                mTheme: "ሕብሪ ምልዋጥ",
                 mAbout: "ብዛዕባና",
                 mShare: "ንመካፈል",
                 mFeedback: "ርእይቶ",
@@ -456,6 +487,7 @@
                 inputLabel: "Asitti Gaafadhaa:",
                 placeholder: "Gaaffii keessan asitti galchaa...",
                 ansTitle: "Deebii Ortodoksii:",
+                mTheme: "Jijjiirraa Halluu",
                 mAbout: "Soba Cfa",
                 mShare: "Qooduuf",
                 mFeedback: "Yaadaaf",
@@ -466,16 +498,17 @@
             sid: {
                 header: "Ortodoksawoyye Dawaro",
                 heroTitle: '"Xa\'ma Rosaanchimma Aana ledoono"',
-                heroSub: "Ammanatenna woga xammichakki xa'mi; dawaro afiri",
-                inputLabel: "Tiniini Xa'mi:",
-                placeholder: "Xa'moki borreessi...",
+                heroSub: "Ammanatenna woga xammichakki xa\'mi; dawaro afiri",
+                inputLabel: "Tiniini Xa\'mi:",
+                placeholder: "Xa\'moki borreessi...",
                 ansTitle: "Ortodoksawoyye Dawaro:",
+                mTheme: "Bisa Soorromma",
                 mAbout: "Ninke Daafira",
                 mShare: "Beechate",
                 mFeedback: "Yaadaa",
                 mContact: "Ninke ledo Xintini",
                 footerCopy: "Hagirooti Wogateen aguramaaho.",
-                defaultAnswer: "Xa'mokira ortodoksawoyye dawaro: Ammana borro qullawa tenna hayyoota xawishsha aana xintamanno."
+                defaultAnswer: "Xa\'mokira ortodoksawoyye dawaro: Ammana borro qullawa tenna hayyoota xawishsha aana xintamanno."
             },
             gur: {
                 header: "ኦርቶዶክሳዊ መልስ",
@@ -484,6 +517,7 @@
                 inputLabel: "ዚኸ ተጣየቅ፡",
                 placeholder: "ጥያቄኸ ዚኸ ፅፍ...",
                 ansTitle: "ኦርቶዶክሳዊ መልስ፡",
+                mTheme: "ቀለም መቀየሪያ",
                 mAbout: "በነህነ ኸነ",
                 mShare: "ሸር ያረጉተ",
                 mFeedback: "አስተያየት",
@@ -498,6 +532,7 @@
                 inputLabel: "ሃጋን ኦይቻ፡",
                 placeholder: "ኔ ኦይቻ ሃጋን ፃፋ...",
                 ansTitle: "ኦርቶዶክሴ ዛሮ፡",
+                mTheme: "ቀላሜ ላሚያ",
                 mAbout: "ኑባራ",
                 mShare: "ሻሬ ኦሳናስ",
                 mFeedback: "ቆፎስ",
@@ -512,6 +547,7 @@
                 inputLabel: "ሂንዲ ኢቼ፡",
                 placeholder: "ኢቾኪ ሂንዲ ፃፌ...",
                 ansTitle: "ኦርቶዶክሶ ቃቦ፡",
+                mTheme: "ቀለሞ ዶፌ",
                 mAbout: "ኖ 采用",
                 mShare: "ኮተቶ",
                 mFeedback: "ቃቦ ያዶ",
@@ -526,6 +562,7 @@
                 inputLabel: "اسأل هنا:",
                 placeholder: "أدخل سؤالك هنا...",
                 ansTitle: "الرد الأرثوذكسي:",
+                mTheme: "تغيير المظهر",
                 mAbout: "من نحن",
                 mShare: "مشاركة",
                 mFeedback: "ملاحظات",
@@ -555,6 +592,12 @@
             document.getElementById('info-modal').style.display = 'none';
         }
 
+        // Toggle Dark/Light Theme Function
+        function toggleTheme() {
+            document.body.classList.toggle('dark-mode');
+            closeModalAndSidebar();
+        }
+
         // Language Switcher Function
         function changeLang(lang, btnElement) {
             currentLang = lang;
@@ -572,6 +615,7 @@
             document.getElementById('input-label').innerText = t.inputLabel;
             document.getElementById('user-q').placeholder = t.placeholder;
             document.getElementById('ans-title').innerHTML = `<i class="fa-solid fa-book-bible"></i> ${t.ansTitle}`;
+            document.getElementById('m-theme').innerText = t.mTheme;
             document.getElementById('m-about').innerText = t.mAbout;
             document.getElementById('m-share').innerText = t.mShare;
             document.getElementById('m-feedback').innerText = t.mFeedback;
@@ -585,7 +629,7 @@
             autoSearch();
         }
 
-        // Automatic Search Function (No button required)
+        // Automatic Search Function
         let searchTimeout;
         function autoSearch() {
             clearTimeout(searchTimeout);
@@ -598,7 +642,6 @@
                 return;
             }
 
-            // ጽሑፍ ተጽፎ ሲቆም (300ms በኋላ) በራሱ ፍለጋ ያደርጋል
             searchTimeout = setTimeout(() => {
                 const t = translations[currentLang];
                 let customResponse = `<strong>"${q}"</strong> <br><br> ${t.defaultAnswer}`;
