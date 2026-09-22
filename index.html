@@ -4,379 +4,289 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>ኦርቶዶክሳዊ መልስ</title>
-    <!-- FontAwesome icons for cross and menu icons -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
-        :root {
-            --gold: #D4AF37;
-            --dark-gold: #AA7C11;
-            --green: #008000;
-            --yellow: #FFD700;
-            --red: #DA291C;
-            --bg-color: #FAFAFA;
-            --card-bg: #FFFFFF;
-            --text-color: #222222;
-        }
-
         * {
             box-sizing: border-box;
-            margin: 0;
-            padding: 0;
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
         }
-
         body {
-            background-color: var(--bg-color);
-            color: var(--text-color);
+            background-color: #ffffff;
+            margin: 0;
+            padding: 15px;
             display: flex;
-            flex-direction: column;
-            min-height: 100vh;
+            justify-content: center;
         }
-
-        /* Ethiopian flag-themed top accent bar */
-        .flag-bar {
-            height: 6px;
-            background: linear-gradient(to right, var(--green) 33%, var(--yellow) 33% 66%, var(--red) 66%);
+        .container {
             width: 100%;
+            max-width: 500px;
         }
-
-        /* Header Layout */
-        header {
-            background-color: var(--card-bg);
-            border-bottom: 2px solid var(--gold);
-            padding: 15px 20px;
+        /* Header Styling */
+        .header {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            box-shadow: 0 2px 8px rgba(212, 175, 55, 0.15);
+            margin-bottom: 20px;
         }
-
         .brand {
             display: flex;
             align-items: center;
-            gap: 12px;
-        }
-
-        .brand i {
-            color: var(--gold);
-            font-size: 2rem;
-        }
-
-        .title-container h1 {
-            color: var(--dark-gold);
-            font-size: 1.5rem;
-            font-weight: bold;
-        }
-
-        .title-container p {
-            color: var(--green);
-            font-size: 0.95rem;
-            font-weight: 600;
-        }
-
-        /* Navigation Menu Icon & Dropdown */
-        .menu-container {
-            position: relative;
-        }
-
-        .menu-btn {
-            background: none;
-            border: 2px solid var(--gold);
-            color: var(--dark-gold);
-            font-size: 1.2rem;
-            padding: 8px 12px;
-            border-radius: 6px;
-            cursor: pointer;
-            transition: 0.3s;
-        }
-
-        .menu-btn:hover {
-            background-color: var(--gold);
-            color: #fff;
-        }
-
-        .dropdown-menu {
-            display: none;
-            position: absolute;
-            right: 0;
-            top: 45px;
-            background: var(--card-bg);
-            border: 1px solid var(--gold);
-            box-shadow: 0 4px 10px rgba(0,0,0,0.1);
-            border-radius: 6px;
-            width: 180px;
-            z-index: 100;
-        }
-
-        .dropdown-menu a {
-            display: block;
-            padding: 10px 15px;
-            color: var(--text-color);
-            text-decoration: none;
-            border-bottom: 1px solid #eee;
-            transition: 0.2s;
-        }
-
-        .dropdown-menu a:hover {
-            background-color: #fffdf0;
-            color: var(--dark-gold);
-        }
-
-        .dropdown-menu a:last-child {
-            border-bottom: none;
-        }
-
-        .dropdown-menu.show {
-            display: block;
-        }
-
-        /* Container */
-        .container {
-            max-width: 800px;
-            margin: 30px auto;
-            padding: 0 15px;
-            width: 100%;
-            flex: 1;
-        }
-
-        /* Horizontal Scrollable Languages Bar */
-        .languages-wrapper {
-            display: flex;
             gap: 10px;
-            overflow-x: auto;
-            padding: 10px 5px 15px 5px;
-            white-space: nowrap;
-            scrollbar-width: thin;
-            scrollbar-color: var(--gold) #transparent;
         }
-
-        .languages-wrapper::-webkit-scrollbar {
-            height: 5px;
-        }
-
-        .languages-wrapper::-webkit-scrollbar-thumb {
-            background-color: var(--gold);
-            border-radius: 4px;
-        }
-
-        .lang-btn {
-            background: var(--card-bg);
-            border: 1px solid var(--gold);
-            color: var(--dark-gold);
-            padding: 6px 14px;
-            border-radius: 20px;
-            cursor: pointer;
-            font-size: 0.85rem;
-            font-weight: 500;
-            transition: 0.3s;
-            flex-shrink: 0;
-        }
-
-        .lang-btn.active, .lang-btn:hover {
-            background-color: var(--gold);
-            color: #fff;
-        }
-
-        /* Main Card */
-        .search-card {
-            background: var(--card-bg);
-            border: 1px solid var(--gold);
-            border-radius: 10px;
-            padding: 25px;
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
-            position: relative;
-        }
-
-        /* Decorative Background Icons */
-        .search-card::after {
-            content: "\f518"; /* Book icon */
-            font-family: "Font Awesome 6 Free";
-            font-weight: 900;
-            position: absolute;
-            bottom: 15px;
-            right: 20px;
-            font-size: 4rem;
-            color: rgba(212, 175, 55, 0.08);
-            pointer-events: none;
-        }
-
-        .input-label {
-            display: block;
-            font-size: 1.1rem;
+        .cross-icon {
+            color: '#c59b27';
+            font-size: 32px;
             font-weight: bold;
-            color: var(--dark-gold);
-            margin-bottom: 10px;
+            line-height: 1;
+        }
+        .title-area h1 {
+            margin: 0;
+            color: #c59b27;
+            font-size: 22px;
+        }
+        .title-area p {
+            margin: 0;
+            color: #8c733e;
+            font-size: 13px;
+        }
+        .menu-btn {
+            border: 1px solid #c59b27;
+            background: transparent;
+            border-radius: 8px;
+            padding: 6px 12px;
+            cursor: pointer;
+            color: #c59b27;
+            font-size: 20px;
         }
 
+        /* Language Buttons Styling */
+        .lang-container {
+            display: flex;
+            gap: 8px;
+            overflow-x: auto;
+            padding-bottom: 10px;
+            margin-bottom: 20px;
+            scrollbar-width: none; /* Firefox */
+        }
+        .lang-container::-webkit-scrollbar {
+            display: none; /* Chrome/Safari */
+        }
+        .lang-btn {
+            border: 1px solid #dcdcdc;
+            background-color: #ffffff;
+            color: #555;
+            padding: 8px 18px;
+            border-radius: 20px;
+            font-size: 14px;
+            white-space: nowrap;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+        .lang-btn.active {
+            background-color: #d9a74a;
+            color: #ffffff;
+            border-color: #d9a74a;
+            font-weight: bold;
+        }
+
+        /* Card Section */
+        .card {
+            border: 1px solid #e8dec3;
+            border-radius: 16px;
+            padding: 20px;
+            background-color: #fff;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.02);
+        }
+        .card-title {
+            color: #c59b27;
+            margin: 0 0 15px 0;
+            font-size: 18px;
+        }
+        .input-box {
+            position: relative;
+            border: 1px solid #e0e0e0;
+            border-radius: 12px;
+            padding: 12px;
+            background-color: #fafafa;
+        }
         textarea {
             width: 100%;
-            height: 120px;
-            border: 1px solid #ccc;
-            border-radius: 8px;
-            padding: 12px;
-            font-size: 1rem;
-            resize: vertical;
+            border: none;
+            background: transparent;
+            resize: none;
             outline: none;
-            transition: border-color 0.3s;
+            font-size: 14px;
+            color: #333;
+            min-height: 90px;
         }
-
-        textarea:focus {
-            border-color: var(--gold);
-            box-shadow: 0 0 5px rgba(212, 175, 55, 0.4);
+        .send-btn-container {
+            display: flex;
+            justify-content: flex-end;
+            margin-top: 10px;
         }
-
-        /* Output / Response Section */
+        .send-btn {
+            background-color: #c59b27;
+            color: white;
+            border: none;
+            padding: 8px 20px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: bold;
+        }
+        
+        /* Response Area */
         .response-box {
-            margin-top: 20px;
-            padding: 15px;
-            background-color: #fffdf0;
-            border-left: 4px solid var(--gold);
-            border-radius: 4px;
-            display: none;
-        }
-
-        .response-box h4 {
-            color: var(--green);
-            margin-bottom: 8px;
-        }
-
-        /* Loading indicator */
-        .loading {
-            display: none;
             margin-top: 15px;
-            color: var(--dark-gold);
-            font-style: italic;
-        }
-
-        footer {
-            text-align: center;
-            padding: 15px;
-            background: var(--card-bg);
-            border-top: 1px solid var(--gold);
-            color: #666;
-            font-size: 0.85rem;
+            padding: 12px;
+            background-color: #fcf9f2;
+            border-left: 4px solid #c59b27;
+            border-radius: 6px;
+            display: none;
+            font-size: 14px;
+            color: #333;
         }
     </style>
 </head>
 <body>
 
-    <div class="flag-bar"></div>
-
-    <header>
+<div class="container">
+    <!-- Header Section -->
+    <div class="header">
         <div class="brand">
-            <!-- Cross Icon -->
-            <i class="fa-solid fa-cross"></i>
-            <div class="title-container">
-                <h1>ኦርቶዶክሳዊ መልስ</h1>
-                <p>መጠየቅ ያደርጋል ሊቅ</p>
+            <span class="cross-icon" style="color:#c59b27;">┼</span>
+            <div class="title-area">
+                <h1 id="main-title">ኦርቶዶክሳዊ መልስ</h1>
+                <p id="sub-title">መጠየቅ ያደርጋል ሊቅ</p>
             </div>
         </div>
-
-        <!-- 3-line Menu Dropdown -->
-        <div class="menu-container">
-            <button class="menu-btn" onclick="toggleMenu()">
-                <i class="fa-solid fa-bars"></i>
-            </button>
-            <div class="dropdown-menu" id="menuDropdown">
-                <a href="#about" onclick="openModal('ስለ እኛ')">ስለ እኛ</a>
-                <a href="#feedback" onclick="openModal('አስተያየት ለመስጠት')">አስተያየት ለመስጠት</a>
-                <a href="#share" onclick="openModal('ለማጋራት')">ለማጋራት</a>
-            </div>
-        </div>
-    </header>
-
-    <div class="container">
-        <!-- Horizontal List of Languages -->
-        <div class="languages-wrapper">
-            <button class="lang-btn active">አማርኛ</button>
-            <button class="lang-btn">English</button>
-            <button class="lang-btn">ትግርኛ</button>
-            <button class="lang-btn">Afaan Oromoo</button>
-            <button class="lang-btn">Sidaamu Afoo</button>
-            <button class="lang-btn">ጉራጊኛ</button>
-            <button class="lang-btn">ወላይቲኛ</button>
-            <button class="lang-btn">ሶማሊኛ</button>
-            <button class="lang-btn">العربية</button>
-        </div>
-
-        <!-- Question Input Card -->
-        <div class="search-card">
-            <label class="input-label" for="questionInput">እዚህ ይጠይቁ</label>
-            <textarea id="questionInput" placeholder="የመንፈሳዊ ጥያቄዎን እዚህ ያስገቡ... (ጥያቄውን ጽፈው ሲጨርሱ መልሱ ወዲያውኑ ይመጣል)"></textarea>
-            
-            <div class="loading" id="loadingText">
-                <i class="fa-solid fa-spinner fa-spin"></i> መልስ በመፈለግ ላይ...
-            </div>
-
-            <div class="response-box" id="responseBox">
-                <h4>መልስ፡</h4>
-                <p id="responseText"></p>
-            </div>
-        </div>
+        <button class="menu-btn">☰</button>
     </div>
 
-    <footer>
-        <i class="fa-solid fa-book-bible"></i> የኢትዮጵያ ኦርቶዶክስ ተዋሕዶ ቤተ ክርስቲያን ትምህርትና መልሶች
-    </footer>
+    <!-- Language Selector -->
+    <div class="lang-container" id="lang-container">
+        <!-- Buttons are populated by JS -->
+    </div>
 
-    <script>
-        // Toggle Dropdown Menu
-        function toggleMenu() {
-            document.getElementById("menuDropdown").classList.toggle("show");
+    <!-- Main Question Card -->
+    <div class="card">
+        <h2 class="card-title" id="ask-header">እሁድ ይጠይቁ</h2>
+        <div class="input-box">
+            <textarea id="question-input" placeholder="መንፈሳዊ ጥያቄዎን እዚህ ያስገቡ... (ጥያቄውን ጽፈው ሲጨርሱ መልሱ ወዲያው ይመጣል)"></textarea>
+            <div class="send-btn-container">
+                <button class="send-btn" onclick="submitQuestion()">ላክ</button>
+            </div>
+        </div>
+        <div id="response-box" class="response-box"></div>
+    </div>
+</div>
+
+<script>
+    // 1. የቋንቋዎች መረጃና ትርጉም
+    const translations = {
+        am: {
+            name: "አማርኛ",
+            title: "ኦርቶዶክሳዊ መልስ",
+            subtitle: "መጠየቅ ያደርጋል ሊቅ",
+            askHeader: "እዚህ ይጠይቁ",
+            placeholder: "መንፈሳዊ ጥያቄዎን እዚህ ያስገቡ... (ጥያቄውን ጽፈው ሲጨርሱ መልሱ ወዲያው ይመጣል)"
+        },
+        en: {
+            name: "English",
+            title: "Orthodox Answer",
+            subtitle: "Ask and Receive Wisdom",
+            askHeader: "Ask Here",
+            placeholder: "Enter your spiritual question here..."
+        },
+        ti: {
+            name: "ትግርኛ",
+            title: "ኦርቶዶክሳዊ መልሲ",
+            subtitle: "ምሕታት ይገብር ሊቅ",
+            askHeader: "ኣብዚ ሐቱ",
+            placeholder: "መንፈሳዊ ሕቶኹም ኣብዚ የእትዉ..."
+        },
+        om: {
+            name: "Afaan Oromoo",
+            title: "Deebii Ortodoksii",
+            subtitle: "Gaafachuun Ogeessa Isaan Taasisa",
+            askHeader: "Asitti Gaafadhaa",
+            placeholder: "Gaaffii afuuraa keessan asitti galchaa..."
+        },
+        sid: {
+            name: "Sidaamu Afoo",
+            title: "Ortodoksete Dawaro",
+            subtitle: "Oso'leenna Ogessa Ikkano",
+            askHeader: "Konninni Osol'le",
+            placeholder: "Ayyaanaamete osol'le konninni borreessite..."
+        },
+        gur: {
+            name: "ጉራጊኛ",
+            title: "ኦርቶዶክሳዊ ምልስ",
+            subtitle: "ጠያቄ የፐርካበታ",
+            askHeader: "እካ ጠይቅ",
+            placeholder: "መንፈሳዊ ጥያቄኸ እካ አስገባ..."
         }
+    };
 
-        // Close dropdown when clicking outside
-        window.onclick = function(event) {
-            if (!event.target.matches('.menu-btn') && !event.target.matches('.menu-btn *')) {
-                var dropdowns = document.getElementsByClassName("dropdown-menu");
-                for (var i = 0; i < dropdowns.length; i++) {
-                    var openDropdown = dropdowns[i];
-                    if (openDropdown.classList.contains('show')) {
-                        openDropdown.classList.remove('show');
-                    }
-                }
-            }
-        }
+    let currentLang = 'am';
 
-        // Action for Menu Items
-        function openModal(title) {
-            alert(title + " ገጽ በቅርብ ቀን ይከፈታል!");
-        }
+    // 2. የቋንቋ ቁልፎችን የመፍጠርና የማሳየት ተግባር
+    function renderLangButtons() {
+        const container = document.getElementById('lang-container');
+        container.innerHTML = '';
 
-        // Auto-search logic (Debounce)
-        let typingTimer;
-        const doneTypingInterval = 1000; // 1 second delay after user stops typing
-        const inputArea = document.getElementById('questionInput');
-        const loadingText = document.getElementById('loadingText');
-        const responseBox = document.getElementById('responseBox');
-        const responseText = document.getElementById('responseText');
-
-        inputArea.addEventListener('keyup', () => {
-            clearTimeout(typingTimer);
-            if (inputArea.value.trim() !== '') {
-                typingTimer = setTimeout(fetchAnswer, doneTypingInterval);
-            } else {
-                responseBox.style.display = 'none';
-                loadingText.style.display = 'none';
-            }
+        Object.keys(translations).forEach(langKey => {
+            const btn = document.createElement('button');
+            btn.className = `lang-btn ${langKey === currentLang ? 'active' : ''}`;
+            btn.innerText = translations[langKey].name;
+            btn.onclick = () => switchLanguage(langKey);
+            container.appendChild(btn);
         });
+    }
 
-        inputArea.addEventListener('keydown', () => {
-            clearTimeout(typingTimer);
-        });
+    // 3. ቋንቋ ሲቀየር የጽሑፍ ዝርዝሮችን የመቀየር ተግባር
+    function switchLanguage(langKey) {
+        currentLang = langKey;
+        const data = translations[langKey];
 
-        // Simulating Automatic API Answer Fetching & Translation
-        function fetchAnswer() {
-            loadingText.style.display = 'block';
-            responseBox.style.display = 'none';
+        document.getElementById('main-title').innerText = data.title;
+        document.getElementById('sub-title').innerText = data.subtitle;
+        document.getElementById('ask-header').innerText = data.askHeader;
+        document.getElementById('question-input').placeholder = data.placeholder;
 
-            setTimeout(() => {
-                loadingText.style.display = 'none';
-                responseBox.style.display = 'block';
-                // Example response placeholder
-                responseText.innerText = "ለጥያቄዎ፡ \"" + inputArea.value + "\" የተሰጠ ኦርቶዶክሳዊ ምላሽ እዚህ ጋር በራሱ ጊዜ ተተርጉሞ ይቀርባል።";
-            }, 1200);
+        renderLangButtons(); // ቁልፎቹን እንደገና በማደስ አክቲቭ የሆነውን ማሳየት
+    }
+
+    // 4. ጥያቄ ወደ AI/Server የመላክ ተግባር
+    async function submitQuestion() {
+        const input = document.getElementById('question-input');
+        const responseBox = document.getElementById('response-box');
+        const question = input.value.trim();
+
+        if (!question) return;
+
+        responseBox.style.display = 'block';
+        responseBox.innerText = 'እየፈለገ ነው...';
+
+        try {
+            // ከጀርባ ካለው API ጋር ማገናኘት (የእርስዎን API endpoint እዚህ ይተኩ)
+            const res = await fetch('/api/ask', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    prompt: question,
+                    language: translations[currentLang].name // የተመረጠውን ቋንቋ ይልካል
+                })
+            });
+
+            const data = await res.json();
+            responseBox.innerText = data.reply || "መልስ ማግኘት አልተቻለም።";
+        } catch (error) {
+            responseBox.innerText = "ስህተት ተፈጥሯል። እባክዎ እንደገና ይሞክሩ።";
         }
-    </script>
+    }
+
+    // የመጀመሪያ ገጽ ሲከፈት
+    renderLangButtons();
+</script>
+
 </body>
 </html>
