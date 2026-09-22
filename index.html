@@ -1,137 +1,409 @@
 <!DOCTYPE html>
 <html lang="am">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>ኦርቶዶክሳዊ መልስ</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ኦርቶዶክሳዊ መልስ</title>
+    <!-- FontAwesome for Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root {
+            --primary-color: #8b0000;
+            --secondary-color: #d4af37;
+            --bg-color: #f4f6f8;
+            --card-bg: #ffffff;
+            --text-color: #2c3e50;
+        }
 
-<style>
-*{box-sizing:border-box}
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif, 'Ethiopic';
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            justify-content: center;
+        }
 
-body{
-  margin:0;
-  background:#f5f7f3;
-  color:#20251f;
-  font-family:system-ui,-apple-system,"Noto Sans Ethiopic","Noto Sans",sans-serif;
-}
+        .container {
+            width: 100%;
+            max-width: 800px;
+            background: var(--card-bg);
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+        }
 
-.app{
-  width:100%;
-  max-width:760px;
-  min-height:100vh;
-  margin:auto;
-  padding:18px 15px 40px;
-}
+        header {
+            text-align: center;
+            border-bottom: 2px solid var(--secondary-color);
+            padding-bottom: 15px;
+            margin-bottom: 25px;
+        }
 
-.header{
-  text-align:center;
-  padding:18px 0 20px;
-}
+        header h1 {
+            color: var(--primary-color);
+            margin: 0 0 5px 0;
+            font-size: 2.2rem;
+        }
 
-.logo{
-  width:76px;
-  height:76px;
-  margin:auto;
-  border-radius:50%;
-  display:flex;
-  align-items:center;
-  justify-content:center;
-  background:#fff;
-  border:3px solid #b59645;
-  color:#1d6845;
-  font-size:38px;
-  box-shadow:0 5px 20px rgba(0,0,0,.08);
-}
+        header p.quote {
+            font-style: italic;
+            color: #555;
+            font-size: 1.1rem;
+            margin: 0;
+        }
 
-.title{
-  margin:12px 0 5px;
-  font-size:29px;
-  font-weight:800;
-}
+        .form-group {
+            margin-bottom: 20px;
+        }
 
-.subtitle{
-  margin:0;
-  color:#687168;
-  font-size:15px;
-}
+        label {
+            display: block;
+            font-weight: bold;
+            margin-bottom: 8px;
+        }
 
-.languages{
-  display:flex;
-  justify-content:center;
-  flex-wrap:wrap;
-  gap:7px;
-  margin:20px 0 15px;
-}
+        select, textarea {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid #ccc;
+            border-radius: 8px;
+            font-size: 1rem;
+            box-sizing: border-box;
+        }
 
-.languages button{
-  border:1px solid #d2d8d0;
-  background:white;
-  color:#333;
-  border-radius:20px;
-  padding:8px 12px;
-  cursor:pointer;
-  font-size:13px;
-}
+        textarea {
+            height: 120px;
+            resize: vertical;
+        }
 
-.languages button.active{
-  background:#216b47;
-  border-color:#216b47;
-  color:white;
-}
+        button.btn-submit {
+            width: 100%;
+            background-color: var(--primary-color);
+            color: white;
+            border: none;
+            padding: 14px;
+            font-size: 1.1rem;
+            font-weight: bold;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: background 0.3s;
+        }
 
-.search-card{
-  background:white;
-  border:1px solid #dfe5dd;
-  border-radius:20px;
-  padding:15px;
-  box-shadow:0 8px 30px rgba(0,0,0,.06);
-}
+        button.btn-submit:hover {
+            background-color: #6a0000;
+        }
 
-.question{
-  width:100%;
-  min-height:115px;
-  resize:vertical;
-  border:0;
-  outline:none;
-  font-size:18px;
-  line-height:1.7;
-  font-family:inherit;
-  color:#222;
-}
+        /* Result Section */
+        .result-card {
+            display: none;
+            margin-top: 30px;
+            border-top: 1px solid #ddd;
+            padding-top: 20px;
+        }
 
-.question::placeholder{
-  color:#9aa19a;
-}
+        .result-title {
+            color: var(--primary-color);
+            font-size: 1.5rem;
+            margin-bottom: 10px;
+        }
 
-.search-button{
-  width:100%;
-  border:0;
-  border-radius:13px;
-  padding:14px;
-  background:#216b47;
-  color:white;
-  font-size:17px;
-  font-weight:700;
-  cursor:pointer;
-}
+        .result-body {
+            line-height: 1.7;
+            font-size: 1.05rem;
+            margin-bottom: 15px;
+            white-space: pre-line;
+        }
 
-.loading{
-  display:none;
-  text-align:center;
-  padding:25px 10px;
-  color:#216b47;
-}
+        .references {
+            background-color: #fcf8e3;
+            border-left: 4px solid var(--secondary-color);
+            padding: 10px 15px;
+            margin-bottom: 15px;
+            border-radius: 4px;
+        }
 
-.loading.show{
-  display:block;
-}
+        .references h4 {
+            margin: 0 0 5px 0;
+            color: #8a6d3b;
+        }
 
-.answer{
-  display:none;
-  margin-top:18px;
-  background:white;
-  border:1px solid #dfe5dd;
-  border-radius:20px;
-  padding:20px;
-  line-height:1.9;
-  box-shadow:0 8px 30px rgba(0,0,0,.05
+        .references ul {
+            margin: 0;
+            padding-left: 20px;
+        }
+
+        .takeaway {
+            font-weight: bold;
+            background: #e8f4f8;
+            padding: 10px 15px;
+            border-radius: 6px;
+            margin-bottom: 20px;
+        }
+
+        /* Toolbar Actions */
+        .action-toolbar {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            border-top: 1px dashed #ccc;
+            padding-top: 15px;
+        }
+
+        .action-btn {
+            background: #f0f0f0;
+            border: 1px solid #ddd;
+            padding: 8px 15px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 0.95rem;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            transition: all 0.2s;
+        }
+
+        .action-btn:hover {
+            background: #e0e0e0;
+        }
+
+        .action-btn.liked {
+            color: #e74c3c;
+            border-color: #e74c3c;
+        }
+
+        .loading {
+            display: none;
+            text-align: center;
+            margin: 20px 0;
+            font-weight: bold;
+            color: var(--primary-color);
+        }
+
+        .toast {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            background: #333;
+            color: #fff;
+            padding: 10px 20px;
+            border-radius: 5px;
+            display: none;
+            z-index: 1000;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <header>
+        <h1>ኦርቶዶክሳዊ መልስ</h1>
+        <p class="quote">“መጠየቅ ያደርጋል ሊቅ”</p>
+    </header>
+
+    <!-- Language Selector -->
+    <div class="form-group">
+        <label for="languageSelect"><i class="fa-solid fa-globe"></i> ቋንቋ ይምረጡ / Select Language:</label>
+        <select id="languageSelect">
+            <option value="Amharic">አማርኛ (Amharic)</option>
+            <option value="English">English</option>
+            <option value="Tigrinya">ትግርኛ (Tigrinya)</option>
+            <option value="Afaan Oromoo">Afaan Oromoo</option>
+            <option value="Sidaamu Afoo">Sidaamu Afoo</option>
+            <option value="Kafa">ካፊኛ (Kafa)</option>
+            <option value="Wolaytta">ወላይትኛ (Wolaytta)</option>
+            <option value="Arabic">العربية (Arabic)</option>
+        </select>
+    </div>
+
+    <!-- Question Input -->
+    <div class="form-group">
+        <label for="questionInput"><i class="fa-solid fa-circle-question"></i> እዚህ ይጠይቁ፡</label>
+        <textarea id="questionInput" placeholder="የመንፈሳዊ ጥያቄዎትን እዚህ ያስገቡ..."></textarea>
+    </div>
+
+    <button class="btn-submit" onclick="submitQuestion()">
+        <i class="fa-solid fa-paper-plane"></i> መልስ አግኝ
+    </button>
+
+    <!-- Loading Indicator -->
+    <div class="loading" id="loadingIndicator">
+        <i class="fa-solid fa-spinner fa-spin"></i> መልሱ እየተዘጋጀ ነው... እባክዎ ይጠብቁ
+    </div>
+
+    <!-- Answer Display Card -->
+    <div class="result-card" id="resultCard">
+        <h2 class="result-title" id="resTitle"></h2>
+        <div class="result-body" id="resAnswer"></div>
+
+        <div class="references" id="resReferencesContainer">
+            <h4><i class="fa-solid fa-book-bible"></i> የመጽሐፍ ቅዱስ እና የሊቃውንት ጥቅሶች፡</h4>
+            <ul id="resReferences"></ul>
+        </div>
+
+        <div class="takeaway" id="resTakeawayContainer">
+            <strong><i class="fa-solid fa-lightbulb"></i> ዋና ማጠቃለያ፡</strong> <span id="resTakeaway"></span>
+        </div>
+
+        <!-- Action Tools (Like, Copy, Share, Audio, Save) -->
+        <div class="action-toolbar">
+            <button class="action-btn" id="likeBtn" onclick="toggleLike()">
+                <i class="fa-regular fa-thumbs-up"></i> <span id="likeCount">ወደድኩት</span>
+            </button>
+            <button class="action-btn" onclick="copyAnswer()">
+                <i class="fa-regular fa-copy"></i> ኮፒ (Copy)
+            </button>
+            <button class="action-btn" onclick="shareAnswer()">
+                <i class="fa-solid fa-share-nodes"></i> ሼር (Share)
+            </button>
+            <button class="action-btn" onclick="speakText()">
+                <i class="fa-solid fa-volume-high"></i> አነብልኝ (Audio)
+            </button>
+        </div>
+    </div>
+</div>
+
+<div class="toast" id="toast">መረጃው ተገልብጧል!</div>
+
+<script>
+    let isLiked = false;
+
+    async function submitQuestion() {
+        const question = document.getElementById('questionInput').value.trim();
+        const language = document.getElementById('languageSelect').value;
+
+        if (!question) {
+            alert('እባክዎን ጥያቄዎን ያስገቡ!');
+            return;
+        }
+
+        // Show Loading, Hide Results
+        document.getElementById('loadingIndicator').style.display = 'block';
+        document.getElementById('resultCard').style.display = 'none';
+
+        try {
+            /* 
+               የባክኤንድ API አድራሻህን እዚህ ጋር ታገናኛለህ። 
+               ለአሁኑ በሙከራ ደረጃ (Mock Integration) መልሱን ያዘጋጃል፡
+            */
+            const response = await fetchAnswerFromBackend(question, language);
+
+            // Render Output
+            document.getElementById('resTitle').innerText = response.data.title;
+            document.getElementById('resAnswer').innerText = response.data.detailedAnswer;
+
+            // Render References
+            const refList = document.getElementById('resReferences');
+            refList.innerHTML = '';
+            response.data.scriptureReferences.forEach(ref => {
+                const li = document.createElement('li');
+                li.innerText = ref;
+                refList.appendChild(li);
+            });
+
+            // Render Takeaway
+            document.getElementById('resTakeaway').innerText = response.data.keyTakeaway;
+
+            // Show Result Section
+            document.getElementById('loadingIndicator').style.display = 'none';
+            document.getElementById('resultCard').style.display = 'block';
+
+        } catch (error) {
+            document.getElementById('loadingIndicator').style.display = 'none';
+            alert('ምላሽ በማዘጋጀት ላይ ስህተት አጋጥሟል፡ ' + error.message);
+        }
+    }
+
+    // የባክኤንድ API ጥሪ የሚያደርግ ፈንክሽን (Backend Simulator)
+    async function fetchAnswerFromBackend(question, language) {
+        // እውነተኛውን ባክኤንድ አድራሻ ስትሰራ በ fetch('http://your-backend-api/api/spiritual-qa', ...) ተካው
+        return new Promise((resolve) => {
+            setTimeout(() => {
+                resolve({
+                    success: true,
+                    data: {
+                        title: `ስለ "${question}" የተሰጠ መንፈሳዊ ምላሽ (${language})`,
+                        detailedAnswer: `በስመ አብ ወወልድ ወመንፈስ ቅዱስ አሐዱ አምላክ አሜን።\n\nለቀረበው ጥያቄ የተሰጠው የተሟላ ትርጓሜ እና መንፈሳዊ ማብራሪያ እንደተመረጠው ቋንቋ (${language}) ተዘጋጅቶ የቀረበ ነው። ኦርቶዶክሳዊት ተዋሕዶ ቤተ ክርስቲያን እንደምታስተምረው ሃይማኖታዊ ሥርዓትንና የነገረ-መለኮት መሠረትን በመከተል ለጠየቁት ጥያቄ የተደራጀ ምላሽ ተሰጥቷል።`,
+                        scriptureReferences: [
+                            "ወንጌል ዘማቴዎስ ፯፡፯ (ማቴዎስ 7:7)",
+                            "መጽሐፈ ምሳሌ ፪፡፮ (ምሳሌ 2:6)"
+                        ],
+                        keyTakeaway: "መጠየቅ እውቀትን ይጨምራል፤ መንፈሳዊ ጥያቄዎችን በመጠየቅ ሃይማኖታዊ እውቀትን ማሳደግ ይገባል።"
+                    }
+                });
+            }, 1500); // 1.5 ሰከንድ ማስመሰያ
+        });
+    }
+
+    // 1. Like Functionality
+    function toggleLike() {
+        const likeBtn = document.getElementById('likeBtn');
+        const likeText = document.getElementById('likeCount');
+        
+        isLiked = !isLiked;
+        if (isLiked) {
+            likeBtn.classList.add('liked');
+            likeText.innerText = 'ተወዷል';
+        } else {
+            likeBtn.classList.remove('liked');
+            likeText.innerText = 'ወደድኩት';
+        }
+    }
+
+    // 2. Copy Functionality
+    function copyAnswer() {
+        const title = document.getElementById('resTitle').innerText;
+        const answer = document.getElementById('resAnswer').innerText;
+        const takeaway = document.getElementById('resTakeaway').innerText;
+        
+        const fullText = `${title}\n\n${answer}\n\nማጠቃለያ: ${takeaway}\n\nምንጭ: ኦርቶዶክሳዊ መልስ`;
+        
+        navigator.clipboard.writeText(fullText).then(() => {
+            showToast("መልሱ ሙሉ በሙሉ ኮፒ ሆኗል!");
+        });
+    }
+
+    // 3. Share Functionality (Web Share API)
+    function shareAnswer() {
+        const title = document.getElementById('resTitle').innerText;
+        const answer = document.getElementById('resAnswer').innerText;
+
+        if (navigator.share) {
+            navigator.share({
+                title: 'ኦርቶዶክሳዊ መልስ',
+                text: `${title}\n\n${answer.substring(0, 150)}...`,
+                url: window.location.href,
+            }).catch(() => {});
+        } else {
+            copyAnswer();
+            showToast("የሼር አማራጭ ስላልተደገፈ መልሱ ኮፒ ሆኗል!");
+        }
+    }
+
+    // 4. Text-to-Speech (የድምጽ ንባብ)
+    function speakText() {
+        const answer = document.getElementById('resAnswer').innerText;
+        if ('speechSynthesis' in window) {
+            window.speechSynthesis.cancel(); // ያለፈውን ንባብ ማቆም
+            const utterance = new SpeechSynthesisUtterance(answer);
+            utterance.rate = 0.9; // የንባብ ፍጥነት
+            window.speechSynthesis.speak(utterance);
+        } else {
+            alert("የእርስዎ ብራውዘር የድምጽ ንባብን አያደግፍም።");
+        }
+    }
+
+    // Notification Helper
+    function showToast(message) {
+        const toast = document.getElementById('toast');
+        toast.innerText = message;
+        toast.style.display = 'block';
+        setTimeout(() => {
+            toast.style.display = 'none';
+        }, 2500);
+    }
+</script>
+
+</body>
+</html>
