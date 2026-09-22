@@ -1,183 +1,382 @@
 <!DOCTYPE html>
 <html lang="am">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>ኦርቶዶክሳዊ መልስ - Orthodox Answer</title>
-  
-  <!-- React & React-DOM CDN -->
-  <script src="https://unpkg.com/react@18/umd/react.production.min.js" crossorigin></script>
-  <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js" crossorigin></script>
-  
-  <!-- Babel Compiler for JSX -->
-  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
-  
-  <!-- Tailwind CSS -->
-  <script src="https://cdn.tailwindcss.com"></script>
-  
-  <!-- Lucide Icons -->
-  <script src="https://unpkg.com/lucide@latest"></script>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ኦርቶዶክሳዊ መልስ</title>
+    <!-- FontAwesome icons for cross and menu icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root {
+            --gold: #D4AF37;
+            --dark-gold: #AA7C11;
+            --green: #008000;
+            --yellow: #FFD700;
+            --red: #DA291C;
+            --bg-color: #FAFAFA;
+            --card-bg: #FFFFFF;
+            --text-color: #222222;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+        }
+
+        /* Ethiopian flag-themed top accent bar */
+        .flag-bar {
+            height: 6px;
+            background: linear-gradient(to right, var(--green) 33%, var(--yellow) 33% 66%, var(--red) 66%);
+            width: 100%;
+        }
+
+        /* Header Layout */
+        header {
+            background-color: var(--card-bg);
+            border-bottom: 2px solid var(--gold);
+            padding: 15px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 2px 8px rgba(212, 175, 55, 0.15);
+        }
+
+        .brand {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .brand i {
+            color: var(--gold);
+            font-size: 2rem;
+        }
+
+        .title-container h1 {
+            color: var(--dark-gold);
+            font-size: 1.5rem;
+            font-weight: bold;
+        }
+
+        .title-container p {
+            color: var(--green);
+            font-size: 0.95rem;
+            font-weight: 600;
+        }
+
+        /* Navigation Menu Icon & Dropdown */
+        .menu-container {
+            position: relative;
+        }
+
+        .menu-btn {
+            background: none;
+            border: 2px solid var(--gold);
+            color: var(--dark-gold);
+            font-size: 1.2rem;
+            padding: 8px 12px;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: 0.3s;
+        }
+
+        .menu-btn:hover {
+            background-color: var(--gold);
+            color: #fff;
+        }
+
+        .dropdown-menu {
+            display: none;
+            position: absolute;
+            right: 0;
+            top: 45px;
+            background: var(--card-bg);
+            border: 1px solid var(--gold);
+            box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+            border-radius: 6px;
+            width: 180px;
+            z-index: 100;
+        }
+
+        .dropdown-menu a {
+            display: block;
+            padding: 10px 15px;
+            color: var(--text-color);
+            text-decoration: none;
+            border-bottom: 1px solid #eee;
+            transition: 0.2s;
+        }
+
+        .dropdown-menu a:hover {
+            background-color: #fffdf0;
+            color: var(--dark-gold);
+        }
+
+        .dropdown-menu a:last-child {
+            border-bottom: none;
+        }
+
+        .dropdown-menu.show {
+            display: block;
+        }
+
+        /* Container */
+        .container {
+            max-width: 800px;
+            margin: 30px auto;
+            padding: 0 15px;
+            width: 100%;
+            flex: 1;
+        }
+
+        /* Horizontal Scrollable Languages Bar */
+        .languages-wrapper {
+            display: flex;
+            gap: 10px;
+            overflow-x: auto;
+            padding: 10px 5px 15px 5px;
+            white-space: nowrap;
+            scrollbar-width: thin;
+            scrollbar-color: var(--gold) #transparent;
+        }
+
+        .languages-wrapper::-webkit-scrollbar {
+            height: 5px;
+        }
+
+        .languages-wrapper::-webkit-scrollbar-thumb {
+            background-color: var(--gold);
+            border-radius: 4px;
+        }
+
+        .lang-btn {
+            background: var(--card-bg);
+            border: 1px solid var(--gold);
+            color: var(--dark-gold);
+            padding: 6px 14px;
+            border-radius: 20px;
+            cursor: pointer;
+            font-size: 0.85rem;
+            font-weight: 500;
+            transition: 0.3s;
+            flex-shrink: 0;
+        }
+
+        .lang-btn.active, .lang-btn:hover {
+            background-color: var(--gold);
+            color: #fff;
+        }
+
+        /* Main Card */
+        .search-card {
+            background: var(--card-bg);
+            border: 1px solid var(--gold);
+            border-radius: 10px;
+            padding: 25px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+            position: relative;
+        }
+
+        /* Decorative Background Icons */
+        .search-card::after {
+            content: "\f518"; /* Book icon */
+            font-family: "Font Awesome 6 Free";
+            font-weight: 900;
+            position: absolute;
+            bottom: 15px;
+            right: 20px;
+            font-size: 4rem;
+            color: rgba(212, 175, 55, 0.08);
+            pointer-events: none;
+        }
+
+        .input-label {
+            display: block;
+            font-size: 1.1rem;
+            font-weight: bold;
+            color: var(--dark-gold);
+            margin-bottom: 10px;
+        }
+
+        textarea {
+            width: 100%;
+            height: 120px;
+            border: 1px solid #ccc;
+            border-radius: 8px;
+            padding: 12px;
+            font-size: 1rem;
+            resize: vertical;
+            outline: none;
+            transition: border-color 0.3s;
+        }
+
+        textarea:focus {
+            border-color: var(--gold);
+            box-shadow: 0 0 5px rgba(212, 175, 55, 0.4);
+        }
+
+        /* Output / Response Section */
+        .response-box {
+            margin-top: 20px;
+            padding: 15px;
+            background-color: #fffdf0;
+            border-left: 4px solid var(--gold);
+            border-radius: 4px;
+            display: none;
+        }
+
+        .response-box h4 {
+            color: var(--green);
+            margin-bottom: 8px;
+        }
+
+        /* Loading indicator */
+        .loading {
+            display: none;
+            margin-top: 15px;
+            color: var(--dark-gold);
+            font-style: italic;
+        }
+
+        footer {
+            text-align: center;
+            padding: 15px;
+            background: var(--card-bg);
+            border-top: 1px solid var(--gold);
+            color: #666;
+            font-size: 0.85rem;
+        }
+    </style>
 </head>
-<body class="bg-stone-100 min-h-screen text-stone-800">
+<body>
 
-  <div id="root"></div>
+    <div class="flag-bar"></div>
 
-  <script type="text/babel">
-    const { useState, useEffect } = React;
-
-    function App() {
-      const [lang, setLang] = useState('am');
-      const [isMenuOpen, setIsMenuOpen] = useState(false);
-      const [question, setQuestion] = useState('');
-
-      useEffect(() => {
-        if (window.lucide) {
-          window.lucide.createIcons();
-        }
-      }, [isMenuOpen, lang]);
-
-      const translations = {
-        am: { 
-          title: "ኦርቶዶክሳዊ መልስ", 
-          quote: "መጠየቅ ያውቃል ያደርጋል", 
-          askHere: "እዚህ ይጠይቁ:", 
-          placeholder: "የመንፈሳዊ ጥያቄዎን እዚህ ያስገቡ...", 
-          button: "መልስ አግኝ", 
-          dir: "ltr", 
-          menuTitle: "ዋና ማውጫ", 
-          menuLinks: ["ስለ እኛ", "የቀደሙ መልሶች", "ሕገ ቤተክርስቲያን", "ግንኙነት"] 
-        },
-        en: { 
-          title: "Orthodox Answer", 
-          quote: "Asking makes one learned", 
-          askHere: "Ask Here:", 
-          placeholder: "Enter your spiritual questions here...", 
-          button: "Get Answer", 
-          dir: "ltr", 
-          menuTitle: "Main Menu", 
-          menuLinks: ["About Us", "Previous Answers", "Church Canons", "Contact Us"] 
-        },
-        ar: { 
-          title: "إجابة أورثوذكسية", 
-          quote: "المطالبة تجعل المرء عالماً", 
-          askHere: "أسأل هنا:", 
-          placeholder: "أدخل أسئلتك الروحية هنا...", 
-          button: "احصل على الإجابة", 
-          dir: "rtl", 
-          menuTitle: "القائمة الرئيسية", 
-          menuLinks: ["معلومات عنا", "الإجابات السابقة", "قوانين الكنيسة", "اتصل بنا"] 
-        },
-        om: { 
-          title: "Deebii Oortodoksii", 
-          quote: "Gaafachuun beekaa nama taasisa", 
-          askHere: "Asitti Gaafadhaa:", 
-          placeholder: "Gaaffii afuuraa keessan asitti galchaa...", 
-          button: "Deebii Argadhu", 
-          dir: "ltr", 
-          menuTitle: "Baafata Guddaa", 
-          menuLinks: ["Waa'ee Keenna", "Deebiiwwan Darban", "Seera Seera Seera", "Nu Quunnamaa"] 
-        }
-      };
-
-      const languages = [
-        { code: 'am', name: 'አማርኛ' },
-        { code: 'en', name: 'English' },
-        { code: 'ar', name: 'العربية' },
-        { code: 'om', name: 'Afaan Oromoo' }
-      ];
-
-      const t = translations[lang];
-
-      const handleSubmit = (e) => {
-        e.preventDefault();
-        if (!question.trim()) return;
-        alert(`ጥያቄዎ ተልኳል: ${question}`);
-        setQuestion('');
-      };
-
-      return (
-        <div dir={t.dir} className="min-h-screen bg-stone-100 p-4 font-sans">
-          {/* HEADER */}
-          <header className="max-w-xl mx-auto flex justify-between items-center p-4 bg-white shadow-md rounded-xl">
-            <h1 className="text-xl md:text-2xl font-bold text-[#800020]">{t.title}</h1>
-            <button 
-              onClick={() => setIsMenuOpen(!isMenuOpen)} 
-              className="p-2 rounded-lg hover:bg-[#800020]/10 border border-[#D4AF37]/40 transition text-[#800020]"
-              aria-label="Toggle Menu"
-            >
-              <i data-lucide={isMenuOpen ? "x" : "menu"}></i>
-            </button>
-          </header>
-
-          {/* DROPDOWN MENU */}
-          {isMenuOpen && (
-            <div className="max-w-xl mx-auto mt-2 p-4 bg-white rounded-xl shadow-lg border border-stone-200">
-              <h2 className="font-bold text-stone-700 mb-2 border-b pb-1">{t.menuTitle}</h2>
-              <ul className="space-y-2">
-                {t.menuLinks.map((link, idx) => (
-                  <li key={idx}>
-                    <a href="#" className="block p-2 rounded hover:bg-stone-100 text-stone-600 font-medium">
-                      {link}
-                    </a>
-                  </li>
-                ))}
-              </ul>
+    <header>
+        <div class="brand">
+            <!-- Cross Icon -->
+            <i class="fa-solid fa-cross"></i>
+            <div class="title-container">
+                <h1>ኦርቶዶክሳዊ መልስ</h1>
+                <p>መጠየቅ ያደርጋል ሊቅ</p>
             </div>
-          )}
-
-          {/* MAIN CONTENT */}
-          <main className="mt-6 max-w-xl mx-auto space-y-6">
-            {/* LANGUAGE SELECTOR */}
-            <div className="flex flex-wrap gap-2 justify-center">
-              {languages.map((item) => (
-                <button
-                  key={item.code}
-                  onClick={() => setLang(item.code)}
-                  className={`px-4 py-1.5 rounded-full text-xs md:text-sm font-medium transition-all duration-200 border ${
-                    lang === item.code
-                      ? 'bg-[#800020] text-[#F3E5AB] font-bold border-[#D4AF37] shadow-md scale-105'
-                      : 'bg-white text-stone-700 border-stone-300 hover:bg-stone-200'
-                  }`}
-                >
-                  {item.name}
-                </button>
-              ))}
-            </div>
-
-            {/* QUESTION CARD */}
-            <div className="bg-white p-6 rounded-xl shadow-lg border border-stone-200">
-              <blockquote className="italic text-stone-600 mb-4 border-l-4 border-[#800020] pl-3">
-                "{t.quote}"
-              </blockquote>
-
-              <form onSubmit={handleSubmit} className="space-y-4">
-                <label className="block text-sm font-semibold text-stone-700">
-                  {t.askHere}
-                </label>
-                <textarea
-                  value={question}
-                  onChange={(e) => setQuestion(e.target.value)}
-                  placeholder={t.placeholder}
-                  className="w-full p-3 border border-stone-300 rounded-lg focus:ring-2 focus:ring-[#800020] focus:outline-none transition"
-                  rows="4"
-                />
-                <button
-                  type="submit"
-                  className="w-full py-2.5 bg-[#800020] text-white font-semibold rounded-lg hover:bg-[#600018] transition shadow-md flex items-center justify-center gap-2"
-                >
-                  <i data-lucide="send" className="w-4 h-4"></i>
-                  {t.button}
-                </button>
-              </form>
-            </div>
-          </main>
         </div>
-      );
-    }
 
-    const root = ReactDOM.createRoot(document.getElementById('root'));
-    root.render(<App />);
-  </script>
+        <!-- 3-line Menu Dropdown -->
+        <div class="menu-container">
+            <button class="menu-btn" onclick="toggleMenu()">
+                <i class="fa-solid fa-bars"></i>
+            </button>
+            <div class="dropdown-menu" id="menuDropdown">
+                <a href="#about" onclick="openModal('ስለ እኛ')">ስለ እኛ</a>
+                <a href="#feedback" onclick="openModal('አስተያየት ለመስጠት')">አስተያየት ለመስጠት</a>
+                <a href="#share" onclick="openModal('ለማጋራት')">ለማጋራት</a>
+            </div>
+        </div>
+    </header>
 
+    <div class="container">
+        <!-- Horizontal List of Languages -->
+        <div class="languages-wrapper">
+            <button class="lang-btn active">አማርኛ</button>
+            <button class="lang-btn">English</button>
+            <button class="lang-btn">ትግርኛ</button>
+            <button class="lang-btn">Afaan Oromoo</button>
+            <button class="lang-btn">Sidaamu Afoo</button>
+            <button class="lang-btn">ጉራጊኛ</button>
+            <button class="lang-btn">ወላይቲኛ</button>
+            <button class="lang-btn">ሶማሊኛ</button>
+            <button class="lang-btn">العربية</button>
+        </div>
+
+        <!-- Question Input Card -->
+        <div class="search-card">
+            <label class="input-label" for="questionInput">እዚህ ይጠይቁ</label>
+            <textarea id="questionInput" placeholder="የመንፈሳዊ ጥያቄዎን እዚህ ያስገቡ... (ጥያቄውን ጽፈው ሲጨርሱ መልሱ ወዲያውኑ ይመጣል)"></textarea>
+            
+            <div class="loading" id="loadingText">
+                <i class="fa-solid fa-spinner fa-spin"></i> መልስ በመፈለግ ላይ...
+            </div>
+
+            <div class="response-box" id="responseBox">
+                <h4>መልስ፡</h4>
+                <p id="responseText"></p>
+            </div>
+        </div>
+    </div>
+
+    <footer>
+        <i class="fa-solid fa-book-bible"></i> የኢትዮጵያ ኦርቶዶክስ ተዋሕዶ ቤተ ክርስቲያን ትምህርትና መልሶች
+    </footer>
+
+    <script>
+        // Toggle Dropdown Menu
+        function toggleMenu() {
+            document.getElementById("menuDropdown").classList.toggle("show");
+        }
+
+        // Close dropdown when clicking outside
+        window.onclick = function(event) {
+            if (!event.target.matches('.menu-btn') && !event.target.matches('.menu-btn *')) {
+                var dropdowns = document.getElementsByClassName("dropdown-menu");
+                for (var i = 0; i < dropdowns.length; i++) {
+                    var openDropdown = dropdowns[i];
+                    if (openDropdown.classList.contains('show')) {
+                        openDropdown.classList.remove('show');
+                    }
+                }
+            }
+        }
+
+        // Action for Menu Items
+        function openModal(title) {
+            alert(title + " ገጽ በቅርብ ቀን ይከፈታል!");
+        }
+
+        // Auto-search logic (Debounce)
+        let typingTimer;
+        const doneTypingInterval = 1000; // 1 second delay after user stops typing
+        const inputArea = document.getElementById('questionInput');
+        const loadingText = document.getElementById('loadingText');
+        const responseBox = document.getElementById('responseBox');
+        const responseText = document.getElementById('responseText');
+
+        inputArea.addEventListener('keyup', () => {
+            clearTimeout(typingTimer);
+            if (inputArea.value.trim() !== '') {
+                typingTimer = setTimeout(fetchAnswer, doneTypingInterval);
+            } else {
+                responseBox.style.display = 'none';
+                loadingText.style.display = 'none';
+            }
+        });
+
+        inputArea.addEventListener('keydown', () => {
+            clearTimeout(typingTimer);
+        });
+
+        // Simulating Automatic API Answer Fetching & Translation
+        function fetchAnswer() {
+            loadingText.style.display = 'block';
+            responseBox.style.display = 'none';
+
+            setTimeout(() => {
+                loadingText.style.display = 'none';
+                responseBox.style.display = 'block';
+                // Example response placeholder
+                responseText.innerText = "ለጥያቄዎ፡ \"" + inputArea.value + "\" የተሰጠ ኦርቶዶክሳዊ ምላሽ እዚህ ጋር በራሱ ጊዜ ተተርጉሞ ይቀርባል።";
+            }, 1200);
+        }
+    </script>
 </body>
 </html>
