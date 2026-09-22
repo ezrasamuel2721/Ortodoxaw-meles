@@ -1,409 +1,208 @@
-<!DOCTYPE html>
-<html lang="am">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ኦርቶዶክሳዊ መልስ</title>
-    <!-- FontAwesome for Icons -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <style>
-        :root {
-            --primary-color: #8b0000;
-            --secondary-color: #d4af37;
-            --bg-color: #f4f6f8;
-            --card-bg: #ffffff;
-            --text-color: #2c3e50;
-        }
+import React, { useState } from 'react';
+import { Menu, X, BookOpen, Send, Globe } from 'lucide-react';
 
-        body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif, 'Ethiopic';
-            background-color: var(--bg-color);
-            color: var(--text-color);
-            margin: 0;
-            padding: 20px;
-            display: flex;
-            justify-content: center;
-        }
+export default function OrthodoxApp() {
+  const [lang, setLang] = useState('am');
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const [question, setQuestion] = useState('');
 
-        .container {
-            width: 100%;
-            max-width: 800px;
-            background: var(--card-bg);
-            padding: 30px;
-            border-radius: 12px;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
-        }
+  // የቋንቋዎች መዝገብ (Translations)
+  const translations = {
+    am: {
+      title: "ኦርቶዶክሳዊ መልስ",
+      quote: '"መጠየቅ ያደርጋል ሊቅ"',
+      askHere: "እዚህ ይጠይቁ:",
+      placeholder: "የመንፈሳዊ ጥያቄዎችን እዚህ ያስገቡ . . .",
+      button: "መልስ አግኝ",
+      dir: "ltr",
+      menuTitle: "ዋና ማውጫ",
+      menuLinks: ["ስለ እኛ", "የቀደሙ መልሶች", "ሕግጋተ ቤተክርስቲያን", "ግኙን"]
+    },
+    en: {
+      title: "Orthodox Answer",
+      quote: '"Asking makes one learned"',
+      askHere: "Ask Here:",
+      placeholder: "Enter your spiritual questions here . . .",
+      button: "Get Answer",
+      dir: "ltr",
+      menuTitle: "Main Menu",
+      menuLinks: ["About Us", "Previous Answers", "Church Canons", "Contact Us"]
+    },
+    ar: {
+      title: "إجابة أرثوذكسية",
+      quote: '"المطالبة تجعل المرء عالماً"',
+      askHere: "اسأل هنا:",
+      placeholder: "أدخل أسئلتك الروحية هنا . . .",
+      button: "احصل على الإجابة",
+      dir: "rtl",
+      menuTitle: "القائمة الرئيسية",
+      menuLinks: ["معلومات عنا", "الإجابات السابقة", "قوانين الكنيسة", "اتصل بنا"]
+    },
+    om: {
+      title: "Deebii Oortodoksii",
+      quote: '"Gaafachuun beekaa nama taasisa"',
+      askHere: "Asitti Gaafadhaa:",
+      placeholder: "Gaaffii afuuraa keessան asitti galchaa . . .",
+      button: "Deebii Argadhu",
+      dir: "ltr",
+      menuTitle: "Baafata Guddaa",
+      menuLinks: ["Waa'ee Keenna", "Deebiiwwan Darban", "Seera Seera Seera", "Nu Quunnamaa"]
+    }
+  };
 
-        header {
-            text-align: center;
-            border-bottom: 2px solid var(--secondary-color);
-            padding-bottom: 15px;
-            margin-bottom: 25px;
-        }
+  const languages = [
+    { code: 'am', name: 'አማርኛ' },
+    { code: 'en', name: 'English' },
+    { code: 'ar', name: 'العربية' },
+    { code: 'om', name: 'Afaan Oromoo' }
+  ];
 
-        header h1 {
-            color: var(--primary-color);
-            margin: 0 0 5px 0;
-            font-size: 2.2rem;
-        }
+  const t = translations[lang];
 
-        header p.quote {
-            font-style: italic;
-            color: #555;
-            font-size: 1.1rem;
-            margin: 0;
-        }
+  return (
+    <div className="min-h-screen bg-[#FDFBF7] text-gray-900 font-sans" dir={t.dir}>
+      
+      {/* 1. Header (የላይኛው ክፍል) */}
+      <header className="bg-[#800020] text-[#D4AF37] shadow-lg border-b-4 border-[#D4AF37] relative">
+        {/* የኢትዮጵያ ባንዲራ ቀለማት መስመር (አረንጓዴ፣ ቢጫ፣ ቀይ) */}
+        <div className="h-1.5 w-full bg-gradient-to-r from-green-600 via-yellow-400 to-red-600"></div>
 
-        .form-group {
-            margin-bottom: 20px;
-        }
+        <div className="max-w-4xl mx-auto px-4 py-3 flex items-center justify-between">
+          {/* የጎን 3 ሰረዝ ማውጫ አዝራር */}
+          <button 
+            onClick={() => setIsMenuOpen(!isMenuOpen)}
+            className="p-2 rounded-lg hover:bg-[#600018] border border-[#D4AF37]/40 transition text-[#D4AF37]"
+            aria-label="Toggle Menu"
+          >
+            {isMenuOpen ? <X size={26} /> : <Menu size={26} />}
+          </button>
 
-        label {
-            display: block;
-            font-weight: bold;
-            margin-bottom: 8px;
-        }
+          {/* መሃል ላይ የሚገኝ የመስቀል እና የርዕስ ምልክት */}
+          <div className="flex items-center gap-2">
+            <span className="text-2xl text-[#D4AF37]">☦</span>
+            <h1 className="text-xl md:text-2xl font-bold tracking-wide text-[#F3E5AB]">
+              {t.title}
+            </h1>
+          </div>
 
-        select, textarea {
-            width: 100%;
-            padding: 12px;
-            border: 1px solid #ccc;
-            border-radius: 8px;
-            font-size: 1rem;
-            box-sizing: border-box;
-        }
-
-        textarea {
-            height: 120px;
-            resize: vertical;
-        }
-
-        button.btn-submit {
-            width: 100%;
-            background-color: var(--primary-color);
-            color: white;
-            border: none;
-            padding: 14px;
-            font-size: 1.1rem;
-            font-weight: bold;
-            border-radius: 8px;
-            cursor: pointer;
-            transition: background 0.3s;
-        }
-
-        button.btn-submit:hover {
-            background-color: #6a0000;
-        }
-
-        /* Result Section */
-        .result-card {
-            display: none;
-            margin-top: 30px;
-            border-top: 1px solid #ddd;
-            padding-top: 20px;
-        }
-
-        .result-title {
-            color: var(--primary-color);
-            font-size: 1.5rem;
-            margin-bottom: 10px;
-        }
-
-        .result-body {
-            line-height: 1.7;
-            font-size: 1.05rem;
-            margin-bottom: 15px;
-            white-space: pre-line;
-        }
-
-        .references {
-            background-color: #fcf8e3;
-            border-left: 4px solid var(--secondary-color);
-            padding: 10px 15px;
-            margin-bottom: 15px;
-            border-radius: 4px;
-        }
-
-        .references h4 {
-            margin: 0 0 5px 0;
-            color: #8a6d3b;
-        }
-
-        .references ul {
-            margin: 0;
-            padding-left: 20px;
-        }
-
-        .takeaway {
-            font-weight: bold;
-            background: #e8f4f8;
-            padding: 10px 15px;
-            border-radius: 6px;
-            margin-bottom: 20px;
-        }
-
-        /* Toolbar Actions */
-        .action-toolbar {
-            display: flex;
-            gap: 10px;
-            flex-wrap: wrap;
-            border-top: 1px dashed #ccc;
-            padding-top: 15px;
-        }
-
-        .action-btn {
-            background: #f0f0f0;
-            border: 1px solid #ddd;
-            padding: 8px 15px;
-            border-radius: 6px;
-            cursor: pointer;
-            font-size: 0.95rem;
-            display: flex;
-            align-items: center;
-            gap: 6px;
-            transition: all 0.2s;
-        }
-
-        .action-btn:hover {
-            background: #e0e0e0;
-        }
-
-        .action-btn.liked {
-            color: #e74c3c;
-            border-color: #e74c3c;
-        }
-
-        .loading {
-            display: none;
-            text-align: center;
-            margin: 20px 0;
-            font-weight: bold;
-            color: var(--primary-color);
-        }
-
-        .toast {
-            position: fixed;
-            bottom: 20px;
-            right: 20px;
-            background: #333;
-            color: #fff;
-            padding: 10px 20px;
-            border-radius: 5px;
-            display: none;
-            z-index: 1000;
-        }
-    </style>
-</head>
-<body>
-
-<div class="container">
-    <header>
-        <h1>ኦርቶዶክሳዊ መልስ</h1>
-        <p class="quote">“መጠየቅ ያደርጋል ሊቅ”</p>
-    </header>
-
-    <!-- Language Selector -->
-    <div class="form-group">
-        <label for="languageSelect"><i class="fa-solid fa-globe"></i> ቋንቋ ይምረጡ / Select Language:</label>
-        <select id="languageSelect">
-            <option value="Amharic">አማርኛ (Amharic)</option>
-            <option value="English">English</option>
-            <option value="Tigrinya">ትግርኛ (Tigrinya)</option>
-            <option value="Afaan Oromoo">Afaan Oromoo</option>
-            <option value="Sidaamu Afoo">Sidaamu Afoo</option>
-            <option value="Kafa">ካፊኛ (Kafa)</option>
-            <option value="Wolaytta">ወላይትኛ (Wolaytta)</option>
-            <option value="Arabic">العربية (Arabic)</option>
-        </select>
-    </div>
-
-    <!-- Question Input -->
-    <div class="form-group">
-        <label for="questionInput"><i class="fa-solid fa-circle-question"></i> እዚህ ይጠይቁ፡</label>
-        <textarea id="questionInput" placeholder="የመንፈሳዊ ጥያቄዎትን እዚህ ያስገቡ..."></textarea>
-    </div>
-
-    <button class="btn-submit" onclick="submitQuestion()">
-        <i class="fa-solid fa-paper-plane"></i> መልስ አግኝ
-    </button>
-
-    <!-- Loading Indicator -->
-    <div class="loading" id="loadingIndicator">
-        <i class="fa-solid fa-spinner fa-spin"></i> መልሱ እየተዘጋጀ ነው... እባክዎ ይጠብቁ
-    </div>
-
-    <!-- Answer Display Card -->
-    <div class="result-card" id="resultCard">
-        <h2 class="result-title" id="resTitle"></h2>
-        <div class="result-body" id="resAnswer"></div>
-
-        <div class="references" id="resReferencesContainer">
-            <h4><i class="fa-solid fa-book-bible"></i> የመጽሐፍ ቅዱስ እና የሊቃውንት ጥቅሶች፡</h4>
-            <ul id="resReferences"></ul>
+          <div className="w-8"></div> {/* ለባላንስ መቀመጫ */}
         </div>
 
-        <div class="takeaway" id="resTakeawayContainer">
-            <strong><i class="fa-solid fa-lightbulb"></i> ዋና ማጠቃለያ፡</strong> <span id="resTakeaway"></span>
+        {/* 2. ቋንቋዎችን ከላይ ወደ ጎን ዘርዝሮ ማሳያ (Horizontal Language Selector) */}
+        <div className="bg-[#500014] border-t border-[#D4AF37]/30 py-2 px-4">
+          <div className="max-w-4xl mx-auto flex items-center justify-center gap-2 md:gap-4 overflow-x-auto">
+            <Globe size={18} className="text-[#D4AF37] shrink-0" />
+            <div className="flex gap-2">
+              {languages.map((item) => (
+                <button
+                  key={item.code}
+                  onClick={() => setLang(item.code)}
+                  className={`px-3 py-1 rounded-full text-xs md:text-sm font-medium transition-all duration-200 border ${
+                    lang === item.code
+                      ? 'bg-[#D4AF37] text-[#800020] font-bold border-[#F3E5AB] shadow-md scale-105'
+                      : 'bg-transparent text-[#F3E5AB] border-[#D4AF37]/40 hover:bg-[#800020]'
+                  }`}
+                >
+                  {item.name}
+                </button>
+              ))}
+            </div>
+          </div>
         </div>
+      </header>
 
-        <!-- Action Tools (Like, Copy, Share, Audio, Save) -->
-        <div class="action-toolbar">
-            <button class="action-btn" id="likeBtn" onclick="toggleLike()">
-                <i class="fa-regular fa-thumbs-up"></i> <span id="likeCount">ወደድኩት</span>
-            </button>
-            <button class="action-btn" onclick="copyAnswer()">
-                <i class="fa-regular fa-copy"></i> ኮፒ (Copy)
-            </button>
-            <button class="action-btn" onclick="shareAnswer()">
-                <i class="fa-solid fa-share-nodes"></i> ሼር (Share)
-            </button>
-            <button class="action-btn" onclick="speakText()">
-                <i class="fa-solid fa-volume-high"></i> አነብልኝ (Audio)
-            </button>
+      {/* 3. የጎን ማውጫ (Slide-out Sidebar Menu) */}
+      {isMenuOpen && (
+        <div className="fixed inset-0 z-50 flex">
+          {/* ከጀርባ የሚሸፍነው ጨለምለም ያለ ክፍል */}
+          <div 
+            className="fixed inset-0 bg-black/50 backdrop-blur-sm"
+            onClick={() => setIsMenuOpen(false)}
+          ></div>
+
+          {/* የማውጫው ሳጥን */}
+          <div className="relative bg-[#FFFDF9] w-72 max-w-full h-full shadow-2xl border-r-4 border-[#D4AF37] flex flex-col z-10">
+            <div className="bg-[#800020] text-[#D4AF37] p-4 flex items-center justify-between border-b-2 border-[#D4AF37]">
+              <h2 className="font-bold text-lg flex items-center gap-2">
+                <span>☦</span> {t.menuTitle}
+              </h2>
+              <button onClick={() => setIsMenuOpen(false)} className="text-[#D4AF37] hover:text-white">
+                <X size={24} />
+              </button>
+            </div>
+
+            <div className="p-4 flex-1 overflow-y-auto">
+              <ul className="space-y-3">
+                {t.menuLinks.map((link, idx) => (
+                  <li key={idx}>
+                    <a 
+                      href={`#link-${idx}`} 
+                      className="block p-3 rounded-md border border-amber-200/60 bg-amber-50/50 hover:bg-[#800020] hover:text-[#D4AF37] font-medium transition text-gray-800"
+                    >
+                      {link}
+                    </a>
+                  </li>
+                ))}
+              </ul>
+            </div>
+
+            {/* የታችኛው ያጌጠ ክፍል */}
+            <div className="p-4 border-t border-amber-200 bg-amber-50 text-center text-xs text-amber-900">
+              <p>የኢትዮጵያ ኦርቶዶክስ ተዋሕዶ ቤተክርስቲያን</p>
+            </div>
+          </div>
         </div>
+      )}
+
+      {/* 4. ዋናው የጥያቄ መዋቅር (Main Content Container) */}
+      <main className="max-w-2xl mx-auto p-4 md:p-6 mt-6">
+        <div className="bg-white rounded-xl shadow-xl border-2 border-[#D4AF37]/60 overflow-hidden relative">
+          
+          {/* ያጌጠ የላይኛው ጠርዝ የመስቀል እና መጽሐፍ ዲዛይን */}
+          <div className="bg-gradient-to-r from-[#800020] via-[#A00028] to-[#800020] text-[#D4AF37] p-6 text-center relative">
+            <div className="flex justify-center items-center gap-3 mb-2">
+              <span className="text-xl">✝</span>
+              <BookOpen size={32} className="text-[#D4AF37]" />
+              <span className="text-xl">✝</span>
+            </div>
+            <h2 className="text-2xl md:text-3xl font-bold tracking-wide text-[#F3E5AB]">
+              {t.title}
+            </h2>
+            <p className="text-amber-200/90 text-sm md:text-base italic mt-1 font-serif">
+              {t.quote}
+            </p>
+          </div>
+
+          {/* ጥያቄ ማስገቢያ ፎርም */}
+          <div className="p-6 space-y-5 bg-[#FFFCF7]">
+            <div>
+              <label className="block text-gray-800 font-semibold mb-2 text-sm md:text-base flex items-center gap-1">
+                <span className="text-[#800020]">❓</span> {t.askHere}
+              </label>
+              <textarea
+                value={question}
+                onChange={(e) => setQuestion(e.target.value)}
+                placeholder={t.placeholder}
+                rows={5}
+                className="w-full p-4 rounded-lg border-2 border-amber-200 focus:border-[#D4AF37] focus:ring-2 focus:ring-[#D4AF37]/30 outline-none transition bg-white text-gray-800 shadow-inner resize-none"
+              />
+            </div>
+
+            {/* መላኪያ አዝራር */}
+            <button
+              type="button"
+              className="w-full bg-[#800020] hover:bg-[#600018] text-[#D4AF37] hover:text-[#FFF8DC] font-bold py-3.5 px-6 rounded-lg border-2 border-[#D4AF37] shadow-lg transition-all duration-200 flex items-center justify-center gap-2 text-base md:text-lg cursor-pointer"
+            >
+              <Send size={18} />
+              <span>{t.button}</span>
+            </button>
+          </div>
+
+          {/* የታችኛው የቀለም ዲዛይን መስመር */}
+          <div className="h-2 w-full bg-gradient-to-r from-green-600 via-yellow-400 to-red-600"></div>
+        </div>
+      </main>
+
     </div>
-</div>
-
-<div class="toast" id="toast">መረጃው ተገልብጧል!</div>
-
-<script>
-    let isLiked = false;
-
-    async function submitQuestion() {
-        const question = document.getElementById('questionInput').value.trim();
-        const language = document.getElementById('languageSelect').value;
-
-        if (!question) {
-            alert('እባክዎን ጥያቄዎን ያስገቡ!');
-            return;
-        }
-
-        // Show Loading, Hide Results
-        document.getElementById('loadingIndicator').style.display = 'block';
-        document.getElementById('resultCard').style.display = 'none';
-
-        try {
-            /* 
-               የባክኤንድ API አድራሻህን እዚህ ጋር ታገናኛለህ። 
-               ለአሁኑ በሙከራ ደረጃ (Mock Integration) መልሱን ያዘጋጃል፡
-            */
-            const response = await fetchAnswerFromBackend(question, language);
-
-            // Render Output
-            document.getElementById('resTitle').innerText = response.data.title;
-            document.getElementById('resAnswer').innerText = response.data.detailedAnswer;
-
-            // Render References
-            const refList = document.getElementById('resReferences');
-            refList.innerHTML = '';
-            response.data.scriptureReferences.forEach(ref => {
-                const li = document.createElement('li');
-                li.innerText = ref;
-                refList.appendChild(li);
-            });
-
-            // Render Takeaway
-            document.getElementById('resTakeaway').innerText = response.data.keyTakeaway;
-
-            // Show Result Section
-            document.getElementById('loadingIndicator').style.display = 'none';
-            document.getElementById('resultCard').style.display = 'block';
-
-        } catch (error) {
-            document.getElementById('loadingIndicator').style.display = 'none';
-            alert('ምላሽ በማዘጋጀት ላይ ስህተት አጋጥሟል፡ ' + error.message);
-        }
-    }
-
-    // የባክኤንድ API ጥሪ የሚያደርግ ፈንክሽን (Backend Simulator)
-    async function fetchAnswerFromBackend(question, language) {
-        // እውነተኛውን ባክኤንድ አድራሻ ስትሰራ በ fetch('http://your-backend-api/api/spiritual-qa', ...) ተካው
-        return new Promise((resolve) => {
-            setTimeout(() => {
-                resolve({
-                    success: true,
-                    data: {
-                        title: `ስለ "${question}" የተሰጠ መንፈሳዊ ምላሽ (${language})`,
-                        detailedAnswer: `በስመ አብ ወወልድ ወመንፈስ ቅዱስ አሐዱ አምላክ አሜን።\n\nለቀረበው ጥያቄ የተሰጠው የተሟላ ትርጓሜ እና መንፈሳዊ ማብራሪያ እንደተመረጠው ቋንቋ (${language}) ተዘጋጅቶ የቀረበ ነው። ኦርቶዶክሳዊት ተዋሕዶ ቤተ ክርስቲያን እንደምታስተምረው ሃይማኖታዊ ሥርዓትንና የነገረ-መለኮት መሠረትን በመከተል ለጠየቁት ጥያቄ የተደራጀ ምላሽ ተሰጥቷል።`,
-                        scriptureReferences: [
-                            "ወንጌል ዘማቴዎስ ፯፡፯ (ማቴዎስ 7:7)",
-                            "መጽሐፈ ምሳሌ ፪፡፮ (ምሳሌ 2:6)"
-                        ],
-                        keyTakeaway: "መጠየቅ እውቀትን ይጨምራል፤ መንፈሳዊ ጥያቄዎችን በመጠየቅ ሃይማኖታዊ እውቀትን ማሳደግ ይገባል።"
-                    }
-                });
-            }, 1500); // 1.5 ሰከንድ ማስመሰያ
-        });
-    }
-
-    // 1. Like Functionality
-    function toggleLike() {
-        const likeBtn = document.getElementById('likeBtn');
-        const likeText = document.getElementById('likeCount');
-        
-        isLiked = !isLiked;
-        if (isLiked) {
-            likeBtn.classList.add('liked');
-            likeText.innerText = 'ተወዷል';
-        } else {
-            likeBtn.classList.remove('liked');
-            likeText.innerText = 'ወደድኩት';
-        }
-    }
-
-    // 2. Copy Functionality
-    function copyAnswer() {
-        const title = document.getElementById('resTitle').innerText;
-        const answer = document.getElementById('resAnswer').innerText;
-        const takeaway = document.getElementById('resTakeaway').innerText;
-        
-        const fullText = `${title}\n\n${answer}\n\nማጠቃለያ: ${takeaway}\n\nምንጭ: ኦርቶዶክሳዊ መልስ`;
-        
-        navigator.clipboard.writeText(fullText).then(() => {
-            showToast("መልሱ ሙሉ በሙሉ ኮፒ ሆኗል!");
-        });
-    }
-
-    // 3. Share Functionality (Web Share API)
-    function shareAnswer() {
-        const title = document.getElementById('resTitle').innerText;
-        const answer = document.getElementById('resAnswer').innerText;
-
-        if (navigator.share) {
-            navigator.share({
-                title: 'ኦርቶዶክሳዊ መልስ',
-                text: `${title}\n\n${answer.substring(0, 150)}...`,
-                url: window.location.href,
-            }).catch(() => {});
-        } else {
-            copyAnswer();
-            showToast("የሼር አማራጭ ስላልተደገፈ መልሱ ኮፒ ሆኗል!");
-        }
-    }
-
-    // 4. Text-to-Speech (የድምጽ ንባብ)
-    function speakText() {
-        const answer = document.getElementById('resAnswer').innerText;
-        if ('speechSynthesis' in window) {
-            window.speechSynthesis.cancel(); // ያለፈውን ንባብ ማቆም
-            const utterance = new SpeechSynthesisUtterance(answer);
-            utterance.rate = 0.9; // የንባብ ፍጥነት
-            window.speechSynthesis.speak(utterance);
-        } else {
-            alert("የእርስዎ ብራውዘር የድምጽ ንባብን አያደግፍም።");
-        }
-    }
-
-    // Notification Helper
-    function showToast(message) {
-        const toast = document.getElementById('toast');
-        toast.innerText = message;
-        toast.style.display = 'block';
-        setTimeout(() => {
-            toast.style.display = 'none';
-        }, 2500);
-    }
-</script>
-
-</body>
-</html>
+  );
+}
