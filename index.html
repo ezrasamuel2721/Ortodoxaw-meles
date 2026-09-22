@@ -655,6 +655,39 @@ question.addEventListener(
 updateLanguage();
 
 </script>
+<script>
+const SUPABASE_URL = "https://geznekrpdubpgsegseer.supabase.co";
+const SUPABASE_KEY = "sb_publishable_v6cciBIeO_Gr3q3ZHto2vQ_wQp9vl6e";
 
+async function saveQuestion(question) {
+  try {
+    const response = await fetch(
+      SUPABASE_URL + "/rest/v1/questions",
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "apikey": SUPABASE_KEY,
+          "Authorization": "Bearer " + SUPABASE_KEY,
+          "Prefer": "return=minimal"
+        },
+        body: JSON.stringify({
+          question: question
+        })
+      }
+    );
+
+    if (!response.ok) {
+      console.error("Supabase error:", await response.text());
+      return false;
+    }
+
+    return true;
+  } catch (error) {
+    console.error("Connection error:", error);
+    return false;
+  }
+}
+</script>
 </body>
 </html>
