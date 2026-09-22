@@ -2,27 +2,28 @@ import React, { useState } from 'react';
 import { Menu, X, BookOpen, Send, Globe } from 'lucide-react';
 
 export default function OrthodoxApp() {
+  // 1. React States
   const [lang, setLang] = useState('am');
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [question, setQuestion] = useState('');
 
-  // የቋንቋዎች መዝገብ (Translations)
+  // 2. Translations Data
   const translations = {
     am: {
       title: "ኦርቶዶክሳዊ መልስ",
-      quote: '"መጠየቅ ያደርጋል ሊቅ"',
+      quote: '"መጠየቅ ያውቃል ያደርጋል"',
       askHere: "እዚህ ይጠይቁ:",
-      placeholder: "የመንፈሳዊ ጥያቄዎችን እዚህ ያስገቡ . . .",
+      placeholder: "የመንፈሳዊ ጥያቄዎን እዚህ ያስገቡ...",
       button: "መልስ አግኝ",
       dir: "ltr",
       menuTitle: "ዋና ማውጫ",
-      menuLinks: ["ስለ እኛ", "የቀደሙ መልሶች", "ሕግጋተ ቤተክርስቲያን", "ግኙን"]
+      menuLinks: ["ስለ እኛ", "የቀደሙ መልሶች", "ሕገ ቤተክርስቲያን", "ግንኙነት"]
     },
     en: {
       title: "Orthodox Answer",
       quote: '"Asking makes one learned"',
       askHere: "Ask Here:",
-      placeholder: "Enter your spiritual questions here . . .",
+      placeholder: "Enter your spiritual questions here...",
       button: "Get Answer",
       dir: "ltr",
       menuTitle: "Main Menu",
@@ -31,8 +32,8 @@ export default function OrthodoxApp() {
     ar: {
       title: "إجابة أرثوذكسية",
       quote: '"المطالبة تجعل المرء عالماً"',
-      askHere: "اسأل هنا:",
-      placeholder: "أدخل أسئلتك الروحية هنا . . .",
+      askHere: "أسأل هنا:",
+      placeholder: "أدخل أسئلتك الروحية هنا...",
       button: "احصل على الإجابة",
       dir: "rtl",
       menuTitle: "القائمة الرئيسية",
@@ -42,7 +43,7 @@ export default function OrthodoxApp() {
       title: "Deebii Oortodoksii",
       quote: '"Gaafachuun beekaa nama taasisa"',
       askHere: "Asitti Gaafadhaa:",
-      placeholder: "Gaaffii afuuraa keessան asitti galchaa . . .",
+      placeholder: "Gaaffii afuuraa keessan asitti galchaa...",
       button: "Deebii Argadhu",
       dir: "ltr",
       menuTitle: "Baafata Guddaa",
@@ -50,6 +51,7 @@ export default function OrthodoxApp() {
     }
   };
 
+  // Supported Languages List
   const languages = [
     { code: 'am', name: 'አማርኛ' },
     { code: 'en', name: 'English' },
@@ -57,152 +59,124 @@ export default function OrthodoxApp() {
     { code: 'om', name: 'Afaan Oromoo' }
   ];
 
+  // Current translation object based on selected language
   const t = translations[lang];
 
-  return (
-    <div className="min-h-screen bg-[#FDFBF7] text-gray-900 font-sans" dir={t.dir}>
-      
-      {/* 1. Header (የላይኛው ክፍል) */}
-      <header className="bg-[#800020] text-[#D4AF37] shadow-lg border-b-4 border-[#D4AF37] relative">
-        {/* የኢትዮጵያ ባንዲራ ቀለማት መስመር (አረንጓዴ፣ ቢጫ፣ ቀይ) */}
-        <div className="h-1.5 w-full bg-gradient-to-r from-green-600 via-yellow-400 to-red-600"></div>
+  // Submit Handler
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    if (!question.trim()) return;
+    alert(`ጥያቄዎ ተልኳል: ${question}`);
+    setQuestion('');
+  };
 
-        <div className="max-w-4xl mx-auto px-4 py-3 flex items-center justify-between">
-          {/* የጎን 3 ሰረዝ ማውጫ አዝራር */}
-          <button 
+  return (
+    <div className="min-h-screen bg-stone-100 text-stone-800 flex flex-col font-sans" dir={t.dir}>
+      {/* ==================== 1. HEADER ==================== */}
+      <header className="sticky top-0 z-40 bg-stone-900 text-amber-400 border-b-4 border-[#D4AF37] px-4 py-3 shadow-lg">
+        <div className="max-w-4xl mx-auto flex items-center justify-between">
+          
+          {/* Menu Toggle Button */}
+          <button
             onClick={() => setIsMenuOpen(!isMenuOpen)}
-            className="p-2 rounded-lg hover:bg-[#600018] border border-[#D4AF37]/40 transition text-[#D4AF37]"
+            className="p-2 rounded-lg hover:bg-[#800020] border border-[#D4AF37]/40 transition text-[#D4AF37]"
             aria-label="Toggle Menu"
           >
-            {isMenuOpen ? <X size={26} /> : <Menu size={26} />}
+            {isMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
           </button>
 
-          {/* መሃል ላይ የሚገኝ የመስቀል እና የርዕስ ምልክት */}
-          <div className="flex items-center gap-2">
-            <span className="text-2xl text-[#D4AF37]">☦</span>
-            <h1 className="text-xl md:text-2xl font-bold tracking-wide text-[#F3E5AB]">
-              {t.title}
-            </h1>
+          {/* Title */}
+          <div className="text-center flex items-center gap-2">
+            <BookOpen className="w-6 h-6 text-[#D4AF37]" />
+            <h1 className="text-xl md:text-2xl font-bold tracking-wide">{t.title}</h1>
           </div>
 
-          <div className="w-8"></div> {/* ለባላንስ መቀመጫ */}
-        </div>
-
-        {/* 2. ቋንቋዎችን ከላይ ወደ ጎን ዘርዝሮ ማሳያ (Horizontal Language Selector) */}
-        <div className="bg-[#500014] border-t border-[#D4AF37]/30 py-2 px-4">
-          <div className="max-w-4xl mx-auto flex items-center justify-center gap-2 md:gap-4 overflow-x-auto">
-            <Globe size={18} className="text-[#D4AF37] shrink-0" />
-            <div className="flex gap-2">
-              {languages.map((item) => (
-                <button
-                  key={item.code}
-                  onClick={() => setLang(item.code)}
-                  className={`px-3 py-1 rounded-full text-xs md:text-sm font-medium transition-all duration-200 border ${
-                    lang === item.code
-                      ? 'bg-[#D4AF37] text-[#800020] font-bold border-[#F3E5AB] shadow-md scale-105'
-                      : 'bg-transparent text-[#F3E5AB] border-[#D4AF37]/40 hover:bg-[#800020]'
-                  }`}
-                >
-                  {item.name}
-                </button>
-              ))}
-            </div>
-          </div>
+          <div className="w-10"></div>
         </div>
       </header>
 
-      {/* 3. የጎን ማውጫ (Slide-out Sidebar Menu) */}
+      {/* ==================== 2. MAIN CONTENT ==================== */}
+      <main className="flex-1 max-w-4xl w-full mx-auto p-4 md:p-6">
+        
+        {/* Horizontal Language Selector */}
+        <div className="flex flex-wrap justify-center gap-2 mb-8">
+          {languages.map((item) => (
+            <button
+              key={item.code}
+              onClick={() => setLang(item.code)}
+              className={`px-4 py-1.5 rounded-full text-xs md:text-sm font-medium transition-all duration-200 border ${
+                lang === item.code
+                  ? 'bg-[#800020] text-[#F3E5AB] font-bold border-[#D4AF37] shadow-md scale-105'
+                  : 'bg-white text-stone-700 border-stone-300 hover:bg-stone-200'
+              }`}
+            >
+              {item.name}
+            </button>
+          ))}
+        </div>
+
+        {/* Question Form Card */}
+        <div className="bg-white p-6 md:p-8 rounded-2xl shadow-xl border border-stone-200">
+          <p className="italic text-stone-600 mb-6 text-center text-lg font-serif">
+            {t.quote}
+          </p>
+          
+          <form onSubmit={handleSubmit}>
+            <label className="block text-stone-800 font-semibold mb-2">
+              {t.askHere}
+            </label>
+            <textarea
+              value={question}
+              onChange={(e) => setQuestion(e.target.value)}
+              placeholder={t.placeholder}
+              rows="5"
+              className="w-full p-4 border border-stone-300 rounded-xl focus:ring-2 focus:ring-[#D4AF37] focus:border-transparent outline-none transition mb-4 text-stone-800 bg-stone-50"
+            />
+            <button
+              type="submit"
+              className="w-full bg-[#800020] hover:bg-[#600018] text-amber-100 py-3.5 px-6 rounded-xl font-bold transition flex items-center justify-center gap-2 shadow-lg"
+            >
+              <Send className="w-5 h-5" />
+              {t.button}
+            </button>
+          </form>
+        </div>
+      </main>
+
+      {/* ==================== 3. SIDEBAR MENU ==================== */}
       {isMenuOpen && (
-        <div className="fixed inset-0 z-50 flex">
-          {/* ከጀርባ የሚሸፍነው ጨለምለም ያለ ክፍል */}
-          <div 
-            className="fixed inset-0 bg-black/50 backdrop-blur-sm"
-            onClick={() => setIsMenuOpen(false)}
-          ></div>
-
-          {/* የማውጫው ሳጥን */}
-          <div className="relative bg-[#FFFDF9] w-72 max-w-full h-full shadow-2xl border-r-4 border-[#D4AF37] flex flex-col z-10">
-            <div className="bg-[#800020] text-[#D4AF37] p-4 flex items-center justify-between border-b-2 border-[#D4AF37]">
-              <h2 className="font-bold text-lg flex items-center gap-2">
-                <span>☦</span> {t.menuTitle}
-              </h2>
-              <button onClick={() => setIsMenuOpen(false)} className="text-[#D4AF37] hover:text-white">
-                <X size={24} />
-              </button>
-            </div>
-
-            <div className="p-4 flex-1 overflow-y-auto">
-              <ul className="space-y-3">
+        <div className="fixed inset-0 bg-black/60 z-50 flex">
+          <div className="w-72 bg-stone-900 text-amber-100 p-6 h-full border-r-2 border-[#D4AF37] shadow-2xl flex flex-col justify-between">
+            <div>
+              <div className="flex justify-between items-center mb-8 border-b border-stone-800 pb-4">
+                <h2 className="text-xl font-bold text-[#D4AF37]">{t.menuTitle}</h2>
+                <button 
+                  onClick={() => setIsMenuOpen(false)} 
+                  className="text-[#D4AF37] hover:text-white transition"
+                >
+                  <X className="w-6 h-6" />
+                </button>
+              </div>
+              <ul className="space-y-4">
                 {t.menuLinks.map((link, idx) => (
-                  <li key={idx}>
-                    <a 
-                      href={`#link-${idx}`} 
-                      className="block p-3 rounded-md border border-amber-200/60 bg-amber-50/50 hover:bg-[#800020] hover:text-[#D4AF37] font-medium transition text-gray-800"
-                    >
-                      {link}
-                    </a>
+                  <li 
+                    key={idx} 
+                    className="border-b border-stone-800/60 pb-3 hover:text-[#D4AF37] cursor-pointer transition font-medium"
+                    onClick={() => setIsMenuOpen(false)}
+                  >
+                    {link}
                   </li>
                 ))}
               </ul>
             </div>
-
-            {/* የታችኛው ያጌጠ ክፍል */}
-            <div className="p-4 border-t border-amber-200 bg-amber-50 text-center text-xs text-amber-900">
-              <p>የኢትዮጵያ ኦርቶዶክስ ተዋሕዶ ቤተክርስቲያን</p>
+            <div className="text-xs text-stone-500 text-center">
+              © Orthodox Answer App
             </div>
           </div>
+          {/* Overlay background click to close */}
+          <div className="flex-1" onClick={() => setIsMenuOpen(false)}></div>
         </div>
       )}
-
-      {/* 4. ዋናው የጥያቄ መዋቅር (Main Content Container) */}
-      <main className="max-w-2xl mx-auto p-4 md:p-6 mt-6">
-        <div className="bg-white rounded-xl shadow-xl border-2 border-[#D4AF37]/60 overflow-hidden relative">
-          
-          {/* ያጌጠ የላይኛው ጠርዝ የመስቀል እና መጽሐፍ ዲዛይን */}
-          <div className="bg-gradient-to-r from-[#800020] via-[#A00028] to-[#800020] text-[#D4AF37] p-6 text-center relative">
-            <div className="flex justify-center items-center gap-3 mb-2">
-              <span className="text-xl">✝</span>
-              <BookOpen size={32} className="text-[#D4AF37]" />
-              <span className="text-xl">✝</span>
-            </div>
-            <h2 className="text-2xl md:text-3xl font-bold tracking-wide text-[#F3E5AB]">
-              {t.title}
-            </h2>
-            <p className="text-amber-200/90 text-sm md:text-base italic mt-1 font-serif">
-              {t.quote}
-            </p>
-          </div>
-
-          {/* ጥያቄ ማስገቢያ ፎርም */}
-          <div className="p-6 space-y-5 bg-[#FFFCF7]">
-            <div>
-              <label className="block text-gray-800 font-semibold mb-2 text-sm md:text-base flex items-center gap-1">
-                <span className="text-[#800020]">❓</span> {t.askHere}
-              </label>
-              <textarea
-                value={question}
-                onChange={(e) => setQuestion(e.target.value)}
-                placeholder={t.placeholder}
-                rows={5}
-                className="w-full p-4 rounded-lg border-2 border-amber-200 focus:border-[#D4AF37] focus:ring-2 focus:ring-[#D4AF37]/30 outline-none transition bg-white text-gray-800 shadow-inner resize-none"
-              />
-            </div>
-
-            {/* መላኪያ አዝራር */}
-            <button
-              type="button"
-              className="w-full bg-[#800020] hover:bg-[#600018] text-[#D4AF37] hover:text-[#FFF8DC] font-bold py-3.5 px-6 rounded-lg border-2 border-[#D4AF37] shadow-lg transition-all duration-200 flex items-center justify-center gap-2 text-base md:text-lg cursor-pointer"
-            >
-              <Send size={18} />
-              <span>{t.button}</span>
-            </button>
-          </div>
-
-          {/* የታችኛው የቀለም ዲዛይን መስመር */}
-          <div className="h-2 w-full bg-gradient-to-r from-green-600 via-yellow-400 to-red-600"></div>
-        </div>
-      </main>
-
     </div>
   );
 }
