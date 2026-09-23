@@ -15,13 +15,12 @@
             --bg-light: #FDFBF7;
             --text-dark: #2C2C2C;
             --white: #FFFFFF;
-            --green: #2e7d32; /* Halluu Magariisaa */
+            --green: #2e7d32;
             --card-bg: #FFFFFF;
             --input-border: #DDD;
             --answer-bg: #F4F6F9;
         }
 
-        /* Dark Theme Variables */
         body.dark-mode {
             --bg-light: #121212;
             --text-dark: #E0E0E0;
@@ -47,11 +46,10 @@
             transition: background-color 0.3s, color 0.3s;
         }
 
-        /* Header & Navigation */
         header {
             background: linear-gradient(135deg, var(--deep-red), #002366);
             color: var(--gold);
-            padding: 1rem 2rem;
+            padding: 0.8rem 2rem;
             box-shadow: 0 4px 15px rgba(0,0,0,0.3);
             border-bottom: 4px solid var(--gold);
             position: relative;
@@ -73,10 +71,17 @@
             text-shadow: 1px 1px 3px rgba(0,0,0,0.8);
             display: flex;
             align-items: center;
-            gap: 10px;
+            gap: 12px;
         }
 
-        /* Menu Button & Sidebar */
+        .brand-logo {
+            width: 45px;
+            height: 45px;
+            border-radius: 50%;
+            border: 2px solid var(--gold);
+            object-fit: cover;
+        }
+
         .menu-btn {
             background: none;
             border: none;
@@ -160,7 +165,6 @@
             display: block;
         }
 
-        /* Language Selector Bar */
         .lang-container {
             background-color: rgba(0, 0, 0, 0.05);
             padding: 0.6rem;
@@ -171,7 +175,6 @@
             border-bottom: 1px solid rgba(212, 175, 55, 0.3);
         }
 
-        /* Fooyya'iinsa Halluu Afaanotaa (Magariisa) */
         .lang-btn {
             background-color: transparent;
             border: 1.5px solid var(--green);
@@ -190,7 +193,6 @@
             box-shadow: 0 2px 5px rgba(0,0,0,0.2);
         }
 
-        /* Hero / Main Title Banner */
         .hero {
             text-align: center;
             padding: 2.5rem 1rem;
@@ -214,7 +216,6 @@
             font-weight: 600;
         }
 
-        /* Main Content & Form */
         main {
             flex: 1;
             max-width: 800px;
@@ -259,7 +260,6 @@
             border-color: var(--gold);
         }
 
-        /* Answer Display Box */
         .answer-box {
             margin-top: 1.5rem;
             padding: 1.5rem;
@@ -291,7 +291,6 @@
             font-size: 1.05rem;
         }
 
-        /* Modals for Sidebar Menu Items */
         .modal {
             display: none;
             position: fixed;
@@ -325,7 +324,16 @@
             color: var(--deep-red);
         }
 
-        /* Footer */
+        .contact-link {
+            color: var(--royal-blue);
+            text-decoration: none;
+            font-weight: bold;
+        }
+        
+        .contact-link:hover {
+            text-decoration: underline;
+        }
+
         footer {
             background-color: #111;
             color: var(--white);
@@ -350,7 +358,6 @@
             to { opacity: 1; transform: translateY(0); }
         }
 
-        /* RTL Support for Arabic */
         .rtl {
             direction: rtl;
             text-align: right;
@@ -363,14 +370,14 @@
     <header>
         <div class="header-container">
             <div class="main-brand">
-                <i class="fa-solid fa-cross"></i>
+                <img src="logo.png" alt="Logo" class="brand-logo">
                 <span id="header-title">ኦርቶዶክሳዊ መልስ</span>
             </div>
             <button class="menu-btn" id="menu-open"><i class="fa-solid fa-bars-staggered"></i></button>
         </div>
     </header>
 
-    <!-- Language Navigation (8 Languages) -->
+    <!-- Language Navigation -->
     <div class="lang-container">
         <button class="lang-btn active" onclick="changeLang('am', this)">አማርኛ</button>
         <button class="lang-btn" onclick="changeLang('en', this)">English</button>
@@ -378,8 +385,8 @@
         <button class="lang-btn" onclick="changeLang('om', this)">Afaan Oromoo</button>
         <button class="lang-btn" onclick="changeLang('sid', this)">Sidaamu Afoo</button>
         <button class="lang-btn" onclick="changeLang('gur', this)">ጉራጊኛ</button>
-        <button class="lang-btn" onclick="changeLang('wal', this)">Wolayta</button>
-        <button class="lang-btn" onclick="changeLang('kaf', this)">Kafa</button>
+        <button class="lang-btn" onclick="changeLang('wal', this)">Wolaytta</button>
+        <button class="lang-btn" onclick="changeLang('kaf', this)">Kafinoono</button>
         <button class="lang-btn" onclick="changeLang('ar', this)">العربية</button>
     </div>
 
@@ -526,34 +533,34 @@
                 defaultAnswer: "ለጥያቄኸ የተፈሐ ኦርቶዶክሳዊ መልስ፡ በሃይማኖት ሥርዓትኖ በሊቃውንት ትምህርት የተመሰረተ ው።"
             },
             wal: {
-                header: "ኦርቶዶክሴ ዛሮ",
-                heroTitle: '"ኦይቻ ኦይቻያ ኤራንቻ ኦቼስ"',
-                heroSub: "አያናታ ኦይቾታ ኦይቻ፤ ቱማ ኤራ",
-                inputLabel: "ሃጋን ኦይቻ፡",
-                placeholder: "ኔ ኦይቻ ሃጋን ፃፋ...",
-                ansTitle: "ኦርቶዶክሴ ዛሮ፡",
-                mTheme: "ቀላሜ ላሚያ",
-                mAbout: "ኑባራ",
-                mShare: "ሻሬ ኦሳናስ",
-                mFeedback: "ቆፎስ",
-                mContact: "ኑና ጋቴታ",
-                footerCopy: "ማታይ ህጋን ናጌቲዳይሳ።",
-                defaultAnswer: "ኔ ኦይቾስ ኦርቶዶክሴ ዛሮ፡ ቤተክርስቲያኔ ዎጋኔ ኤራንቻታ ትምህርቴ ቦላ ጊዲዳይሳ።"
+                header: "Ortodokse Zaaro",
+                heroTitle: '"Oychiyai Erancha Ochees"',
+                heroSub: "Ayaana oychata oychite, Tumaa erite",
+                inputLabel: "Hagan Oychite:",
+                placeholder: "Ne oycha hagan xafe...",
+                ansTitle: "Ortodokse Zaaro:",
+                mTheme: "Bisa Laamiya",
+                mAbout: "Nubaara",
+                mShare: "Shaare Osaanas",
+                mFeedback: "Qofoos",
+                mContact: "Nuna Gatetta",
+                footerCopy: "Maatay higgan naagettidaisa.",
+                defaultAnswer: "Ne oychos Ortodokse zaaro: Beetakristiyaane wogaane eranchata timirtte bolla gididaisa."
             },
             kaf: {
-                header: "ኦርቶዶክሶ ቃቦ",
-                heroTitle: '"ኢቾ ኢቻኦ ኤሪቻ ያሬቶ"',
-                heroSub: "መንፈሳዎ ኢቾታ ኢቼ፤ እውነቶ ኤሬ",
-                inputLabel: "ሂንዲ ኢቼ፡",
-                placeholder: "ኢቾኪ ሂንዲ ፃፌ...",
-                ansTitle: "ኦርቶዶክሶ ቃቦ፡",
-                mTheme: "ቀለሞ ዶፌ",
-                mAbout: "ኖ 采用",
-                mShare: "ኮተቶ",
-                mFeedback: "ቃቦ ያዶ",
-                mContact: "ኖና ዶፌ",
-                footerCopy: "ወጎን ማቾ አካጂቴ።",
-                defaultAnswer: "ኢቾኪ ኦርቶዶክሶ ቃቦ፡ ቤተክርስቲያኖ ወጎና ኤሪቻቶ ትምህርቶ አፌን ጊዶታኦ።"
+                header: "Ortodokxo Qabo",
+                heroTitle: '"Ichino Ichaao Erichino Yaareto"',
+                heroSub: "Ayyaano ichoota ichi, Dhiiroo eree",
+                inputLabel: "Hinni Ichi:",
+                placeholder: "Ichoki hinni xafe...",
+                ansTitle: "Ortodokxo Qabo:",
+                mTheme: "Bisa Doofe",
+                mAbout: "Noo Daafiroo",
+                mShare: "Koteto",
+                mFeedback: "Qabo Yaadoo",
+                mContact: "Noona Doofe",
+                footerCopy: "Wogono maachoo akajiite.",
+                defaultAnswer: "Ichoki Ortodokxo qabo: Beetakristiyaano wogona erichato timirtoo afeen gidotaao."
             },
             ar: {
                 header: "الإجابة الأرثوذكسية",
@@ -574,7 +581,6 @@
 
         let currentLang = 'am';
 
-        // Sidebar Navigation Handling
         const sidebar = document.getElementById('sidebar');
         const overlay = document.getElementById('overlay');
         
@@ -592,13 +598,11 @@
             document.getElementById('info-modal').style.display = 'none';
         }
 
-        // Toggle Dark/Light Theme Function
         function toggleTheme() {
             document.body.classList.toggle('dark-mode');
             closeModalAndSidebar();
         }
 
-        // Language Switcher Function
         function changeLang(lang, btnElement) {
             currentLang = lang;
             const t = translations[lang];
@@ -625,11 +629,9 @@
             document.querySelectorAll('.lang-btn').forEach(btn => btn.classList.remove('active'));
             if(btnElement) btnElement.classList.add('active');
 
-            // Re-trigger autoSearch to update answer language
             autoSearch();
         }
 
-        // Automatic Search Function
         let searchTimeout;
         function autoSearch() {
             clearTimeout(searchTimeout);
@@ -650,7 +652,6 @@
             }, 300);
         }
 
-        // Modal Handler (About, Feedback, Contact)
         function openModal(type) {
             closeModalAndSidebar();
             const modal = document.getElementById('info-modal');
@@ -660,13 +661,14 @@
 
             if (type === 'about') {
                 title.innerText = t.mAbout;
-                body.innerText = "ይህ መድረክ የኢትዮጵያ ኦርቶዶክስ ተዋሕዶ ቤተክርስቲያንን ትምህርት፣ ሥርዓትና ታሪክ ለምእመናን በበርካታ ቋንቋዎች ለማድረስ የተዘጋጀ መንፈሳዊ መተግበሪያ ነው።";
-            } else if (type === 'feedback') {
-                title.innerText = t.mFeedback;
-                body.innerHTML = "አስተያየትዎን ወይም ጥያቄዎን በእነዚህ አድራሻዎች ይላኩልን፡ <br><br><strong>ኢሜይል:</strong> ezrasamuel2721@gmail.com<br><strong>ስልክ:</strong> 0962244464";
-            } else if (type === 'contact') {
-                title.innerText = t.mContact;
-                body.innerHTML = "እኛን ለማግኘት፡ <br><br><strong>ኢሜይል:</strong> ezrasamuel2721@gmail.com<br><strong>ስልክ:</strong> 0962244464";
+                body.innerText = "ይህ መድረክ የኢትዮጵያ ኦርቶዶክሳዊ ተዋሕዶ ቤተክርስቲያንን ትምህርት፣ ሥርዓትና ታሪክ ለምእመናን በበርካታ ቋንቋዎች ለማድረስ የተዘጋጀ መንፈሳዊ መተግበሪያ ነው።";
+            } else if (type === 'feedback' || type === 'contact') {
+                title.innerText = (type === 'feedback') ? t.mFeedback : t.mContact;
+                body.innerHTML = `
+                    ለማንኛውም አስተያየት ወይም ጥያቄ በእነዚህ አድራሻዎች ያግኙን፡ <br><br>
+                    <strong>ኢሜይል:</strong> <a href="mailto:ezrasamuel2721@gmail.com" class="contact-link">ezrasamuel2721@gmail.com</a><br>
+                    <strong>ስልክ:</strong> <a href="tel:0962244464" class="contact-link">0962244464</a>
+                `;
             }
 
             modal.style.display = 'flex';
@@ -676,7 +678,6 @@
             document.getElementById('info-modal').style.display = 'none';
         }
 
-        // Share Feature
         function shareApp() {
             if (navigator.share) {
                 navigator.share({
