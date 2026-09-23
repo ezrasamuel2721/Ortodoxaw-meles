@@ -82,7 +82,6 @@
             gap: 12px;
         }
 
-        /* Logo Styling Fix */
         .logo-box {
             width: 50px;
             height: 50px;
@@ -491,7 +490,7 @@
                 <button class="lang-btn" data-lang="sgw">ጉራጊኛ</button>
                 <button class="lang-btn" data-lang="ar">العربية</button>
                 <button class="lang-btn" data-lang="el">Ελληνικά</button>
-                <button class="lang-btn" data-lang="he">עבריት</button>
+                <button class="lang-btn" data-lang="he">עברית</button>
             </div>
         </div>
 
@@ -512,7 +511,6 @@
 
         <!-- Answer Controls & Display Container -->
         <section class="answer-section hidden" id="answerSection">
-            <!-- Results will be injected dynamically here -->
             <div id="answersList"></div>
         </section>
     </main>
@@ -532,8 +530,8 @@
             <span class="modal-close" onclick="closeModal('feedbackModal')">&times;</span>
             <h2 id="uiModalFeedbackTitle">ለአስተያየት</h2>
             <br>
-            <p><strong>ኢሜይል፡</strong> ezrasamuel2721@gmail.com</p>
-            <p><strong>ስልክ ቁጥር፡</strong> 0962244464</p>
+            <p><strong>ኢሜይል፡</strong> <a href="mailto:ezrasamuel2721@gmail.com" style="color:var(--green); text-decoration:none;">ezrasamuel2721@gmail.com</a></p>
+            <p><strong>ስልክ ቁጥር፡</strong> <a href="tel:0962244464" style="color:var(--green); text-decoration:none;">0962244464</a></p>
         </div>
     </div>
 
@@ -559,8 +557,6 @@
 
     <!-- JavaScript Controls & Supabase Integration -->
     <script>
-        // Supabase Initialization
-        // NOTE: Fill with your real SUPABASE_URL and SUPABASE_ANON_KEY if needed.
         const SUPABASE_URL = "https://YOUR_SUPABASE_URL.supabase.co";
         const SUPABASE_ANON_KEY = "YOUR_SUPABASE_ANON_KEY";
         
@@ -852,20 +848,20 @@
                 notFound: "שאלה זו לא נמצאה במאגר המידע.",
                 emptyAlert: "אנא הזן שאלה תחילה!",
                 copiedAlert: "התשובה הועתקה!",
-                linkCopiedAlert: "הקישור הועתק!",
+                linkCopiedAlert: "קישור האפליקציה הועתק!",
                 aboutTitle: "עלינו",
-                aboutText: "פלטפורמה דיגיטלית למתן תשובות אורתודוקסיות.",
+                aboutText: "פלטפורמה דיגיטלית לתשובות אורתודוקסיות.",
                 feedbackTitle: "משוב",
                 booksTitle: "ספרים מומלצים",
                 footer: "כל הזכויות שמורות | Created by Ezra Samuel Abebe"
             }
         };
 
-        // UI Language Switcher
-        function updateUI(lang) {
+        // UI Language Switcher Logic
+        function setLanguage(lang) {
             currentLang = lang;
-            const t = translations[lang] || translations.am;
-            
+            const t = translations[lang] || translations['am'];
+
             document.getElementById('docTitle').innerText = t.title;
             document.getElementById('uiMainTitle').innerText = t.title;
             document.getElementById('uiMenuTitle').innerText = t.menu;
@@ -885,202 +881,48 @@
             document.getElementById('uiModalFeedbackTitle').innerText = t.feedbackTitle;
             document.getElementById('uiModalBooksTitle').innerText = t.booksTitle;
             document.getElementById('uiFooter').innerText = t.footer;
+
+            // Handle RTL layout for Hebrew and Arabic
+            if (lang === 'ar' || lang === 'he') {
+                document.documentElement.setAttribute('dir', 'rtl');
+            } else {
+                document.documentElement.setAttribute('dir', 'ltr');
+            }
         }
 
-        document.addEventListener('DOMContentLoaded', () => {
-            const sidebar = document.getElementById('sidebar');
-            const overlay = document.getElementById('overlay');
-            const menuToggle = document.getElementById('menuToggle');
-            const closeSidebar = document.getElementById('closeSidebar');
-
-            menuToggle.addEventListener('click', () => {
-                sidebar.classList.add('active');
-                overlay.classList.add('active');
+        // Language Buttons Event Listeners
+        document.querySelectorAll('.lang-btn').forEach(btn => {
+            btn.addEventListener('click', function() {
+                document.querySelectorAll('.lang-btn').forEach(b => b.classList.remove('active'));
+                this.classList.add('active');
+                setLanguage(this.getAttribute('data-lang'));
             });
-
-            const hideSidebar = () => {
-                sidebar.classList.remove('active');
-                overlay.classList.remove('active');
-            };
-
-            closeSidebar.addEventListener('click', hideSidebar);
-            overlay.addEventListener('click', hideSidebar);
-
-            // Language Bar Click Listener
-            const langButtons = document.querySelectorAll('.lang-btn');
-            langButtons.forEach(btn => {
-                btn.addEventListener('click', (e) => {
-                    langButtons.forEach(b => b.classList.remove('active'));
-                    e.target.classList.add('active');
-                    const lang = e.target.getAttribute('data-lang');
-                    updateUI(lang);
-                });
-            });
-
-            // Theme Toggle
-            document.getElementById('colorThemeBtn').addEventListener('click', (e) => {
-                e.preventDefault();
-                document.body.classList.toggle('theme-dark');
-            });
-
-            // Share App Button
-            document.getElementById('shareAppBtn').addEventListener('click', (e) => {
-                e.preventDefault();
-                const t = translations[currentLang] || translations.am;
-                navigator.clipboard.writeText(window.location.href);
-                alert(t.linkCopiedAlert);
-            });
-
-            // Submit / Search Listener
-            document.getElementById('submitBtn').addEventListener('click', performSearch);
         });
 
-        // Search Functionality with Supabase / Fallback
-        async function performSearch() {
-            const query = document.getElementById('userQuestion').value.trim();
-            const t = translations[currentLang] || translations.am;
-            const answerSection = document.getElementById('answerSection');
-            const answersList = document.getElementById('answersList');
+        // Sidebar Controls
+        const menuToggle = document.getElementById('menuToggle');
+        const sidebar = document.getElementById('sidebar');
+        const closeSidebar = document.getElementById('closeSidebar');
+        const overlay = document.getElementById('overlay');
 
-            if (!query) {
-                alert(t.emptyAlert);
-                return;
-            }
-
-            answerSection.classList.remove('hidden');
-            answersList.innerHTML = `
-                <div class="answer-card">
-                    <p><i class="fa-solid fa-spinner fa-spin"></i> ${t.searching}</p>
-                </div>
-            `;
-
-            let results = [];
-
-            if (supabaseClient) {
-                try {
-                    // Search in Supabase 'orthodox_answers' table across question, answer, category
-                    const { data, error } = await supabaseClient
-                        .from('orthodox_answers')
-                        .select('*')
-                        .or(`question.ilike.%${query}%,answer.ilike.%${query}%,category.ilike.%${query}%`)
-                        .eq('language', currentLang);
-
-                    if (!error && data && data.length > 0) {
-                        results = data;
-                    }
-                } catch (err) {
-                    console.error("Supabase search error:", err);
-                }
-            }
-
-            // Render Results
-            answersList.innerHTML = '';
-
-            if (results.length > 0) {
-                results.forEach((item, index) => {
-                    renderAnswerCard(item.question, item.answer, item.category || '', index);
-                });
-            } else {
-                // If no exact database record, render Not Found Message
-                answersList.innerHTML = `
-                    <div class="answer-card">
-                        <div class="answer-header">
-                            <h4><i class="fa-solid fa-circle-exclamation" style="color:var(--red);"></i> ${t.answerTitle}</h4>
-                        </div>
-                        <div class="answer-body">
-                            <p>${t.notFound}</p>
-                        </div>
-                    </div>
-                `;
-            }
+        function toggleSidebar() {
+            sidebar.classList.toggle('active');
+            overlay.classList.toggle('active');
         }
 
-        // Render Answer Card Helper Function
-        function renderAnswerCard(question, answer, category, index) {
-            const t = translations[currentLang] || translations.am;
-            const answersList = document.getElementById('answersList');
-
-            const card = document.createElement('div');
-            card.className = 'answer-card';
-            card.id = `card-${index}`;
-
-            card.innerHTML = `
-                <div class="answer-header">
-                    <h4><i class="fa-solid fa-cross"></i> ${question ? question : t.answerTitle}</h4>
-                    <div class="answer-tools">
-                        <button onclick="speakText('text-${index}')" title="Read Aloud"><i class="fa-solid fa-volume-high"></i></button>
-                        <button onclick="zoomText('text-${index}')" title="Zoom"><i class="fa-solid fa-magnifying-glass-plus"></i></button>
-                        <button onclick="toggleFullScreen('card-${index}')" title="Full Screen"><i class="fa-solid fa-expand"></i></button>
-                        <button onclick="likeAnswer(this)" title="Like"><i class="fa-regular fa-thumbs-up"></i> <span>0</span></button>
-                        <button onclick="dislikeAnswer(this)" title="Dislike"><i class="fa-regular fa-thumbs-down"></i> <span>0</span></button>
-                        <button onclick="copyAnswer('text-${index}')" title="Copy"><i class="fa-regular fa-copy"></i></button>
-                        <button onclick="shareAnswer('text-${index}')" title="Share"><i class="fa-solid fa-share-nodes"></i></button>
-                    </div>
-                </div>
-                <div class="answer-body" id="text-${index}">
-                    <p>${answer}</p>
-                    ${category ? `<span class="category-badge">${category}</span>` : ''}
-                </div>
-            `;
-
-            answersList.appendChild(card);
-        }
-
-        // Interactive Tool Actions
-        function speakText(elementId) {
-            const text = document.getElementById(elementId).innerText;
-            const utterance = new SpeechSynthesisUtterance(text);
-            window.speechSynthesis.speak(utterance);
-        }
-
-        function zoomText(elementId) {
-            const el = document.getElementById(elementId);
-            const currentSize = parseFloat(window.getComputedStyle(el).fontSize);
-            el.style.fontSize = (currentSize >= 24 ? 16 : currentSize + 2) + 'px';
-        }
-
-        function toggleFullScreen(cardId) {
-            const card = document.getElementById(cardId);
-            card.classList.toggle('fullscreen-mode');
-        }
-
-        function likeAnswer(btn) {
-            const span = btn.querySelector('span');
-            span.innerText = parseInt(span.innerText) + 1;
-        }
-
-        function dislikeAnswer(btn) {
-            const span = btn.querySelector('span');
-            span.innerText = parseInt(span.innerText) + 1;
-        }
-
-        function copyAnswer(elementId) {
-            const text = document.getElementById(elementId).innerText;
-            const t = translations[currentLang] || translations.am;
-            navigator.clipboard.writeText(text);
-            alert(t.copiedAlert);
-        }
-
-        function shareAnswer(elementId) {
-            const text = document.getElementById(elementId).innerText;
-            if (navigator.share) {
-                navigator.share({
-                    title: 'ኦርቶዶክሳዊ መልስ',
-                    text: text,
-                    url: window.location.href
-                });
-            } else {
-                copyAnswer(elementId);
-            }
-        }
+        menuToggle.addEventListener('click', toggleSidebar);
+        closeSidebar.addEventListener('click', toggleSidebar);
+        overlay.addEventListener('click', toggleSidebar);
 
         // Modal Controls
-        function openModal(id) {
-            document.getElementById(id).style.display = 'block';
+        function openModal(modalId) {
+            document.getElementById(modalId).style.display = 'block';
+            sidebar.classList.remove('active');
+            overlay.classList.remove('active');
         }
 
-        function closeModal(id) {
-            document.getElementById(id).style.display = 'none';
+        function closeModal(modalId) {
+            document.getElementById(modalId).style.display = 'none';
         }
 
         window.onclick = function(event) {
@@ -1088,6 +930,113 @@
                 event.target.style.display = 'none';
             }
         }
+
+        // Theme Switcher (Color / Dark mode)
+        document.getElementById('colorThemeBtn').addEventListener('click', function(e) {
+            e.preventDefault();
+            document.body.classList.toggle('theme-dark');
+        });
+
+        // Search & Answer Generation Logic
+        document.getElementById('submitBtn').addEventListener('click', async function() {
+            const questionInput = document.getElementById('userQuestion');
+            const questionText = questionInput.value.trim();
+            const t = translations[currentLang] || translations['am'];
+
+            if (!questionText) {
+                alert(t.emptyAlert);
+                return;
+            }
+
+            const answerSection = document.getElementById('answerSection');
+            const answersList = document.getElementById('answersList');
+
+            answerSection.classList.remove('hidden');
+            answersList.innerHTML = `<div class="answer-card"><p><i class="fa-solid fa-spinner fa-spin"></i> ${t.searching}</p></div>`;
+
+            let foundAnswer = t.notFound;
+            let category = "አጠቃላይ / General";
+
+            if (supabaseClient) {
+                try {
+                    let { data, error } = await supabaseClient
+                        .from('orthodox_answers') // ከስክሪንሾትዎ የተወሰደ ትክክለኛ የሠንጠረዥ ስም
+                        .select('*')
+                        .eq('language', currentLang) // ተጠቃሚው የመረጠውን ቋንቋ ብቻ ማጣራት
+                        .ilike('question', `%${questionText}%`)
+                        .limit(1);
+
+                    if (data && data.length > 0) {
+                        foundAnswer = data[0].answer;
+                        category = data[0].category || category;
+                    }
+                } catch (err) {
+                    console.error("Supabase error:", err);
+                }
+            } else {
+                // Dummy local database matching fallback
+                const sampleDB = [
+                    { q: "ጥምቀት", a: "ጥምቀት ከሰባቱ ምስጢራተ ቤተክርስቲያን አንዱ ሲሆን በውኃ እና በመንፈስ ቅዱስ የሚፈጸም የልጅነት ክብር ማግኛ ሥርዓት ነው።", cat: "ምስጢራተ ቤተክርስቲያን" },
+                    { q: "ቁርባን", a: "ቅዱስ ቁርባን የጌታችን የኢየሱስ ክርስቶስን ሥጋና ደም የምንቀበልበት ከሰባቱ ምስጢራት ዋናው ነው።", cat: "ምስጢራተ ቤተክርስቲያን" }
+                ];
+
+                const match = sampleDB.find(item => questionText.includes(item.q));
+                if (match) {
+                    foundAnswer = match.a;
+                    category = match.cat;
+                }
+            }
+
+            // Render Answer Card with Tools
+            answersList.innerHTML = `
+                <div class="answer-card" id="ansCard">
+                    <div class="answer-header">
+                        <h4><i class="fa-solid fa-book-open"></i> ${t.answerTitle}</h4>
+                        <div class="answer-tools">
+                            <button onclick="copyAnswer()" title="Copy"><i class="fa-solid fa-copy"></i></button>
+                            <button onclick="toggleFullscreen()" title="Fullscreen"><i class="fa-solid fa-expand"></i></button>
+                        </div>
+                    </div>
+                    <div class="answer-body" id="ansBody">
+                        <p><strong>ጥያቄ፡</strong> ${questionText}</p><br>
+                        <p>${foundAnswer}</p>
+                        <div class="category-badge"><i class="fa-solid fa-tag"></i> ${category}</div>
+                    </div>
+                </div>
+            `;
+        });
+
+        // Answer Utility Tools
+        function copyAnswer() {
+            const ansBodyText = document.getElementById('ansBody').innerText;
+            const t = translations[currentLang] || translations['am'];
+            navigator.clipboard.writeText(ansBodyText).then(() => {
+                alert(t.copiedAlert);
+            });
+        }
+
+        function toggleFullscreen() {
+            const card = document.getElementById('ansCard');
+            card.classList.toggle('fullscreen-mode');
+        }
+
+        // Share App Link Button
+        document.getElementById('shareAppBtn').addEventListener('click', function(e) {
+            e.preventDefault();
+            const t = translations[currentLang] || translations['am'];
+            const appUrl = window.location.href;
+            if (navigator.share) {
+                navigator.share({
+                    title: t.title,
+                    text: t.subQuoteText,
+                    url: appUrl,
+                }).catch(() => {});
+            } else {
+                navigator.clipboard.writeText(appUrl).then(() => {
+                    alert(t.linkCopiedAlert);
+                });
+            }
+        });
     </script>
 </body>
 </html>
