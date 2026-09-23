@@ -4,115 +4,674 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>ኦርቶዶክሳዊ መልስ</title>
-
-    <!-- FontAwesome icons -->
-    <link rel="stylesheet"
-          href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-
+    <!-- FontAwesome Font icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
     <style>
+        /* Ethiopian Orthodox Tewahedo Colors Theme */
         :root {
             --gold: #D4AF37;
-            --dark-gold: #AA7C11;
-            --deep-red: #800000;
-            --royal-blue: #002366;
-            --bg-light: #FDFBF7;
-            --text-dark: #2C2C2C;
+            --gold-light: #f9f3d9;
+            --green: #006B3C;
+            --yellow: #FCD116;
+            --red: #D21034;
+            --blue: #003399;
             --white: #FFFFFF;
-            --green: #2e7d32;
-            --card-bg: #FFFFFF;
-            --input-border: #DDD;
-            --answer-bg: #F4F6F9;
+            --black: #1A1A1A;
+            --bg-color: #f7f9fc;
+            --card-bg: #ffffff;
+            --text-color: #1a1a1a;
         }
 
-        body.dark-mode {
-            --bg-light: #121212;
-            --text-dark: #E0E0E0;
-            --card-bg: #1E1E1E;
-            --input-border: #444;
-            --answer-bg: #2A2A2A;
-            --royal-blue: #64B5F6;
-        }
-
+        /* Base Styles */
         * {
-            box-sizing: border-box;
             margin: 0;
             padding: 0;
-            font-family: 'Segoe UI', Nyala, 'Abyssinica SIL', sans-serif;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
         }
 
         body {
-            background-color: var(--bg-light);
-            color: var(--text-dark);
+            background-color: var(--bg-color);
+            color: var(--text-color);
             display: flex;
             flex-direction: column;
             min-height: 100vh;
             transition: background-color 0.3s, color 0.3s;
         }
 
-        header {
-            background: linear-gradient(135deg, var(--deep-red), #002366);
-            color: var(--gold);
-            padding: 0.6rem 1.5rem;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+        /* Dark Theme Option */
+        body.theme-dark {
+            --bg-color: #121212;
+            --card-bg: #1e1e1e;
+            --text-color: #e0e0e0;
+        }
+
+        /* 1. Header & Logo Header */
+        .navbar {
+            background: linear-gradient(135deg, var(--green), var(--blue));
+            color: var(--white);
+            padding: 12px 20px;
             border-bottom: 4px solid var(--gold);
-            position: relative;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.15);
+            position: sticky;
+            top: 0;
+            z-index: 100;
         }
 
-        .header-container {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            max-width: 1200px;
-            margin: 0 auto;
-            width: 100%;
-        }
-
-        .main-brand {
-            font-size: 1.8rem;
-            font-weight: bold;
-            color: var(--gold);
-            text-shadow: 1px 1px 3px rgba(0,0,0,0.8);
+        .nav-left {
             display: flex;
             align-items: center;
-            gap: 12px;
-            min-width: 0;
-        }
-
-        /* ================================
-           የተስተካከለው የኦርቶዶክሳዊ መልስ ሎጎ
-           ================================ */
-        .brand-logo {
-            width: 58px;
-            height: 58px;
-            min-width: 58px;
-            min-height: 58px;
-            border-radius: 50%;
-            border: 2px solid var(--gold);
-            object-fit: cover;
-            object-position: center;
-            background-color: #FFFFFF;
-            flex-shrink: 0;
-            display: block;
+            gap: 15px;
         }
 
         .menu-btn {
             background: none;
             border: none;
             color: var(--gold);
-            font-size: 1.8rem;
+            font-size: 26px;
             cursor: pointer;
-            transition: transform 0.2s;
-            flex-shrink: 0;
         }
 
-        .menu-btn:hover {
-            transform: scale(1.1);
+        .brand-container {
+            display: flex;
+            align-items: center;
+            gap: 12px;
         }
 
+        /* 10. Logo Styling */
+        .logo-img {
+            width: 55px;
+            height: 55px;
+            border-radius: 50%;
+            border: 2px solid var(--gold);
+            object-fit: cover;
+            box-shadow: 0 0 5px rgba(212, 175, 55, 0.5);
+        }
+
+        .main-title {
+            font-size: 24px;
+            font-weight: bold;
+            color: var(--gold);
+            text-shadow: 1px 1px 3px rgba(0,0,0,0.6);
+        }
+
+        /* 8. Sidebar Navigation (3 ሰረዝ) */
         .sidebar {
             position: fixed;
             top: 0;
-            right: -300px;
-            width: 300px;
+            left: -320px;
+            width: 310px;
             height: 100%;
-            background-color: #1A1A1
+            background-color: var(--card-bg);
+            box-shadow: 4px 0 15px rgba(0,0,0,0.3);
+            z-index: 200;
+            transition: 0.3s ease;
+            padding: 20px;
+            overflow-y: auto;
+        }
+
+        .sidebar.active {
+            left: 0;
+        }
+
+        .sidebar-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 2px solid var(--gold);
+            padding-bottom: 10px;
+            margin-bottom: 20px;
+        }
+
+        .close-btn {
+            background: none;
+            border: none;
+            font-size: 24px;
+            cursor: pointer;
+            color: var(--red);
+        }
+
+        .sidebar-links {
+            list-style: none;
+        }
+
+        .sidebar-links li {
+            margin-bottom: 12px;
+        }
+
+        .sidebar-links a {
+            text-decoration: none;
+            color: var(--text-color);
+            font-size: 15px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 10px;
+            border-radius: 6px;
+            transition: 0.2s;
+        }
+
+        .sidebar-links a:hover {
+            background-color: var(--gold-light);
+            color: var(--green);
+        }
+
+        .contact-info {
+            font-size: 12px;
+            color: #666;
+            margin-top: 2px;
+            display: block;
+        }
+
+        .overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            display: none;
+            z-index: 150;
+        }
+
+        .overlay.active {
+            display: block;
+        }
+
+        /* 2. Languages Scroll Horizontal Bar */
+        .lang-scroll-container {
+            background-color: var(--card-bg);
+            padding: 12px 0;
+            border-bottom: 2px solid var(--yellow);
+            overflow-x: auto;
+            white-space: nowrap;
+        }
+
+        .lang-bar {
+            display: inline-flex;
+            gap: 10px;
+            padding: 0 15px;
+        }
+
+        .lang-btn {
+            background-color: transparent;
+            border: 1.5px solid var(--gold);
+            color: var(--text-color);
+            padding: 6px 16px;
+            border-radius: 20px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: 0.3s;
+            font-size: 14px;
+        }
+
+        .lang-btn.active, .lang-btn:hover {
+            background-color: var(--gold);
+            color: var(--black);
+        }
+
+        /* 3 & 4. Banner Quotes */
+        .quote-section {
+            text-align: center;
+            margin: 20px 15px;
+            padding: 15px;
+            border-left: 5px solid var(--red);
+            border-right: 5px solid var(--green);
+            background: var(--card-bg);
+            border-radius: 8px;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.06);
+        }
+
+        .quote-text {
+            color: var(--green);
+            font-size: 26px;
+            font-weight: bold;
+            margin-bottom: 6px;
+        }
+
+        .sub-quote-text {
+            color: var(--red);
+            font-size: 18px;
+            font-weight: 600;
+        }
+
+        /* 5. Question Box */
+        .main-container {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 15px;
+            flex: 1;
+            width: 100%;
+        }
+
+        .input-card {
+            background: var(--card-bg);
+            padding: 20px;
+            border-radius: 10px;
+            border-top: 4px solid var(--gold);
+            box-shadow: 0 4px 10px rgba(0,0,0,0.08);
+        }
+
+        .input-label {
+            display: block;
+            font-size: 18px;
+            font-weight: bold;
+            margin-bottom: 10px;
+            color: var(--green);
+        }
+
+        textarea {
+            width: 100%;
+            height: 110px;
+            padding: 12px;
+            border: 1px solid #ccc;
+            border-radius: 6px;
+            resize: vertical;
+            font-size: 16px;
+            background: var(--bg-color);
+            color: var(--text-color);
+        }
+
+        .ask-btn {
+            margin-top: 12px;
+            width: 100%;
+            background-color: var(--green);
+            color: var(--white);
+            border: none;
+            padding: 12px;
+            font-size: 16px;
+            font-weight: bold;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: background 0.3s;
+        }
+
+        .ask-btn:hover {
+            background-color: #004d2b;
+        }
+
+        /* 6. Answer Display Controls Box */
+        .answer-section {
+            margin-top: 25px;
+        }
+
+        .answer-section.hidden {
+            display: none;
+        }
+
+        .answer-card {
+            background: var(--card-bg);
+            border-radius: 10px;
+            border: 2px solid var(--gold);
+            padding: 18px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        }
+
+        .answer-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid #eee;
+            padding-bottom: 10px;
+            margin-bottom: 15px;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+
+        .answer-header h4 {
+            color: var(--green);
+            font-size: 18px;
+        }
+
+        .answer-tools {
+            display: flex;
+            gap: 8px;
+        }
+
+        .answer-tools button {
+            background: var(--bg-color);
+            border: 1px solid #ccc;
+            padding: 6px 10px;
+            border-radius: 5px;
+            cursor: pointer;
+            color: var(--text-color);
+            transition: 0.2s;
+        }
+
+        .answer-tools button:hover {
+            background-color: var(--gold);
+            color: var(--black);
+        }
+
+        .answer-body {
+            font-size: 16px;
+            line-height: 1.6;
+        }
+
+        .fullscreen-mode {
+            position: fixed !important;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            z-index: 1000;
+            background: var(--card-bg);
+            overflow-y: auto;
+            padding: 30px;
+        }
+
+        /* Modals */
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 300;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0,0,0,0.6);
+        }
+
+        .modal-content {
+            background-color: var(--card-bg);
+            margin: 15% auto;
+            padding: 20px;
+            border: 2px solid var(--gold);
+            border-radius: 8px;
+            width: 85%;
+            max-width: 500px;
+            position: relative;
+        }
+
+        .modal-close {
+            position: absolute;
+            right: 15px;
+            top: 10px;
+            font-size: 24px;
+            cursor: pointer;
+            color: var(--red);
+        }
+
+        /* 7. Footer */
+        .footer {
+            background: var(--black);
+            color: var(--gold);
+            text-align: center;
+            padding: 15px;
+            margin-top: auto;
+            border-top: 3px solid var(--red);
+            font-size: 14px;
+        }
+    </style>
+</head>
+<body class="theme-default">
+
+    <!-- 1 & 10. Header with Logo and Title -->
+    <header class="navbar">
+        <div class="nav-left">
+            <button class="menu-btn" id="menuToggle"><i class="fa-solid fa-bars"></i></button>
+            <div class="brand-container">
+                <img src="orthodox_answer_logo.jpg" alt="ኦርቶዶክሳዊ መልስ ሎጎ" class="logo-img">
+                <h1 class="main-title">ኦርቶዶክሳዊ መልስ</h1>
+            </div>
+        </div>
+    </header>
+
+    <!-- 8. Side Menu (3 ሰረዝ) -->
+    <div class="sidebar" id="sidebar">
+        <div class="sidebar-header">
+            <h3>ማውጫ</h3>
+            <button class="close-btn" id="closeSidebar"><i class="fa-solid fa-xmark"></i></button>
+        </div>
+        <ul class="sidebar-links">
+            <li><a href="#" id="colorThemeBtn"><i class="fa-solid fa-palette"></i> ቀለም መቀየሪያ</a></li>
+            <li><a href="#" id="designThemeBtn"><i class="fa-solid fa-brush"></i> ዲዛይን መቀየሪያ</a></li>
+            <li><a href="#" onclick="openModal('aboutModal')"><i class="fa-solid fa-circle-info"></i> ስለ እኛ</a></li>
+            <li>
+                <a href="#" onclick="openModal('feedbackModal')">
+                    <i class="fa-solid fa-envelope"></i> 
+                    <div>
+                        ለአስተያየት
+                        <span class="contact-info">ezrasamuel2721@gmail.com</span>
+                        <span class="contact-info">0962244464</span>
+                    </div>
+                </a>
+            </li>
+            <li><a href="#" id="shareAppBtn"><i class="fa-solid fa-share-nodes"></i> ያጋሩ</a></li>
+            <li><a href="#" onclick="openModal('booksModal')"><i class="fa-solid fa-book-bible"></i> የንባብ መጻሕፍት ጥቆማ</a></li>
+        </ul>
+    </div>
+    <div class="overlay" id="overlay"></div>
+
+    <!-- Main Container -->
+    <main class="main-container">
+        
+        <!-- 2. Languages Scroll Horizontal Bar (በራሳቸው ቋንቋ የተፃፉ) -->
+        <div class="lang-scroll-container">
+            <div class="lang-bar" id="langBar">
+                <button class="lang-btn active" data-lang="am">አማርኛ</button>
+                <button class="lang-btn" data-lang="en">English</button>
+                <button class="lang-btn" data-lang="ti">ትግርኛ</button>
+                <button class="lang-btn" data-lang="sid">Sidaamu Afoo</button>
+                <button class="lang-btn" data-lang="om">Afaan Oromoo</button>
+                <button class="lang-btn" data-lang="wal">Wolayttatto</button>
+                <button class="lang-btn" data-lang="kff">Kaffoono</button>
+                <button class="lang-btn" data-lang="sgw">ጉራጊኛ</button>
+                <button class="lang-btn" data-lang="ar">العربية</button>
+                <button class="lang-btn" data-lang="el">Ελληνικά</button>
+                <button class="lang-btn" data-lang="he">עברית</button>
+            </div>
+        </div>
+
+        <!-- 3 & 4. Bold Quotes -->
+        <section class="quote-section">
+            <h2 class="quote-text">"መጠየቅ ያደርጋል ሊቅ"</h2>
+            <h3 class="sub-quote-text">መንፈሳዊ ጥያቄዎን ይጠይቁ፤ እውነቱን ይወቁ!</h3>
+        </section>
+
+        <!-- 5. Question Box -->
+        <section class="question-section">
+            <div class="input-card">
+                <label for="userQuestion" class="input-label">እዚህ ይጠይቁ፡</label>
+                <textarea id="userQuestion" placeholder="የመንፈሳዊ ጥያቄዎን እዚህ ያስገቡ..."></textarea>
+                <button id="submitBtn" class="ask-btn"><i class="fa-solid fa-paper-plane"></i> ይጠይቁ</button>
+            </div>
+        </section>
+
+        <!-- 6. Answer Controls & Display -->
+        <section class="answer-section hidden" id="answerSection">
+            <div class="answer-card" id="answerCard">
+                <div class="answer-header">
+                    <h4><i class="fa-solid fa-cross"></i> መልስ</h4>
+                    <!-- Response Action Buttons -->
+                    <div class="answer-tools">
+                        <button id="zoomInBtn" title="Zoom (አሳንስ/አብልቅ)"><i class="fa-solid fa-magnifying-glass-plus"></i></button>
+                        <button id="fullScreenBtn" title="Full Screen (ሙሉ ገጽ)"><i class="fa-solid fa-expand"></i></button>
+                        <button id="likeBtn" title="Like"><i class="fa-regular fa-thumbs-up"></i> <span id="likeCount">0</span></button>
+                        <button id="dislikeBtn" title="Dislike"><i class="fa-regular fa-thumbs-down"></i> <span id="dislikeCount">0</span></button>
+                        <button id="copyBtn" title="Copy"><i class="fa-regular fa-copy"></i></button>
+                        <button id="shareBtn" title="Share"><i class="fa-solid fa-share-nodes"></i></button>
+                    </div>
+                </div>
+                <div class="answer-body" id="answerBody">
+                    <p id="answerText">ጥያቄዎ በመመመር ላይ ነው...</p>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <!-- Modal Dialogs -->
+    <div class="modal" id="aboutModal">
+        <div class="modal-content">
+            <span class="modal-close" onclick="closeModal('aboutModal')">&times;</span>
+            <h2>ስለ እኛ</h2>
+            <br>
+            <p>ኦርቶዶክሳዊ መልስ፡ በኢትዮጵያ ኦርቶዶክስ ተዋሕዶ ቤተክርስቲያን አስተምህሮ እና ሥርዓት መሠረት ለሚነሱ መንፈሳዊ፣ ታሪካዊ እና መጽሐፍ ቅዱሳዊ ጥያቄዎች በብዙ ቋንቋዎች ትክክለኛውን መልስ የሚሰጥ ዲጂታል መድረክ ነው።</p>
+        </div>
+    </div>
+
+    <div class="modal" id="feedbackModal">
+        <div class="modal-content">
+            <span class="modal-close" onclick="closeModal('feedbackModal')">&times;</span>
+            <h2>ለአስተያየት</h2>
+            <br>
+            <p><strong>ኢሜይል፡</strong> ezrasamuel2721@gmail.com</p>
+            <p><strong>ስልክ ቁጥር፡</strong> 0962244464</p>
+        </div>
+    </div>
+
+    <div class="modal" id="booksModal">
+        <div class="modal-content">
+            <span class="modal-close" onclick="closeModal('booksModal')">&times;</span>
+            <h2>የንባብ መጻሕፍት ጥቆማ</h2>
+            <br>
+            <ul>
+                <li>መጽሐፍ ቅዱስ (የ81 አቡቀለምሲስ መጻሕፍት)</li>
+                <li>ሃይማኖተ አበው</li>
+                <li>ፍትሐ ነገሥት</li>
+                <li>መጽሐፈ ምሥጢር (አባ ጊዮርጊስ ዘጋስጫ)</li>
+                <li>መጽሐፈ አቅማዶ</li>
+            </ul>
+        </div>
+    </div>
+
+    <!-- 7. Footer -->
+    <footer class="footer">
+        <p>መብቱ በሕግ የተጠበቀ ነው | Created by Ezra Samuel Abebe</p>
+    </footer>
+
+    <!-- JavaScript Controls -->
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const sidebar = document.getElementById('sidebar');
+            const overlay = document.getElementById('overlay');
+            const menuToggle = document.getElementById('menuToggle');
+            const closeSidebar = document.getElementById('closeSidebar');
+
+            menuToggle.addEventListener('click', () => {
+                sidebar.classList.add('active');
+                overlay.classList.add('active');
+            });
+
+            const hideSidebar = () => {
+                sidebar.classList.remove('active');
+                overlay.classList.remove('active');
+            };
+
+            closeSidebar.addEventListener('click', hideSidebar);
+            overlay.addEventListener('click', hideSidebar);
+
+            // Multilingual Auto Responses
+            const langBtns = document.querySelectorAll('.lang-btn');
+            let currentLang = 'am';
+
+            const sampleAnswers = {
+                am: "እግዚአብሔር ይመስገን! ጥያቄዎ በተመረጠው ቋንቋ (አማርኛ) መልስ አግኝቷል። በኢትዮጵያ ኦርቶዶክስ ተዋሕዶ ቤተክርስቲያን አስተምህሮ መሠረት እውነትን መፈለግና መጠየቅ ለመንፈሳዊ ዕድገት ትልቅ መንገድ ነው።",
+                en: "Praise be to God! Your question has been answered in English. According to the teachings of the Ethiopian Orthodox Tewahedo Church, seeking truth is vital for spiritual growth.",
+                ti: "እግዚአብሔር ይመስገን! ሕቶኻ ብትግርኛ ተመሊሱ ኣሎ። ከም ትምህርቲ ቤተክርስቲያን ኦርቶዶክስ ተዋሕዶ ሓቂ ምድላይ ንመንፈሳዊ ዕብየት ኣገዳሲ እዩ።",
+                sid: "Magano galatamo! Xa'mmoki Sidaamu Afoonni qolantino.",
+                om: "Galanni Waaqayyof haa ta'u! Gaaffiin keessan Afaan Oromootiin deebii argatee jira.",
+                wal: "Xoossay galatetto! Ne oyssay Wolayttattun zaaretisiis.",
+                kff: "Yeroo galateeto! Ne kello Kaffoonoon amaniete.",
+                sgw: "እግዚአብሔር ይመርመር! የኸነ ጥያቄህ በጉራጊኛ መልስ አግኝቷል።",
+                ar: "الحمد لله! تم الرد على سؤالك باللغة العربية بناءً على تعاليم الكنيسة.",
+                el: "Δόξα τω Θεώ! Η ερώτησή σας απαντήθηκε στα Ελληνικά.",
+                he: "ברוך השם! תשובתך ניתנה בשפה העברית."
+            };
+
+            langBtns.forEach(btn => {
+                btn.addEventListener('click', () => {
+                    langBtns.forEach(b => b.classList.remove('active'));
+                    btn.classList.add('active');
+                    currentLang = btn.getAttribute('data-lang');
+                });
+            });
+
+            const submitBtn = document.getElementById('submitBtn');
+            const userQuestion = document.getElementById('userQuestion');
+            const answerSection = document.getElementById('answerSection');
+            const answerText = document.getElementById('answerText');
+
+            submitBtn.addEventListener('click', () => {
+                const question = userQuestion.value.trim();
+                if (question === '') {
+                    alert('እባክዎን አስቀድመው ጥያቄዎን ያስገቡ!');
+                    return;
+                }
+
+                answerSection.classList.remove('hidden');
+                answerText.innerText = "በመፈለግ ላይ...";
+                
+                setTimeout(() => {
+                    answerText.innerText = sampleAnswers[currentLang] || sampleAnswers['am'];
+                }, 500);
+            });
+
+            // Tool Option Actions
+            let isZoomed = false;
+            document.getElementById('zoomInBtn').addEventListener('click', () => {
+                isZoomed = !isZoomed;
+                answerText.style.fontSize = isZoomed ? '22px' : '16px';
+            });
+
+            const answerCard = document.getElementById('answerCard');
+            document.getElementById('fullScreenBtn').addEventListener('click', () => {
+                answerCard.classList.toggle('fullscreen-mode');
+            });
+
+            let likes = 0, dislikes = 0;
+            document.getElementById('likeBtn').addEventListener('click', () => {
+                likes++;
+                document.getElementById('likeCount').innerText = likes;
+            });
+
+            document.getElementById('dislikeBtn').addEventListener('click', () => {
+                dislikes++;
+                document.getElementById('dislikeCount').innerText = dislikes;
+            });
+
+            document.getElementById('copyBtn').addEventListener('click', () => {
+                navigator.clipboard.writeText(answerText.innerText);
+                alert('መልሱ ኮፒ ተደርጓል!');
+            });
+
+            document.getElementById('shareBtn').addEventListener('click', () => {
+                if (navigator.share) {
+                    navigator.share({
+                        title: 'ኦርቶዶክሳዊ መልስ',
+                        text: answerText.innerText,
+                        url: window.location.href
+                    });
+                } else {
+                    alert('ሊንክ፡ ' + window.location.href);
+                }
+            });
+
+            document.getElementById('colorThemeBtn').addEventListener('click', () => {
+                document.body.classList.toggle('theme-dark');
+                hideSidebar();
+            });
+
+            document.getElementById('designThemeBtn').addEventListener('click', () => {
+                alert('የዲዛይን ስታይል ተቀይሯል!');
+                hideSidebar();
+            });
+
+            document.getElementById('shareAppBtn').addEventListener('click', () => {
+                navigator.clipboard.writeText(window.location.href);
+                alert('የአፕሊኬሽኑ ሊንክ ተቀድቷል (Copied)!');
+                hideSidebar();
+            });
+        });
+
+        function openModal(id) {
+            document.getElementById(id).style.display = "block";
+        }
+
+        function closeModal(id) {
+            document.getElementById(id).style.display = "none";
+        }
+    </script>
+</body>
+</html>
