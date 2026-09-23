@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ኦርቶዶክሳዊ መልስ</title>
+    <title id="docTitle">ኦርቶዶክሳዊ መልስ</title>
     <!-- FontAwesome Font icons -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     
@@ -47,7 +47,7 @@
             --text-color: #e0e0e0;
         }
 
-        /* 1. Header & Logo Header */
+        /* Header & Logo Header */
         .navbar {
             background: linear-gradient(135deg, var(--green), var(--blue));
             color: var(--white);
@@ -79,24 +79,35 @@
             gap: 12px;
         }
 
-        /* 10. Logo Styling */
-        .logo-img {
-            width: 55px;
-            height: 55px;
+        /* Logo Styling Fix */
+        .logo-box {
+            width: 50px;
+            height: 50px;
             border-radius: 50%;
             border: 2px solid var(--gold);
-            object-fit: cover;
+            overflow: hidden;
+            background-color: var(--gold-light);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
             box-shadow: 0 0 5px rgba(212, 175, 55, 0.5);
         }
 
+        .logo-img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
         .main-title {
-            font-size: 24px;
+            font-size: 22px;
             font-weight: bold;
             color: var(--gold);
             text-shadow: 1px 1px 3px rgba(0,0,0,0.6);
         }
 
-        /* 8. Sidebar Navigation (3 ሰረዝ) */
+        /* Sidebar Navigation */
         .sidebar {
             position: fixed;
             top: 0;
@@ -179,13 +190,14 @@
             display: block;
         }
 
-        /* 2. Languages Scroll Horizontal Bar */
+        /* Languages Scroll Horizontal Bar */
         .lang-scroll-container {
             background-color: var(--card-bg);
             padding: 12px 0;
             border-bottom: 2px solid var(--yellow);
             overflow-x: auto;
             white-space: nowrap;
+            scrollbar-width: thin;
         }
 
         .lang-bar {
@@ -211,7 +223,7 @@
             color: var(--black);
         }
 
-        /* 3 & 4. Banner Quotes */
+        /* Banner Quotes */
         .quote-section {
             text-align: center;
             margin: 20px 15px;
@@ -225,18 +237,18 @@
 
         .quote-text {
             color: var(--green);
-            font-size: 26px;
+            font-size: 24px;
             font-weight: bold;
             margin-bottom: 6px;
         }
 
         .sub-quote-text {
             color: var(--red);
-            font-size: 18px;
+            font-size: 16px;
             font-weight: 600;
         }
 
-        /* 5. Question Box */
+        /* Question Box */
         .main-container {
             max-width: 800px;
             margin: 0 auto;
@@ -291,7 +303,7 @@
             background-color: #004d2b;
         }
 
-        /* 6. Answer Display Controls Box */
+        /* Answer Display Controls Box */
         .answer-section {
             margin-top: 25px;
         }
@@ -327,6 +339,7 @@
         .answer-tools {
             display: flex;
             gap: 8px;
+            flex-wrap: wrap;
         }
 
         .answer-tools button {
@@ -339,7 +352,7 @@
             transition: 0.2s;
         }
 
-        .answer-tools button:hover {
+        .answer-tools button:hover, .answer-tools button.active {
             background-color: var(--gold);
             color: var(--black);
         }
@@ -393,7 +406,7 @@
             color: var(--red);
         }
 
-        /* 7. Footer */
+        /* Footer */
         .footer {
             background: var(--black);
             color: var(--gold);
@@ -407,39 +420,41 @@
 </head>
 <body class="theme-default">
 
-    <!-- 1 & 10. Header with Logo and Title -->
+    <!-- Header with Logo and Title -->
     <header class="navbar">
         <div class="nav-left">
             <button class="menu-btn" id="menuToggle"><i class="fa-solid fa-bars"></i></button>
             <div class="brand-container">
-                <img src="orthodox_answer_logo.jpg" alt="ኦርቶዶክሳዊ መልስ ሎጎ" class="logo-img">
-                <h1 class="main-title">ኦርቶዶክሳዊ መልስ</h1>
+                <div class="logo-box">
+                    <img src="orthodox_answer_logo.jpg" alt="ኦርቶዶክሳዊ መልስ ሎጎ" class="logo-img" onerror="this.style.display='none'; this.parentElement.innerHTML='<i class=\"fa-solid fa-cross\" style=\"color:var(--green);font-size:20px;\"></i>';">
+                </div>
+                <h1 class="main-title" id="uiMainTitle">ኦርቶዶክሳዊ መልስ</h1>
             </div>
         </div>
     </header>
 
-    <!-- 8. Side Menu (3 ሰረዝ) -->
+    <!-- Side Menu -->
     <div class="sidebar" id="sidebar">
         <div class="sidebar-header">
-            <h3>ማውጫ</h3>
+            <h3 id="uiMenuTitle">ማውጫ</h3>
             <button class="close-btn" id="closeSidebar"><i class="fa-solid fa-xmark"></i></button>
         </div>
         <ul class="sidebar-links">
-            <li><a href="#" id="colorThemeBtn"><i class="fa-solid fa-palette"></i> ቀለም መቀየሪያ</a></li>
-            <li><a href="#" id="designThemeBtn"><i class="fa-solid fa-brush"></i> ዲዛይን መቀየሪያ</a></li>
-            <li><a href="#" onclick="openModal('aboutModal')"><i class="fa-solid fa-circle-info"></i> ስለ እኛ</a></li>
+            <li><a href="#" id="colorThemeBtn"><i class="fa-solid fa-palette"></i> <span id="uiColorTheme">ቀለም መቀየሪያ</span></a></li>
+            <li><a href="#" id="designThemeBtn"><i class="fa-solid fa-brush"></i> <span id="uiDesignTheme">ዲዛይን መቀየሪያ</span></a></li>
+            <li><a href="#" onclick="openModal('aboutModal')"><i class="fa-solid fa-circle-info"></i> <span id="uiAboutUs">ስለ እኛ</span></a></li>
             <li>
                 <a href="#" onclick="openModal('feedbackModal')">
                     <i class="fa-solid fa-envelope"></i> 
                     <div>
-                        ለአስተያየት
+                        <span id="uiFeedback">ለአስተያየት</span>
                         <span class="contact-info">ezrasamuel2721@gmail.com</span>
                         <span class="contact-info">0962244464</span>
                     </div>
                 </a>
             </li>
-            <li><a href="#" id="shareAppBtn"><i class="fa-solid fa-share-nodes"></i> ያጋሩ</a></li>
-            <li><a href="#" onclick="openModal('booksModal')"><i class="fa-solid fa-book-bible"></i> የንባብ መጻሕፍት ጥቆማ</a></li>
+            <li><a href="#" id="shareAppBtn"><i class="fa-solid fa-share-nodes"></i> <span id="uiShareApp">ያጋሩ</span></a></li>
+            <li><a href="#" onclick="openModal('booksModal')"><i class="fa-solid fa-book-bible"></i> <span id="uiBooksSuggest">የንባብ መጻሕፍት ጥቆማ</span></a></li>
         </ul>
     </div>
     <div class="overlay" id="overlay"></div>
@@ -447,7 +462,7 @@
     <!-- Main Container -->
     <main class="main-container">
         
-        <!-- 2. Languages Scroll Horizontal Bar (በራሳቸው ቋንቋ የተፃፉ) -->
+        <!-- Languages Scroll Horizontal Bar -->
         <div class="lang-scroll-container">
             <div class="lang-bar" id="langBar">
                 <button class="lang-btn active" data-lang="am">አማርኛ</button>
@@ -464,30 +479,31 @@
             </div>
         </div>
 
-        <!-- 3 & 4. Bold Quotes -->
+        <!-- Banner Quotes -->
         <section class="quote-section">
-            <h2 class="quote-text">"መጠየቅ ያደርጋል ሊቅ"</h2>
-            <h3 class="sub-quote-text">መንፈሳዊ ጥያቄዎን ይጠይቁ፤ እውነቱን ይወቁ!</h3>
+            <h2 class="quote-text" id="uiQuoteText">"መጠየቅ ያደርጋል ሊቅ"</h2>
+            <h3 class="sub-quote-text" id="uiSubQuoteText">መንፈሳዊ ጥያቄዎን ይጠይቁ፤ እውነቱን ይወቁ!</h3>
         </section>
 
-        <!-- 5. Question Box -->
+        <!-- Question Box -->
         <section class="question-section">
             <div class="input-card">
-                <label for="userQuestion" class="input-label">እዚህ ይጠይቁ፡</label>
+                <label for="userQuestion" class="input-label" id="uiInputLabel">እዚህ ይጠይቁ፡</label>
                 <textarea id="userQuestion" placeholder="የመንፈሳዊ ጥያቄዎን እዚህ ያስገቡ..."></textarea>
-                <button id="submitBtn" class="ask-btn"><i class="fa-solid fa-paper-plane"></i> ይጠይቁ</button>
+                <button id="submitBtn" class="ask-btn"><i class="fa-solid fa-paper-plane"></i> <span id="uiSubmitBtn">ይጠይቁ</span></button>
             </div>
         </section>
 
-        <!-- 6. Answer Controls & Display -->
+        <!-- Answer Controls & Display -->
         <section class="answer-section hidden" id="answerSection">
             <div class="answer-card" id="answerCard">
                 <div class="answer-header">
-                    <h4><i class="fa-solid fa-cross"></i> መልስ</h4>
+                    <h4><i class="fa-solid fa-cross"></i> <span id="uiAnswerTitle">መልስ</span></h4>
                     <!-- Response Action Buttons -->
                     <div class="answer-tools">
-                        <button id="zoomInBtn" title="Zoom (አሳንስ/አብልቅ)"><i class="fa-solid fa-magnifying-glass-plus"></i></button>
-                        <button id="fullScreenBtn" title="Full Screen (ሙሉ ገጽ)"><i class="fa-solid fa-expand"></i></button>
+                        <button id="ttsBtn" title="ድምፅ ያሰሙ (Read Aloud)"><i class="fa-solid fa-volume-high"></i></button>
+                        <button id="zoomInBtn" title="Zoom"><i class="fa-solid fa-magnifying-glass-plus"></i></button>
+                        <button id="fullScreenBtn" title="Full Screen"><i class="fa-solid fa-expand"></i></button>
                         <button id="likeBtn" title="Like"><i class="fa-regular fa-thumbs-up"></i> <span id="likeCount">0</span></button>
                         <button id="dislikeBtn" title="Dislike"><i class="fa-regular fa-thumbs-down"></i> <span id="dislikeCount">0</span></button>
                         <button id="copyBtn" title="Copy"><i class="fa-regular fa-copy"></i></button>
@@ -505,16 +521,16 @@
     <div class="modal" id="aboutModal">
         <div class="modal-content">
             <span class="modal-close" onclick="closeModal('aboutModal')">&times;</span>
-            <h2>ስለ እኛ</h2>
+            <h2 id="uiModalAboutTitle">ስለ እኛ</h2>
             <br>
-            <p>ኦርቶዶክሳዊ መልስ፡ በኢትዮጵያ ኦርቶዶክስ ተዋሕዶ ቤተክርስቲያን አስተምህሮ እና ሥርዓት መሠረት ለሚነሱ መንፈሳዊ፣ ታሪካዊ እና መጽሐፍ ቅዱሳዊ ጥያቄዎች በብዙ ቋንቋዎች ትክክለኛውን መልስ የሚሰጥ ዲጂታል መድረክ ነው።</p>
+            <p id="uiModalAboutText">ኦርቶዶክሳዊ መልስ፡ በኢትዮጵያ ኦርቶዶክስ ተዋሕዶ ቤተክርስቲያን አስተምህሮ እና ሥርዓት መሠረት ለሚነሱ መንፈሳዊ፣ ታሪካዊ እና መጽሐፍ ቅዱሳዊ ጥያቄዎች በብዙ ቋንቋዎች ትክክለኛውን መልስ የሚሰጥ ዲጂታል መድረክ ነው።</p>
         </div>
     </div>
 
     <div class="modal" id="feedbackModal">
         <div class="modal-content">
             <span class="modal-close" onclick="closeModal('feedbackModal')">&times;</span>
-            <h2>ለአስተያየት</h2>
+            <h2 id="uiModalFeedbackTitle">ለአስተያየት</h2>
             <br>
             <p><strong>ኢሜይል፡</strong> ezrasamuel2721@gmail.com</p>
             <p><strong>ስልክ ቁጥር፡</strong> 0962244464</p>
@@ -524,9 +540,9 @@
     <div class="modal" id="booksModal">
         <div class="modal-content">
             <span class="modal-close" onclick="closeModal('booksModal')">&times;</span>
-            <h2>የንባብ መጻሕፍት ጥቆማ</h2>
+            <h2 id="uiModalBooksTitle">የንባብ መጻሕፍት ጥቆማ</h2>
             <br>
-            <ul>
+            <ul id="uiModalBooksList">
                 <li>መጽሐፍ ቅዱስ (የ81 አቡቀለምሲስ መጻሕፍት)</li>
                 <li>ሃይማኖተ አበው</li>
                 <li>ፍትሐ ነገሥት</li>
@@ -536,9 +552,9 @@
         </div>
     </div>
 
-    <!-- 7. Footer -->
+    <!-- Footer -->
     <footer class="footer">
-        <p>መብቱ በሕግ የተጠበቀ ነው | Created by Ezra Samuel Abebe</p>
+        <p id="uiFooter">መብቱ በሕግ የተጠበቀ ነው | Created by Ezra Samuel Abebe</p>
     </footer>
 
     <!-- JavaScript Controls -->
@@ -562,50 +578,387 @@
             closeSidebar.addEventListener('click', hideSidebar);
             overlay.addEventListener('click', hideSidebar);
 
-            // Multilingual Auto Responses
-            const langBtns = document.querySelectorAll('.lang-btn');
-            let currentLang = 'am';
-
-            const sampleAnswers = {
-                am: "እግዚአብሔር ይመስገን! ጥያቄዎ በተመረጠው ቋንቋ (አማርኛ) መልስ አግኝቷል። በኢትዮጵያ ኦርቶዶክስ ተዋሕዶ ቤተክርስቲያን አስተምህሮ መሠረት እውነትን መፈለግና መጠየቅ ለመንፈሳዊ ዕድገት ትልቅ መንገድ ነው።",
-                en: "Praise be to God! Your question has been answered in English. According to the teachings of the Ethiopian Orthodox Tewahedo Church, seeking truth is vital for spiritual growth.",
-                ti: "እግዚአብሔር ይመስገን! ሕቶኻ ብትግርኛ ተመሊሱ ኣሎ። ከም ትምህርቲ ቤተክርስቲያን ኦርቶዶክስ ተዋሕዶ ሓቂ ምድላይ ንመንፈሳዊ ዕብየት ኣገዳሲ እዩ።",
-                sid: "Magano galatamo! Xa'mmoki Sidaamu Afoonni qolantino.",
-                om: "Galanni Waaqayyof haa ta'u! Gaaffiin keessan Afaan Oromootiin deebii argatee jira.",
-                wal: "Xoossay galatetto! Ne oyssay Wolayttattun zaaretisiis.",
-                kff: "Yeroo galateeto! Ne kello Kaffoonoon amaniete.",
-                sgw: "እግዚአብሔር ይመርመር! የኸነ ጥያቄህ በጉራጊኛ መልስ አግኝቷል።",
-                ar: "الحمد لله! تم الرد على سؤالك باللغة العربية بناءً على تعاليم الكنيسة.",
-                el: "Δόξα τω Θεώ! Η ερώτησή σας απαντήθηκε στα Ελληνικά.",
-                he: "ברוך השם! תשובתך ניתנה בשפה העברית."
+            // Multilingual Dictionary & Auto Responses
+            const translations = {
+                am: {
+                    title: "ኦርቶዶክሳዊ መልስ",
+                    menu: "ማውጫ",
+                    colorTheme: "ቀለም መቀየሪያ",
+                    designTheme: "ዲዛይን መቀየሪያ",
+                    aboutUs: "ስለ እኛ",
+                    feedback: "ለአስተያየት",
+                    shareApp: "ያጋሩ",
+                    booksSuggest: "የንባብ መጻሕፍት ጥቆማ",
+                    quoteText: '"መጠየቅ ያደርጋል ሊቅ"',
+                    subQuoteText: "መንፈሳዊ ጥያቄዎን ይጠይቁ፤ እውነቱን ይወቁ!",
+                    inputLabel: "እዚህ ይጠይቁ፡",
+                    placeholder: "የመንፈሳዊ ጥያቄዎን እዚህ ያስገቡ...",
+                    submitBtn: "ይጠይቁ",
+                    answerTitle: "መልስ",
+                    searching: "በመፈለግ ላይ...",
+                    emptyAlert: "እባክዎን አስቀድመው ጥያቄዎን ያስገቡ!",
+                    copiedAlert: "መልሱ ኮፒ ተደርጓል!",
+                    linkCopiedAlert: "የአፕሊኬሽኑ ሊንክ ተቀድቷል (Copied)!",
+                    aboutTitle: "ስለ እኛ",
+                    aboutText: "ኦርቶዶክሳዊ መልስ፡ በኢትዮጵያ ኦርቶዶክስ ተዋሕዶ ቤተክርስቲያን አስተምህሮ እና ሥርዓት መሠረት ለሚነሱ መንፈሳዊ፣ ታሪካዊ እና መጽሐፍ ቅዱሳዊ ጥያቄዎች በብዙ ቋንቋዎች ትክክለኛውን መልስ የሚሰጥ ዲጂታል መድረክ ነው።",
+                    feedbackTitle: "ለአስተያየት",
+                    booksTitle: "የንባብ መጻሕፍት ጥቆማ",
+                    footer: "መብቱ በሕግ የተጠበቀ ነው | Created by Ezra Samuel Abebe",
+                    sampleAnswer: "እግዚአብሔር ይመስገን! ጥያቄዎ በተመረጠው ቋንቋ (አማርኛ) መልስ አግኝቷል። በኢትዮጵያ ኦርቶዶክስ ተዋሕዶ ቤተክርስቲያን አስተምህሮ መሠረት እውነትን መፈለግና መጠየቅ ለመንፈሳዊ ዕድገት ትልቅ መንገድ ነው።"
+                },
+                en: {
+                    title: "Orthodox Answer",
+                    menu: "Menu",
+                    colorTheme: "Change Theme",
+                    designTheme: "Change Design",
+                    aboutUs: "About Us",
+                    feedback: "Feedback",
+                    shareApp: "Share App",
+                    booksSuggest: "Recommended Books",
+                    quoteText: '"Asking Makes One Wise"',
+                    subQuoteText: "Ask your spiritual questions; know the truth!",
+                    inputLabel: "Ask here:",
+                    placeholder: "Enter your spiritual question here...",
+                    submitBtn: "Ask",
+                    answerTitle: "Answer",
+                    searching: "Searching...",
+                    emptyAlert: "Please enter your question first!",
+                    copiedAlert: "Answer copied to clipboard!",
+                    linkCopiedAlert: "App link copied to clipboard!",
+                    aboutTitle: "About Us",
+                    aboutText: "Orthodox Answer is a digital platform providing authentic answers in multiple languages for spiritual, historical, and biblical questions based on the doctrine of the Ethiopian Orthodox Tewahedo Church.",
+                    feedbackTitle: "Feedback",
+                    booksTitle: "Recommended Books",
+                    footer: "All Rights Reserved | Created by Ezra Samuel Abebe",
+                    sampleAnswer: "Praise be to God! Your question has been answered in English. According to the teachings of the Ethiopian Orthodox Tewahedo Church, seeking truth is vital for spiritual growth."
+                },
+                ti: {
+                    title: "ኦርቶዶክሳዊ መልሲ",
+                    menu: "ማውጫ",
+                    colorTheme: "ሕብሪ ምቅያር",
+                    designTheme: "ዲዛይን ምቅያር",
+                    aboutUs: "ብዛዕባና",
+                    feedback: "ርእይቶ ንምሃብ",
+                    shareApp: "ኣካፍሉ (Share)",
+                    booksSuggest: "ምክሪ መጻሕፍቲ ንባብ",
+                    quoteText: '"ምሕታት ሊቅ ይገብር"',
+                    subQuoteText: "መንፈሳዊ ሕቶኹም ሕተቱ፤ ሓቂ ፍለጡ!",
+                    inputLabel: "ኣብዚ ሕተቱ፡",
+                    placeholder: "መንፈሳዊ ሕቶኹም ኣብዚ ኣእትዉ...",
+                    submitBtn: "ሕተቱ",
+                    answerTitle: "መልሲ",
+                    searching: "ደለይቲ ኣለና...",
+                    emptyAlert: "በጃኹም ፈሊጥኩም ሕቶኹም ኣእትዉ!",
+                    copiedAlert: "መልሲ ተቐዲሑ ኣሎ!",
+                    linkCopiedAlert: "ሊንክ ናይዚ ኣፕ ተቐዲሑ ኣሎ!",
+                    aboutTitle: "ብዛዕባና",
+                    aboutText: "ኦርቶዶክሳዊ መልሲ፡ ብመሰረት ትምህርትን ስርዓትን ቤተክርስቲያን ኦርቶዶክስ ተዋሕዶ ኢትዮጵያ ንዝለዓሉ መንፈሳውያን፣ ታሪካውያንን መጽሓፍ ቅዱሳውያንን ሕቶታት ብብዙሕ ቋንቋታት ትክክለኛ መልሲ ዝህብ ዲጂታል መድረኽ እዩ።",
+                    feedbackTitle: "ርእይቶ ንምሃብ",
+                    booksTitle: "ምክሪ መጻሕፍቲ ንባብ",
+                    footer: "መሰሉ ብሕጊ እተሓለወ እዩ | Created by Ezra Samuel Abebe",
+                    sampleAnswer: "እግዚአብሔር ይመስገን! ሕቶኻ ብትግርኛ ተመሊሱ ኣሎ። ከም ትምህርቲ ቤተክርስቲያን ኦርቶዶክስ ተዋሕዶ ሓቂ ምድላይ ንመንፈሳዊ ዕብየት ኣገዳሲ እዩ።"
+                },
+                om: {
+                    title: "Deebii Ortoodoksii",
+                    menu: "Baafata",
+                    colorTheme: "Halluu Jijjiiri",
+                    designTheme: "Diizaayinii Jijjiiri",
+                    aboutUs: "Waa'ee Keenya",
+                    feedback: "Yaadaaf",
+                    shareApp: "Qoodaa (Share)",
+                    booksSuggest: "Madaallii Kitaabota Dubbisaa",
+                    quoteText: '"Gaafachuun Beekaa Nama Taasisa"',
+                    subQuoteText: "Gaaffii keessan gaafadhaa; dhugaa bira gahaa!",
+                    inputLabel: "Asitti gaafadhaa:",
+                    placeholder: "Gaaffii keessan asitti galchaa...",
+                    submitBtn: "Gaafadhu",
+                    answerTitle: "Deebii",
+                    searching: "Barbaadamaa jira...",
+                    emptyAlert: "Mee jalqaba gaaffii keessan galchaa!",
+                    copiedAlert: "Deebiin waraabbameera!",
+                    linkCopiedAlert: "Linkiin 'App' kanaa waraabbameera!",
+                    aboutTitle: "Waa'ee Keenya",
+                    aboutText: "Deebii Ortoodoksii: Akka barsiisa fi sirna Mana Krestaana Ortoodoksii Tawaahidoo Itoophiyaatti gaaffilee afuuraa, seenaa fi Kitaaba Qulqulluu ka'aniif afaanota hedduun deebii sirrii kan kennu agarsiisa dijiitaalaati.",
+                    feedbackTitle: "Yaadaaf",
+                    booksTitle: "Madaallii Kitaabota Dubbisaa",
+                    footer: "Mirgi seeraan eegamaadha | Created by Ezra Samuel Abebe",
+                    sampleAnswer: "Galanni Waaqayyof haa ta'u! Gaaffiin keessan Afaan Oromootiin deebii argatee jira."
+                },
+                sid: {
+                    title: "Ortodoksaawu Dawaro",
+                    menu: "Gudunfa",
+                    colorTheme: "Bishsha Soorri",
+                    designTheme: "Dizaayine Soorri",
+                    aboutUs: "Nushetta",
+                    feedback: "Heddoora",
+                    shareApp: "Beehi (Share)",
+                    booksSuggest: "Nabbawate Maxaaffa",
+                    quoteText: '"Xattammoanne Beekcho Ikkani"',
+                    subQuoteText: "Ayaanaamittate xattammoki xattammi; halaalakki afi!",
+                    inputLabel: "Tiniini xattammi:",
+                    placeholder: "Ayaanaamittate xattammoki tiniini eessiri...",
+                    submitBtn: "Xattammi",
+                    answerTitle: "Dawaro",
+                    searching: "Hasisaanni no...",
+                    emptyAlert: "Mee balaxxe xattammoki eessiri!",
+                    copiedAlert: "Dawaro kaphphantino!",
+                    linkCopiedAlert: "Appete liinkie kaphphantino!",
+                    aboutTitle: "Nushetta",
+                    aboutText: "Ortodoksaawu Dawaro: Itaphiyu Ortodokse Tawahedo Ammana bikiinin ayaanaamittate xattammooto dawaro quante eeltanno dijitaale ikkino.",
+                    feedbackTitle: "Heddoora",
+                    booksTitle: "Nabbawate Maxaaffa",
+                    footer: "Qoosso higgenni agarantino | Created by Ezra Samuel Abebe",
+                    sampleAnswer: "Magano galatamo! Xa'mmoki Sidaamu Afoonni qolantino."
+                },
+                wal: {
+                    title: "Oortodookse Zaaro",
+                    menu: "Kessha",
+                    colorTheme: "Bishsha Laamiyya",
+                    designTheme: "Dizaayine Laamiyya",
+                    aboutUs: "Nuussi",
+                    feedback: "Qoppo",
+                    shareApp: "Shaariya (Share)",
+                    booksSuggest: "Nabbabiya Maxaafata",
+                    quoteText: '"Oychiyayssi Eraanchcha Gidees"',
+                    subQuoteText: "Ayyaanaametta oyssa oychite; tuma erite!",
+                    inputLabel: "Hagaana oychite:",
+                    placeholder: "Ne ayyaanaametta oyssa hagaana gelissa...",
+                    submitBtn: "Oychite",
+                    answerTitle: "Zaaro",
+                    searching: "Koyyeana de'ees...",
+                    emptyAlert: "Hayyo kasetidi ne oyssa gelissa!",
+                    copiedAlert: "Zaaroy duqettiis!",
+                    linkCopiedAlert: "Appe liinkey duqettiis!",
+                    aboutTitle: "Nuussi",
+                    aboutText: "Oortodookse Zaaro: Itoophiya Oortodookse Tawahedo Woosa Keetha timirtte addan zaaro immiya dijiitaale madaarakka.",
+                    feedbackTitle: "Qoppo",
+                    booksTitle: "Nabbabiya Maxaafata",
+                    footer: "Maatahiggan naagettiis | Created by Ezra Samuel Abebe",
+                    sampleAnswer: "Xoossay galatetto! Ne oyssay Wolayttattun zaaretisiis."
+                },
+                kff: {
+                    title: "Oortodookse Qancho",
+                    menu: "Ketta",
+                    colorTheme: "Bishsha Biyye",
+                    designTheme: "Dizaayine Biyye",
+                    aboutUs: "Nu goppoo",
+                    feedback: "Qoppo",
+                    shareApp: "Beshi (Share)",
+                    booksSuggest: "Nabbabiyee Maxaafata",
+                    quoteText: '"Elliyasi Erano De\'yiyo"',
+                    subQuoteText: "Ne qello kelli; hakko eri!",
+                    inputLabel: "Hinnen kelli:",
+                    placeholder: "Ne spiritual qello hinnino eeshi...",
+                    submitBtn: "Kelli",
+                    answerTitle: "Qancho",
+                    searching: "Koyyeana de'ees...",
+                    emptyAlert: "Hayyo kasetidi ne qello eeshi!",
+                    copiedAlert: "Qancho kaphpheete!",
+                    linkCopiedAlert: "App link kaphpheete!",
+                    aboutTitle: "Nu goppoo",
+                    aboutText: "Oortodookse Qancho: Itoophiya Oortodookse Tawahedo amane timirtin qancho immiya platformie.",
+                    feedbackTitle: "Qoppo",
+                    booksTitle: "Nabbabiyee Maxaafata",
+                    footer: "Wabe higgenni naagettiis | Created by Ezra Samuel Abebe",
+                    sampleAnswer: "Yeroo galateeto! Ne kello Kaffoonoon amaniete."
+                },
+                sgw: {
+                    title: "ኦርቶዶክሳዊ መልስ",
+                    menu: "ማውጫ",
+                    colorTheme: "ቀለም መቀየሪያ",
+                    designTheme: "ዲዛይን መቀየሪያ",
+                    aboutUs: "ስለ እኛ",
+                    feedback: "ለአስተያየት",
+                    shareApp: "ያጋሩ",
+                    booksSuggest: "የንባብ መጻሕፍት ጥቆማ",
+                    quoteText: '"መጠየቅ ያደርጋል ሊቅ"',
+                    subQuoteText: "መንፈሳዊ ጥያቄዎን ይጠይቁ፤ እውነቱን ይወቁ!",
+                    inputLabel: "እዚህ ይጠይቁ፡",
+                    placeholder: "የመንፈሳዊ ጥያቄዎን እዚህ ያስገቡ...",
+                    submitBtn: "ይጠይቁ",
+                    answerTitle: "መልስ",
+                    searching: "በመፈለግ ላይ...",
+                    emptyAlert: "እባክዎን አስቀድመው ጥያቄዎን ያስገቡ!",
+                    copiedAlert: "መልሱ ኮፒ ተደርጓል!",
+                    linkCopiedAlert: "የአፕሊኬሽኑ ሊንክ ተቀድቷል!",
+                    aboutTitle: "ስለ እኛ",
+                    aboutText: "ኦርቶዶክሳዊ መልስ በጉራጊኛ መልስ የሚሰጥ መድረክ ነው።",
+                    feedbackTitle: "ለአስተያየት",
+                    booksTitle: "የንባብ መጻሕፍት ጥቆማ",
+                    footer: "መብቱ በሕግ የተጠበቀ ነው | Created by Ezra Samuel Abebe",
+                    sampleAnswer: "እግዚአብሔር ይመርመር! የኸነ ጥያቄህ በጉራጊኛ መልስ አግኝቷል።"
+                },
+                ar: {
+                    title: "الرد الأرثوذكسي",
+                    menu: "القائمة",
+                    colorTheme: "تغيير المظهر",
+                    designTheme: "تغيير التصميم",
+                    aboutUs: "من نحن",
+                    feedback: "للآراء والتعليقات",
+                    shareApp: "مشاركة التطبيق",
+                    booksSuggest: "كتب مقترحة للقراءة",
+                    quoteText: '"السؤال يمنح الحكمة"',
+                    subQuoteText: "اطرح سؤالك الروحي؛ واعرف الحقيقة!",
+                    inputLabel: "اسأل هنا:",
+                    placeholder: "أدخل سؤالك الروحي هنا...",
+                    submitBtn: "إرسال السؤال",
+                    answerTitle: "الإجابة",
+                    searching: "جاري البحث...",
+                    emptyAlert: "يرجى إدخال سؤالك أولاً!",
+                    copiedAlert: "تم نسخ الإجابة!",
+                    linkCopiedAlert: "تم نسخ رابط التطبيق!",
+                    aboutTitle: "من نحن",
+                    aboutText: "الرد الأرثوذكسي: منصة رقمية تقدم إجابات دقيقة بلغات متعددة للأسئلة الروحية والتاريخية والكتابية بناءً على تعاليم كنيسة التوحيد الأرثوذكسية الإثيوبية.",
+                    feedbackTitle: "للآراء والتعليقات",
+                    booksTitle: "كتب مقترحة للقراءة",
+                    footer: "جميع الحقوق محفوظة | Created by Ezra Samuel Abebe",
+                    sampleAnswer: "الحمد لله! تم الرد على سؤالك باللغة العربية بناءً على تعاليم الكنيسة."
+                },
+                el: {
+                    title: "Ορθόδοξη Απάντηση",
+                    menu: "Μενού",
+                    colorTheme: "Αλλαγή Θέματος",
+                    designTheme: "Αλλαγή Σχεδίου",
+                    aboutUs: "Σχετικά με εμάς",
+                    feedback: "Σχόλια",
+                    shareApp: "Κοινοποίηση",
+                    booksSuggest: "Προτεινόμενα Βιβλία",
+                    quoteText: '"Το να ρωτάς σε κάνει σοφό"',
+                    subQuoteText: "Κάντε την πνευματική σας ερώτηση. Μάθετε την αλήθεια!",
+                    inputLabel: "Ρωτήστε εδώ:",
+                    placeholder: "Εισαγάγετε την ερώτησή σας εδώ...",
+                    submitBtn: "Υποβολή",
+                    answerTitle: "Απάντηση",
+                    searching: "Αναζήτηση...",
+                    emptyAlert: "Παρακαλώ εισαγάγετε πρώτα την ερώτησή σας!",
+                    copiedAlert: "Η απάντηση αντιγράφηκε!",
+                    linkCopiedAlert: "Ο σύνδεσμος αντιγράφηκε!",
+                    aboutTitle: "Σχετικά με εμάς",
+                    aboutText: "Ψηφιακή πλατφόρμα παροχής ορθόδοξων απαντήσεων.",
+                    feedbackTitle: "Σχόλια",
+                    booksTitle: "Προτεινόμενα Βιβλία",
+                    footer: "Με επιφύλαξη παντός δικαιώματος | Created by Ezra Samuel Abebe",
+                    sampleAnswer: "Δόξα τω Θεώ! Η ερώτησή σας απαντήθηκε στα Ελληνικά."
+                },
+                he: {
+                    title: "תשובה אורתודוקסית",
+                    menu: "תפריט",
+                    colorTheme: "שינוי עיצוב",
+                    designTheme: "שינוי סגנון",
+                    aboutUs: "עלינו",
+                    feedback: "משוב",
+                    shareApp: "שתף אפליקציה",
+                    booksSuggest: "ספרים מומלצים",
+                    quoteText: '"לשאול הופך אותך לחכם"',
+                    subQuoteText: "שאל את שאלתך הרוחנית; דע את האמת!",
+                    inputLabel: "שאל כאן:",
+                    placeholder: "הכנס את שאלתך כאן...",
+                    submitBtn: "שאל",
+                    answerTitle: "תשובה",
+                    searching: "מחפש...",
+                    emptyAlert: "אנא הכנס את שאלתך תחילה!",
+                    copiedAlert: "התשובה הועתקה!",
+                    linkCopiedAlert: "הקישור הועתק!",
+                    aboutTitle: "עלינו",
+                    aboutText: "פלטפורמה דיגיטלית למתן תשובות אורתודוקסיות.",
+                    feedbackTitle: "משוב",
+                    booksTitle: "ספרים מומלצים",
+                    footer: "כל הזכויות שמורות | Created by Ezra Samuel Abebe",
+                    sampleAnswer: "ברוך השם! תשובתך ניתנה בשפה העברית."
+                }
             };
 
-            langBtns.forEach(btn => {
-                btn.addEventListener('click', () => {
-                    langBtns.forEach(b => b.classList.remove('active'));
-                    btn.classList.add('active');
-                    currentLang = btn.getAttribute('data-lang');
-                });
-            });
+            const langBtns = document.querySelectorAll('.lang-btn');
+            let currentLang = 'am';
 
             const submitBtn = document.getElementById('submitBtn');
             const userQuestion = document.getElementById('userQuestion');
             const answerSection = document.getElementById('answerSection');
             const answerText = document.getElementById('answerText');
 
+            // Function to update UI Labels and translate existing answer LIVE
+            function updateLanguageUI(lang) {
+                const t = translations[lang] || translations['am'];
+                currentLang = lang;
+
+                document.getElementById('docTitle').innerText = t.title;
+                document.getElementById('uiMainTitle').innerText = t.title;
+                document.getElementById('uiMenuTitle').innerText = t.menu;
+                document.getElementById('uiColorTheme').innerText = t.colorTheme;
+                document.getElementById('uiDesignTheme').innerText = t.designTheme;
+                document.getElementById('uiAboutUs').innerText = t.aboutUs;
+                document.getElementById('uiFeedback').innerText = t.feedback;
+                document.getElementById('uiShareApp').innerText = t.shareApp;
+                document.getElementById('uiBooksSuggest').innerText = t.booksSuggest;
+                document.getElementById('uiQuoteText').innerText = t.quoteText;
+                document.getElementById('uiSubQuoteText').innerText = t.subQuoteText;
+                document.getElementById('uiInputLabel').innerText = t.inputLabel;
+                userQuestion.placeholder = t.placeholder;
+                document.getElementById('uiSubmitBtn').innerText = t.submitBtn;
+                document.getElementById('uiAnswerTitle').innerText = t.answerTitle;
+                
+                document.getElementById('uiModalAboutTitle').innerText = t.aboutTitle;
+                document.getElementById('uiModalAboutText').innerText = t.aboutText;
+                document.getElementById('uiModalFeedbackTitle').innerText = t.feedbackTitle;
+                document.getElementById('uiModalBooksTitle').innerText = t.booksTitle;
+                document.getElementById('uiFooter').innerText = t.footer;
+
+                // Live Answer Translation Fix
+                if (!answerSection.classList.contains('hidden')) {
+                    answerText.innerText = t.sampleAnswer;
+                }
+            }
+
+            langBtns.forEach(btn => {
+                btn.addEventListener('click', () => {
+                    langBtns.forEach(b => b.classList.remove('active'));
+                    btn.classList.add('active');
+                    const lang = btn.getAttribute('data-lang');
+                    updateLanguageUI(lang);
+                });
+            });
+
             submitBtn.addEventListener('click', () => {
                 const question = userQuestion.value.trim();
+                const t = translations[currentLang] || translations['am'];
+
                 if (question === '') {
-                    alert('እባክዎን አስቀድመው ጥያቄዎን ያስገቡ!');
+                    alert(t.emptyAlert);
                     return;
                 }
 
                 answerSection.classList.remove('hidden');
-                answerText.innerText = "በመፈለግ ላይ...";
+                answerText.innerText = t.searching;
                 
                 setTimeout(() => {
-                    answerText.innerText = sampleAnswers[currentLang] || sampleAnswers['am'];
-                }, 500);
+                    answerText.innerText = t.sampleAnswer;
+                    // LocalStorage History Saving
+                    localStorage.setItem('last_asked_question', question);
+                    localStorage.setItem('last_used_lang', currentLang);
+                }, 400);
+            });
+
+            // Restore Previous Session Question/Answer if exists
+            const savedQuestion = localStorage.getItem('last_asked_question');
+            const savedLang = localStorage.getItem('last_used_lang');
+            if (savedQuestion && savedLang) {
+                userQuestion.value = savedQuestion;
+                const targetBtn = document.querySelector(`.lang-btn[data-lang="${savedLang}"]`);
+                if (targetBtn) targetBtn.click();
+            }
+
+            // Text-To-Speech (Voice Reader) Feature
+            const ttsBtn = document.getElementById('ttsBtn');
+            ttsBtn.addEventListener('click', () => {
+                if ('speechSynthesis' in window) {
+                    window.speechSynthesis.cancel();
+                    const utterance = new SpeechSynthesisUtterance(answerText.innerText);
+                    utterance.lang = currentLang === 'en' ? 'en-US' : (currentLang === 'ar' ? 'ar-SA' : 'am-ET');
+                    window.speechSynthesis.speak(utterance);
+                    ttsBtn.classList.toggle('active');
+                } else {
+                    alert('ይህ ብራውዘር የድምፅ ንባብ አያደግፍም!');
+                }
             });
 
             // Tool Option Actions
@@ -632,35 +985,52 @@
             });
 
             document.getElementById('copyBtn').addEventListener('click', () => {
+                const t = translations[currentLang] || translations['am'];
                 navigator.clipboard.writeText(answerText.innerText);
-                alert('መልሱ ኮፒ ተደርጓል!');
+                alert(t.copiedAlert);
             });
 
+            // Answer Share Button
             document.getElementById('shareBtn').addEventListener('click', () => {
+                const t = translations[currentLang] || translations['am'];
                 if (navigator.share) {
                     navigator.share({
-                        title: 'ኦርቶዶክሳዊ መልስ',
+                        title: t.title,
                         text: answerText.innerText,
                         url: window.location.href
-                    });
+                    }).catch(() => {});
                 } else {
-                    alert('ሊንክ፡ ' + window.location.href);
+                    navigator.clipboard.writeText(answerText.innerText);
+                    alert(t.copiedAlert);
                 }
             });
 
-            document.getElementById('colorThemeBtn').addEventListener('click', () => {
+            // Sidebar Share App Function Fix
+            document.getElementById('shareAppBtn').addEventListener('click', (e) => {
+                e.preventDefault();
+                const t = translations[currentLang] || translations['am'];
+                if (navigator.share) {
+                    navigator.share({
+                        title: t.title,
+                        text: t.subQuoteText,
+                        url: window.location.href
+                    }).catch(() => {});
+                } else {
+                    navigator.clipboard.writeText(window.location.href);
+                    alert(t.linkCopiedAlert);
+                }
+                hideSidebar();
+            });
+
+            document.getElementById('colorThemeBtn').addEventListener('click', (e) => {
+                e.preventDefault();
                 document.body.classList.toggle('theme-dark');
                 hideSidebar();
             });
 
-            document.getElementById('designThemeBtn').addEventListener('click', () => {
+            document.getElementById('designThemeBtn').addEventListener('click', (e) => {
+                e.preventDefault();
                 alert('የዲዛይን ስታይል ተቀይሯል!');
-                hideSidebar();
-            });
-
-            document.getElementById('shareAppBtn').addEventListener('click', () => {
-                navigator.clipboard.writeText(window.location.href);
-                alert('የአፕሊኬሽኑ ሊንክ ተቀድቷል (Copied)!');
                 hideSidebar();
             });
         });
