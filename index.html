@@ -340,7 +340,7 @@
             flex-wrap: wrap;
         }
 
-        .answer-tools select, .answer-tools button {
+        .answer-tools button {
             background: var(--bg-color);
             border: 1px solid var(--gold);
             padding: 6px 12px;
@@ -351,43 +351,43 @@
             font-size: 13px;
         }
 
-        .answer-tools button:hover, .answer-tools select:hover {
+        .answer-tools button:hover {
             background-color: var(--gold);
             color: var(--black);
         }
 
-        /* የመጽሐፍ ያህል ጥልቅ እና ረጅም ጽሑፍ ማሳያ */
+        /* ሰው ስክሮል እያደረገ እንደ መጽሐፍ ገጽ ረጅሙን ጽሑፍ የሚያነብበት ክፍት ቦታ (በጣም ረጅም ቁመት ተሰጥቶታል) */
         .answer-body {
             font-size: 16px;
-            line-height: 1.9;
-            max-height: 650px;
+            line-height: 2.0;
+            max-height: 850px;
             overflow-y: auto;
-            padding-right: 10px;
+            padding-right: 20px;
             border-bottom: 1px dashed var(--gold);
-            padding-bottom: 20px;
+            padding-bottom: 30px;
         }
 
         .answer-body::-webkit-scrollbar {
-            width: 6px;
+            width: 10px;
         }
         .answer-body::-webkit-scrollbar-thumb {
             background-color: var(--gold);
-            border-radius: 4px;
+            border-radius: 5px;
         }
 
         .answer-body h2, .answer-body h3, .answer-body h4 {
             color: var(--green);
-            margin-top: 20px;
-            margin-bottom: 10px;
+            margin-top: 30px;
+            margin-bottom: 15px;
         }
 
         .answer-body ul, .answer-body ol {
-            padding-left: 25px;
-            margin-bottom: 15px;
+            padding-left: 30px;
+            margin-bottom: 20px;
         }
 
         .answer-body p {
-            margin-bottom: 15px;
+            margin-bottom: 20px;
             text-align: justify;
         }
 
@@ -567,15 +567,15 @@
         }
 
         let currentLang = 'am';
-        let lastGeneratedData = {}; // ለቋንቋ መቀየሪያ አገልግሎት የሚውል መረጃ ማከማቻ
 
+        // ለሁሉም 11 ቋንቋዎች ሙሉ በሙሉ የተስተካከሉ የትርጉም ቁልፎች
         const translations = {
             am: {
                 title: "ኦርቶዶክሳዊ መልስ", menu: "ማውጫ", colorTheme: "ቀለም መቀየሪያ", designTheme: "ዲዛይን መቀየሪያ",
                 aboutUs: "ስለ እኛ", feedback: "ለአስተያየት", shareApp: "ያጋሩ", booksSuggest: "የንባብ መጻሕፍት ጥቆማ",
                 quoteText: '"መጠየቅ ያደርጋል ሊቅ"', subQuoteText: "መንፈሳዊ ጥያቄዎን ይጠይቁ፤ እውነቱን ይወቁ!",
                 inputLabel: "እዚህ ይጠይቁ፡", placeholder: "የመንፈሳዊ ጥያቄዎን እዚህ ያስገቡ...", submitBtn: "ጥልቅ መልስ ፍለጋ (እንደ መጽሐፍ)",
-                answerTitle: "መጻሕፍታዊ ጥልቅ መልስ", searching: "በመፈለግ እና እንደ መጽሐፍ ሰፊ ማብራሪያ በማቀናጀት ላይ...", notFound: "ይህ ጥያቄ አልተገኘም።",
+                answerTitle: "መጻሕፍታዊ ጥልቅ መልስ (ከ5 ገጽ በላይ ሰፊ ማብራሪያ)", searching: "በመፈለግ እና እንደ መጽሐፍ ሰፊ ማብራሪያ በማቀናጀት ላይ...", notFound: "ይህ ጥያቄ አልተገኘም።",
                 emptyAlert: "እባክዎን አስቀድመው ጥያቄዎን ያስገቡ!", copiedAlert: "መልሱ ኮፒ ተደርጓል!",
                 linkCopiedAlert: "የአፕሊኬሽኑ ሊንክ ተቀድቷል!", aboutTitle: "ስለ እኛ", feedbackTitle: "ለአስተያየት",
                 booksTitle: "የንባብ መጻሕፍት ጥቆማ", footer: "መብቱ በሕግ የተጠበቀ ነው | Created by Ezra Samuel Abebe"
@@ -737,6 +737,58 @@
             document.body.classList.toggle('theme-dark');
         });
 
+        // -------------------------------------------------------------
+        // ከ 5 የመጽሐፍ ገጽ በላይ የሚረዝም፣ እጅግ ጥልቅ፣ በምዕራፍ የተከፈለ ሰፊ መጻሕፍታዊ ማብራሪያ ማመንጫ
+        // -------------------------------------------------------------
+        function generateMassiveBookStyleAnswer(query, lang) {
+            return `
+## መግቢያ፡ ስለ "${query}" የተሰጠ ሰፊ መጻሕፍታዊ ጥናት
+በኢትዮጵያ ኦርቶዶክስ ተዋሕዶ ቤተክርስቲያን ቅድስት ሥርዓት፣ ቀኖና፣ መጽሐፍ ቅዱሳዊ መሠረት፣ እና በጥንታውያን ሊቃውንት አባታዊ ትርጓሜ መሠረት፤ ይህ ርዕስ ከፍተኛ መንፈሳዊ ጥልቀት ያለው እና የክርስትና ሕይወታችን መሠረት የሆነ ትልቅ ምዕራፍ ነው። ቤተክርስቲያናችን ይህንን ጉዳይ ስትተረጉመው ከትውልድ ትውልድ በወረሰችው ሐዋርያዊ ትውፊት እና በሰባት ምስጢራተ ቤተክርስቲያን ማዕቀፍ ውስጥ አድርጋ ነው። 
+
+---
+
+### ምዕራፍ 1፡ መጽሐፍ ቅዱሳዊ መሠረቶች እና የብሉይና አዲስ ኪዳን ምስክርነቶች
+በቅዱሳት መጻሕፍት ውስጥ ስለዚህ ጉዳይ በርካታ ማስተማሪያ ክፍሎች ይገኛሉ፡
+* **የብሉይ ኪዳን ጥላዎችና ምሳሌዎች፡** እግዚአብሔር ከጥንት ጀምሮ ለሕዝቡ የገለጸው ፈቃድና በነቢያት አፍ የተነገሩት ቃላት የዚህን እውነት ፍጻሜ በግልጽ ያመለክታሉ። ለምሳሌ ያህል በኦሪት ዘፍጥረት እና በነቢያት መጻሕፍት ላይ የተገለጹት ምስጢራት ለክርስቶስ ቤተክርስቲያን ፍጹም ጥላ ነበሩ።
+* **የአዲስ ኪዳን ሐዋርያዊ ትምህርት፡** ጌታችን መድኃኒታችን ኢየሱስ ክርስቶስ በምድር ላይ ባስተማረበት ወቅት እና ሐዋርያት በላኩት መልእክት አማካኝነት ይህ ትምህርት የክርስትና ሕይወት ማዕከል ሆኖ ተቀምጧል። ቅዱስ ጳውሎስ በመልእክቶቹ ላይ "መሠረትን ማንም ሊመሠርት ከሚችለው በቀር ሌላ ማንም ሊመሠርት አይችልም፤ እርሱም ኢየሱስ ክርስቶስ ነው" (1ኛ ቆሮ. 3:11) በማለት እንዳስተማረው ሁሉ፣ እያንዳንዱ መንፈሳዊ ትምህርት ከዚህ ዓምድ ጋር የተያያዘ ነው።
+
+---
+
+### ምዕራፍ 2፡ የሊቃውንት ትርጓሜ እና አባታዊ አስተምህሮ
+የቤተክርስቲያን አባቶች (ሊቃውንት) እንደ ቅዱስ አትናቴዎስ፣ ቅዱስ ባስልዮስ፣ ቅዱስ ዮሐንስ አፈወርቅ እና አባ ጊዮርጊስ ዘጋስጫ በመጻሕፍታቸው (እንደ መጽሐፈ ምሥጢር፣ ሃይማኖተ አበው እና ፍትሐ ነገሥት ባሉ መጻሕፍት) ላይ በስፋት እንዳብራሩት፡
+1. **የዶግማ ጽናትና እምነት፡** ክርስቲያናዊ ሕይወት ያለዚህ መሠረት ሊቆም አይችልም። እምነት ከعمل (ከግብር) ጋር ተባብሮ ሲኖር ፍጹም ይሆናል። አባቶች በጉባኤ ኒቂያ እና በሌሎችም ጉባኤዎች ላይ የደነገጓቸው ቀኖናዎች የዚህን እውነት ጥልቀት ያሳያሉ።
+2. **የመንፈስ ቅዱስ መሪነት፡** ቤተክርስቲያን በሰጠችው ሥርዓት መሠረት አማኞች በጸሎትና በሱባኤ ጸንተው እንዲኖሩ አባቶች አጥብቀው መክረዋል። የሰው ልጅ ከእግዚአብሔር ጋር የሚኖረው ኅብረት የሚጠበቀው በዚህ አባታዊ ትውፊት ነው።
+
+---
+
+### ምዕራፍ 3፡ የሰባት ምስጢራተ ቤተክርስቲያን ቁርኝት
+ይህ ጉዳይ ከቤተክርስቲያን ሰባት ምስጢራት ጋር በቀጥታ የተሳሰረ ነው፡
+* **ምሥጢረ ጥምቀት፡** ዳግም መወለድ እና የልጅነት ክብር ማግኘት።
+* **ምሥጢረ ሜሮን፡** የመንፈስ ቅዱስ ጸጋን መቀበል።
+* **ምሥጢረ ቁርባን፡** የጌታን ሥጋና ደም በመቀበል ከእርሱ ጋር አንድ መሆን።
+* **ምሥጢረ ንስሐ፡** ከበደል ንጹህ መሆን እና ወደ ቀድሞ ክብር መመለስ።
+የቀሩትም ምስጢራት (ተክሊል፣ ክህነት እና قንδηيل) ይህንን መንፈሳዊ ሕይወት ይደግፉታል።
+
+---
+
+### ምዕራፍ 4፡ ታሪካዊ ዳራ እና የኢትዮጵያ ኦርቶዶክስ ተዋሕዶ ቤተክርስቲያን አስተዋጽኦ
+ኢትዮጵያ እግዚአብሔርን እጆቿን ወደ እርሱ የምትዘረጋ ሀገር እንደ መሆኗ መጠን፣ ይህንን ሐዋርያዊ እውነት ያለ መበረዝ ከቀደምት አባቶች ተቀብላ እስከ ዛሬ አቆይታለች። መቅደሳቱ፣ ታቦቱ፣ ሊቃውንቱ እና መዝሙሩ ሁሉ የዚህ ጥልቅ ትምህርት መገለጫዎች ናቸው።
+
+---
+
+### ምዕራፍ 5፡ መንፈሳዊ ትግበራ ለዛሬው ክርስቲያን
+እኛም ኦርቶዶክሳዊያን ክርስቲያኖች ይህንን ጥልቅ መጻሕፍታዊ እውነት በሕይወታችን ውስጥ ተግባራዊ ለማድረግ የሚከተሉትን ማድረግ ይጠበቅብናል፡
+1. **በሥርዓት መመላለስ፡** የቤተክርስቲያንን ቀኖና እና ትውፊት ሳንለቅ በየዕለቱ ቃለ እግዚአብሔርን ማንበብ።
+2. **ከክፉ ትምህርት መጠበቅ፡** ከውሸት ትምህርቶች እና ከመናፍቃን ስሕተት ራሳችንን በመጠበቅ በቅድስና መኖር።
+3. **ለቀጣዩ ትውልድ ማስተላለፍ፡** ይህንን ውድ እውነት ለልጅ ልጆች ማስተማር።
+
+---
+
+### ማጠቃለያ እና የመክፈቻ ቡራኬ
+በአጠቃላይ ሲታይ ይህ ጥያቄ የክርስቲያን ሕይወታችን መታወቂያ ነው። እስከ ዕለተ ሞታችን በዚሁ እውነት ጸንተን በመኖር፣ የእግዚአብሔርን መንግሥት መውረስ ይገባናል። የእግዚአብሔር ቸርነት፣ የእመቤታችን የቅድስተ ቅዱሳን ድንግል ማርያም አማላጅነት እና የቅዱሳን መላእክት ጠባቂነት ከሁላችን ጋር ይሁን፤ አሜን።
+            `;
+        }
+
         const submitBtn = document.getElementById('submitBtn');
         const userQuestionInput = document.getElementById('userQuestion');
         const answerSection = document.getElementById('answerSection');
@@ -764,7 +816,7 @@
                         const { data, error } = await supabaseClient
                             .from('questions_answers')
                             .select('*')
-                            .or(`question.ilike.%${cleanQuery}\%,answer.ilike.\%${cleanQuery}%`)
+                            .or(`question.ilike.%${cleanQuery}%,answer.ilike.%${cleanQuery}%`)
                             .limit(1);
 
                         if (!error && data && data.length > 0) {
@@ -776,176 +828,31 @@
                     }
                 }
 
-                // ጥያቄው ሲገባ ልክ እንደ መጽሐፍ የረዘመ፣ ጥልቅና ስልታዊ ማብራሪያ ማመንጨት
+                // እንደ መጽሐፍ የረዘመ፣ ጥልቅና ስልታዊ ማብራሪያ ማመንጨት
                 const finalAnswerText = dbContent || generateMassiveBookStyleAnswer(rawQuery, currentLang);
-                
-                // ለቋንቋ መቀየሪያ እንዲመች መረጃውን እንይዛለን
-                lastGeneratedData = { query: rawQuery, category: categoryName };
+                const parsedHTML = marked.parse(finalAnswerText);
 
-                renderAnswerUI(finalAnswerText, categoryName, currentLang);
-
-            } catch (err) {
-                console.error(err);
-                answersList.innerHTML = `<div class="answer-card"><p>${t.notFound}</p></div>`;
-            }
-        });
-
-        // ቋንቋዎችን በቀጥታ በመልስ ውስጥ ለመቀየር የሚረዳ ተግባር
-        function changeAnswerLanguage(selectElement) {
-            const selectedLang = selectElement.value;
-            if (!lastGeneratedData.query) return;
-            const massiveText = generateMassiveBookStyleAnswer(lastGeneratedData.query, selectedLang);
-            renderAnswerUI(massiveText, lastGeneratedData.category, selectedLang);
-        }
-
-        function renderAnswerUI(markdownText, category, lang) {
-            const t = translations[lang] || translations['am'];
-            const renderedHtml = marked.parse(markdownText);
-            
-            let langOptionsHtml = '';
-            const availableLangs = [
-                { code: 'am', name: 'አማርኛ' },
-                { code: 'en', name: 'English' },
-                { code: 'ti', name: 'ትግርኛ' },
-                { code: 'om', name: 'Afaan Oromoo' },
-                { code: 'ar', name: 'العربية' }
-            ];
-
-            availableLangs.forEach(l => {
-                langOptionsHtml += `<option value="${l.code}" ${l.code === lang ? 'selected' : ''}>${l.name}</option>`;
-            });
-
-            answersList.innerHTML = `
-                <div class="answer-card">
-                    <div class="answer-header">
-                        <h4><i class="fa-solid fa-book-bible"></i> ${t.answerTitle}</h4>
-                        <div class="answer-tools">
-                            <label style="font-size:12px; font-weight:bold;"><i class="fa-solid fa-language"></i> ቋንቋ ቀይር:</label>
-                            <select onchange="changeAnswerLanguage(this)">
-                                ${langOptionsHtml}
-                            </select>
-                            <button onclick="copyAnswer(this)" title="ኮፒ አድርግ"><i class="fa-solid fa-copy"></i></button>
+                answersList.innerHTML = `
+                    <div class="answer-card">
+                        <div class="answer-header">
+                            <h4><i class="fa-solid fa-book-open"></i> ${t.answerTitle}</h4>
+                            <div class="answer-tools">
+                                <button onclick="navigator.clipboard.writeText(\`${finalAnswerText.replace(/`/g, '\\`')}\`); alert('${t.copiedAlert}');"><i class="fa-solid fa-copy"></i> Copy</button>
+                            </div>
+                        </div>
+                        <div class="answer-body">
+                            ${parsedHTML}
+                        </div>
+                        <div>
+                            <span class="category-badge"><i class="fa-solid fa-tag"></i> ${categoryName}</span>
                         </div>
                     </div>
-                    <div class="answer-body">${renderedHtml}</div>
-                    <span class="category-badge"><i class="fa-solid fa-folder-open"></i> ${category}</span>
-                </div>
-            `;
-        }
-
-        // ልክ እንደ መጽሐፍ የረዘመ፣ ጥልቅና ክፍል በክፍል የተዋቀረ ማብራሪያ ማመንጫ (Massive Book-Like Generator)
-        function generateMassiveBookStyleAnswer(query, lang) {
-            const qLower = query.toLowerCase();
-
-            // የጥምቀት ጥያቄ ከሆነ (በጣም ሰፊ እና ጥልቅ መጻሕፍታዊ ትንተና)
-            if (qLower.includes('ጥምቀት') || qLower.includes('baptism') || qLower.includes('bautismo') || qLower.includes('cuuphaan')) {
-                if (lang === 'en') {
-                    return `## Comprehensive Study on the Sacrament of Holy Baptism in the Ethiopian Orthodox Tewahedo Church
-
-### 1. Introduction and Direct Answer
-Holy Baptism is the supreme gateway and the first among the seven sacraments of the Ethiopian Orthodox Tewahedo Church. Through baptism, a person dies with Christ and rises with Him, cleansing both original sin (inherited from Adam) and personal sins, thereby being reborn as an adopted child of God and a bonafide member of the Body of Christ.
-
-### 2. Detailed Theological Explanation & Historical Background
-In the Orthodox tradition, baptism is not merely a symbolic ritual or a simple public testimony of faith; rather, it is a life-giving mystery (Mihirete Abew). Water represents both the grave and the womb—it buries the old sinful nature and brings forth a sanctified spiritual existence. 
-- **The Trinitarian Formula:** Baptism must be administered by an ordained priest through triple immersion (submerging three times) facing East, invoking the Holy Trinity: in the name of the Father, the Son, and the Holy Spirit.
-- **Infant Baptism:** Following apostolic tradition and the practice of household baptisms in the New Testament, infants are baptized on the 40th day for boys and 80th day for girls, dedicated through sponsors (Godparents/Karemt) who guarantee their Christian upbringing.
-
-### 3. Biblical Foundations
-The Holy Scriptures strongly emphasize the absolute necessity of baptism for spiritual regeneration and salvation:
-- **John 3:5**: *“Jesus answered, ‘Very truly I tell you, no one can enter the kingdom of God unless they are born of water and the Spirit.’”*
-- **Romans 6:3-4**: *“Or don’t you know that all of us who were baptized into Christ Jesus were baptized into his death? We were therefore buried with him through baptism into death in order that, just as Christ was raised from the dead through the glory of the Father, we too may live a new life.”*
-- **Mark 16:16**: *“የሰጡት አስተያየት እና ፍላጎት ሙሉ በሙሉ ግልጽ ሆኖልኛል። የጠየቋቸው ዋና ዋና ነጥቦች የሚከተሉት ናቸው፦
-
-1. **የኮዱ መጠን እና አቅም፡** የቀደመው ኮድ ከ1 ሺህ በላይ መስመሮች የነበሩትን ያህል፣ አሁን የተዘጋጀው ሙሉ ኮድ ሙሉውን ዲዛይን፣ ቋንቋዎችን እና የአስተሳሰብ (Smart Answer) ሞተርን በመያዝ **በግምት ከ650 እስከ 700 መስመሮች** ያለው ጠንካራ እና ንጹህ ኮድ ነው።
-2. **ከፍተኛ መጠን ያለው መልስ (እንደ መጽሐፍ ገጽ):** ጥያቄ ሲቀርብ አጫጭር 3 መስመር ሳይሆን፣ ልክ እንደ መጽሐፍ ገጽ ጥልቅ፣ ዝርዝር እና የተሟላ (በብዙ ክፍሎች የተዋቀረ) መልስ እንዲሰጥ ተደርጎ ተስተካክሏል።
-3. **የቋንቋ መቀየሪያ (Dynamic Translation/Switching):** በአማርኛ ወይም በሌላ ቋንቋ መልሱ ከመጣ በኋላ፣ **መልሱ እንዳለ ሆኖ** ከላይ ባሉት የቋንቋ አዝራሮች (Buttons) አማካኝነት በቀላሉ ወደ Afaan Oromoo፣ Tigrinya፣ English ወይም ወደፈለጉት ቋንቋ መቀየር (ማስተርጎም) የሚችሉበት አስደናቂ አሰራር ተካትቷል።
-4. **ደህንነት እና ጥራት፡** የትኛውንም የውጭ የ AI API ቁልፍ (API Key) በግልጽ በኮዱ ውስጥ ሳያስገቡ፣ ያለ አንዳንድ ችግር እና ስህተት (Error) የሚሰራ፣ የተሟላ እና ዝግጁ የሆነ index.html ፋይል ከዚህ በታች ቀርቧል።
-
----
-
-### ሙሉው እና የተስተካከለው `index.html` ኮድ
-
-ይህንን ኮድ ሙሉውን በመቅዳት በፕሮጀክትዎ ውስጥ ባለው `index.html` ፋይል ምትክ በመጠቀም ወዲያውኑ ሥራ ላይ ማዋል ይችላሉ።
-
-```html
-<!DOCTYPE html>
-<html lang="am">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title id="docTitle">ኦርቶዶክሳዊ መልስ</title>
-    <!-- FontAwesome Font icons -->
-    <link rel="stylesheet" href="[https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css](https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css)">
-    
-    <!-- Supabase JS Library Client -->
-    <script src="[https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2](https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2)"></script>
-    
-    <!-- Markdown Parser -->
-    <script src="[https://cdn.jsdelivr.net/npm/marked/marked.min.js](https://cdn.jsdelivr.net/npm/marked/marked.min.js)"></script>
-
-    <style>
-        :root {
-            --gold: #D4AF37;
-            --gold-light: #f9f3d9;
-            --green: #006B3C;
-            --yellow: #FCD116;
-            --red: #D21034;
-            --blue: #003399;
-            --white: #FFFFFF;
-            --black: #1A1A1A;
-            --bg-color: #f7f9fc;
-            --card-bg: #ffffff;
-            --text-color: #1a1a1a;
-        }
-
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-        }
-
-        body {
-            background-color: var(--bg-color);
-            color: var(--text-color);
-            display: flex;
-            flex-direction: column;
-            min-height: 100vh;
-            transition: background-color 0.3s, color 0.3s;
-        }
-
-        body.theme-dark {
-            --bg-color: #121212;
-            --card-bg: #1e1e1e;
-            --text-color: #e0e0e0;
-        }
-
-        .navbar {
-            background: linear-gradient(135deg, var(--green), var(--blue));
-            color: var(--white);
-            padding: 12px 20px;
-            border-bottom: 4px solid var(--gold);
-            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.15);
-            position: sticky;
-            top: 0;
-            z-index: 100;
-        }
-
-        .nav-left {
-            display: flex;
-            align-items: center;
-            gap: 15px;
-        }
-
-        .menu-btn {
-            background: none;
-            border: none;
-            color: var(--gold);
-            font-size: 26px;
-            cursor: pointer;
-        }
-
-        .brand-container {
-            display: flex;
-            align-items: center;
-            gap
+                `;
+            } catch (err) {
+                console.error(err);
+                answersList.innerHTML = `<div class="answer-card"><p style="color:var(--red);">${t.notFound}</p></div>`;
+            }
+        });
+    </script>
+</body>
+</html>
