@@ -7,6 +7,9 @@
     <!-- FontAwesome Font icons -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     
+    <!-- Supabase JS Library Client -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
     <style>
         /* Ethiopian Orthodox Tewahedo Colors Theme */
         :root {
@@ -318,6 +321,7 @@
             border: 2px solid var(--gold);
             padding: 18px;
             box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+            margin-bottom: 15px;
         }
 
         .answer-header {
@@ -360,6 +364,18 @@
         .answer-body {
             font-size: 16px;
             line-height: 1.6;
+        }
+
+        .category-badge {
+            display: inline-block;
+            background-color: var(--gold-light);
+            color: var(--green);
+            padding: 3px 8px;
+            border-radius: 4px;
+            font-size: 12px;
+            font-weight: bold;
+            margin-top: 8px;
+            border: 1px solid var(--gold);
         }
 
         .fullscreen-mode {
@@ -475,7 +491,7 @@
                 <button class="lang-btn" data-lang="sgw">ጉራጊኛ</button>
                 <button class="lang-btn" data-lang="ar">العربية</button>
                 <button class="lang-btn" data-lang="el">Ελληνικά</button>
-                <button class="lang-btn" data-lang="he">עברית</button>
+                <button class="lang-btn" data-lang="he">עבריት</button>
             </div>
         </div>
 
@@ -494,26 +510,10 @@
             </div>
         </section>
 
-        <!-- Answer Controls & Display -->
+        <!-- Answer Controls & Display Container -->
         <section class="answer-section hidden" id="answerSection">
-            <div class="answer-card" id="answerCard">
-                <div class="answer-header">
-                    <h4><i class="fa-solid fa-cross"></i> <span id="uiAnswerTitle">መልስ</span></h4>
-                    <!-- Response Action Buttons -->
-                    <div class="answer-tools">
-                        <button id="ttsBtn" title="ድምፅ ያሰሙ (Read Aloud)"><i class="fa-solid fa-volume-high"></i></button>
-                        <button id="zoomInBtn" title="Zoom"><i class="fa-solid fa-magnifying-glass-plus"></i></button>
-                        <button id="fullScreenBtn" title="Full Screen"><i class="fa-solid fa-expand"></i></button>
-                        <button id="likeBtn" title="Like"><i class="fa-regular fa-thumbs-up"></i> <span id="likeCount">0</span></button>
-                        <button id="dislikeBtn" title="Dislike"><i class="fa-regular fa-thumbs-down"></i> <span id="dislikeCount">0</span></button>
-                        <button id="copyBtn" title="Copy"><i class="fa-regular fa-copy"></i></button>
-                        <button id="shareBtn" title="Share"><i class="fa-solid fa-share-nodes"></i></button>
-                    </div>
-                </div>
-                <div class="answer-body" id="answerBody">
-                    <p id="answerText">ጥያቄዎ በመመመር ላይ ነው...</p>
-                </div>
-            </div>
+            <!-- Results will be injected dynamically here -->
+            <div id="answersList"></div>
         </section>
     </main>
 
@@ -557,8 +557,336 @@
         <p id="uiFooter">መብቱ በሕግ የተጠበቀ ነው | Created by Ezra Samuel Abebe</p>
     </footer>
 
-    <!-- JavaScript Controls -->
+    <!-- JavaScript Controls & Supabase Integration -->
     <script>
+        // Supabase Initialization
+        // NOTE: Fill with your real SUPABASE_URL and SUPABASE_ANON_KEY if needed.
+        const SUPABASE_URL = "https://YOUR_SUPABASE_URL.supabase.co";
+        const SUPABASE_ANON_KEY = "YOUR_SUPABASE_ANON_KEY";
+        
+        let supabaseClient = null;
+        if (typeof supabase !== 'undefined' && SUPABASE_URL !== "https://YOUR_SUPABASE_URL.supabase.co") {
+            supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+        }
+
+        let currentLang = 'am';
+
+        // Multilingual Dictionary
+        const translations = {
+            am: {
+                title: "ኦርቶዶክሳዊ መልስ",
+                menu: "ማውጫ",
+                colorTheme: "ቀለም መቀየሪያ",
+                designTheme: "ዲዛይን መቀየሪያ",
+                aboutUs: "ስለ እኛ",
+                feedback: "ለአስተያየት",
+                shareApp: "ያጋሩ",
+                booksSuggest: "የንባብ መጻሕፍት ጥቆማ",
+                quoteText: '"መጠየቅ ያደርጋል ሊቅ"',
+                subQuoteText: "መንፈሳዊ ጥያቄዎን ይጠይቁ፤ እውነቱን ይወቁ!",
+                inputLabel: "እዚህ ይጠይቁ፡",
+                placeholder: "የመንፈሳዊ ጥያቄዎን እዚህ ያስገቡ...",
+                submitBtn: "ይጠይቁ",
+                answerTitle: "መልስ",
+                searching: "በመፈለግ ላይ...",
+                notFound: "ይህ ጥያቄ በአሁኑ የእውቀት መዝገብ ውስጥ አልተገኘም። ጥያቄውን በሌላ ቃል ይሞክሩ።",
+                emptyAlert: "እባክዎን አስቀድመው ጥያቄዎን ያስገቡ!",
+                copiedAlert: "መልሱ ኮፒ ተደርጓል!",
+                linkCopiedAlert: "የአፕሊኬሽኑ ሊንክ ተቀድቷል (Copied)!",
+                aboutTitle: "ስለ እኛ",
+                aboutText: "ኦርቶዶክሳዊ መልስ፡ በኢትዮጵያ ኦርቶዶክስ ተዋሕዶ ቤተክርስቲያን አስተምህሮ እና ሥርዓት መሠረት ለሚነሱ መንፈሳዊ፣ ታሪካዊ እና መጽሐፍ ቅዱሳዊ ጥያቄዎች በብዙ ቋንቋዎች ትክክለኛውን መልስ የሚሰጥ ዲጂታል መድረክ ነው።",
+                feedbackTitle: "ለአስተያየት",
+                booksTitle: "የንባብ መጻሕፍት ጥቆማ",
+                footer: "መብቱ በሕግ የተጠበቀ ነው | Created by Ezra Samuel Abebe"
+            },
+            en: {
+                title: "Orthodox Answer",
+                menu: "Menu",
+                colorTheme: "Change Theme",
+                designTheme: "Change Design",
+                aboutUs: "About Us",
+                feedback: "Feedback",
+                shareApp: "Share App",
+                booksSuggest: "Recommended Books",
+                quoteText: '"Asking Makes One Wise"',
+                subQuoteText: "Ask your spiritual questions; know the truth!",
+                inputLabel: "Ask here:",
+                placeholder: "Enter your spiritual question here...",
+                submitBtn: "Ask",
+                answerTitle: "Answer",
+                searching: "Searching...",
+                notFound: "This question was not found in the current knowledge base. Please try with different keywords.",
+                emptyAlert: "Please enter your question first!",
+                copiedAlert: "Answer copied to clipboard!",
+                linkCopiedAlert: "App link copied to clipboard!",
+                aboutTitle: "About Us",
+                aboutText: "Orthodox Answer is a digital platform providing authentic answers in multiple languages for spiritual, historical, and biblical questions based on the doctrine of the Ethiopian Orthodox Tewahedo Church.",
+                feedbackTitle: "Feedback",
+                booksTitle: "Recommended Books",
+                footer: "All Rights Reserved | Created by Ezra Samuel Abebe"
+            },
+            ti: {
+                title: "ኦርቶዶክሳዊ መልሲ",
+                menu: "ማውጫ",
+                colorTheme: "ሕብሪ ምቅያር",
+                designTheme: "ዲዛይን ምቅያር",
+                aboutUs: "ብዛዕባና",
+                feedback: "ርእይቶ ንምሃብ",
+                shareApp: "ኣካፍሉ (Share)",
+                booksSuggest: "ምክሪ መጻሕፍቲ ንባብ",
+                quoteText: '"ምሕታት ሊቅ ይገብር"',
+                subQuoteText: "መንፈሳዊ ሕቶኹም ሕተቱ፤ ሓቂ ፍለጡ!",
+                inputLabel: "ኣብዚ ሕተቱ፡",
+                placeholder: "መንፈሳዊ ሕቶኹም ኣብዚ ኣእትዉ...",
+                submitBtn: "ሕተቱ",
+                answerTitle: "መልሲ",
+                searching: "ደለይቲ ኣለና...",
+                notFound: "እዚ ሕቶ ኣብዚ ናይ ሕጂ መዝገብ ፍልጠት ኣይተረኽበን። ብካሊእ ቃላት ይሞክሩ።",
+                emptyAlert: "በጃኹም ፈሊጥኩም ሕቶኹም ኣእትዉ!",
+                copiedAlert: "መልሲ ተቐዲሑ ኣሎ!",
+                linkCopiedAlert: "ሊንክ ናይዚ ኣፕ ተቐዲሑ ኣሎ!",
+                aboutTitle: "ብዛዕባና",
+                aboutText: "ኦርቶዶክሳዊ መልሲ፡ ብመሰረት ትምህርትን ስርዓትን ቤተክርስቲያን ኦርቶዶክስ ተዋሕዶ ኢትዮጵያ ንዝለዓሉ መንፈሳውያን፣ ታሪካውያንን መጽሓፍ ቅዱሳውያንን ሕቶታት ብብዙሕ ቋንቋታት ትክክለኛ መልሲ ዝህብ ዲጂታል መድረኽ እዩ።",
+                feedbackTitle: "ርእይቶ ንምሃብ",
+                booksTitle: "ምክሪ መጻሕፍቲ ንባብ",
+                footer: "መሰሉ ብሕጊ እተሓለወ እዩ | Created by Ezra Samuel Abebe"
+            },
+            om: {
+                title: "Deebii Ortoodoksii",
+                menu: "Baafata",
+                colorTheme: "Halluu Jijjiiri",
+                designTheme: "Diizaayinii Jijjiiri",
+                aboutUs: "Waa'ee Keenya",
+                feedback: "Yaadaaf",
+                shareApp: "Qoodaa (Share)",
+                booksSuggest: "Madaallii Kitaabota Dubbisaa",
+                quoteText: '"Gaafachuun Beekaa Nama Taasisa"',
+                subQuoteText: "Gaaffii keessan gaafadhaa; dhugaa bira gahaa!",
+                inputLabel: "Asitti gaafadhaa:",
+                placeholder: "Gaaffii keessan asitti galchaa...",
+                submitBtn: "Gaafadhu",
+                answerTitle: "Deebii",
+                searching: "Barbaadamaa jira...",
+                notFound: "Gaaffiin kun kuusaa beekumsa ammee keessatti hin argamne. Mee jechoota birootiin yaalaa.",
+                emptyAlert: "Mee jalqaba gaaffii keessan galchaa!",
+                copiedAlert: "Deebiin waraabbameera!",
+                linkCopiedAlert: "Linkiin 'App' kanaa waraabbameera!",
+                aboutTitle: "Waa'ee Keenya",
+                aboutText: "Deebii Ortoodoksii: Akka barsiisa fi sirna Mana Krestaana Ortoodoksii Tawaahidoo Itoophiyaatti gaaffilee afuuraa, seenaa fi Kitaaba Qulqulluu ka'aniif afaanota hedduun deebii sirrii kan kennu agarsiisa dijiitaalaati.",
+                feedbackTitle: "Yaadaaf",
+                booksTitle: "Madaallii Kitaabota Dubbisaa",
+                footer: "Mirgi seeraan eegamaadha | Created by Ezra Samuel Abebe"
+            },
+            sid: {
+                title: "Ortodoksaawu Dawaro",
+                menu: "Gudunfa",
+                colorTheme: "Bishsha Soorri",
+                designTheme: "Dizaayine Soorri",
+                aboutUs: "Nushetta",
+                feedback: "Heddoora",
+                shareApp: "Beehi (Share)",
+                booksSuggest: "Nabbawate Maxaaffa",
+                quoteText: '"Xattammoanne Beekcho Ikkani"',
+                subQuoteText: "Ayaanaamittate xattammoki xattammi; halaalakki afi!",
+                inputLabel: "Tiniini xattammi:",
+                placeholder: "Ayaanaamittate xattammoki tiniini eessiri...",
+                submitBtn: "Xattammi",
+                answerTitle: "Dawaro",
+                searching: "Hasisaanni no...",
+                notFound: "Tini xattammo xonfe egenno borro giddonni afamantinokki. Wole qaallinni wo'naalle.",
+                emptyAlert: "Mee balaxxe xattammoki eessiri!",
+                copiedAlert: "Dawaro kaphphantino!",
+                linkCopiedAlert: "Appete liinkie kaphphantino!",
+                aboutTitle: "Nushetta",
+                aboutText: "Ortodoksaawu Dawaro: Itaphiyu Ortodokse Tawahedo Ammana bikiinin ayaanaamittate xattammooto dawaro quante eeltanno dijitaale ikkino.",
+                feedbackTitle: "Heddoora",
+                booksTitle: "Nabbawate Maxaaffa",
+                footer: "Qoosso higgenni agarantino | Created by Ezra Samuel Abebe"
+            },
+            wal: {
+                title: "Oortodookse Zaaro",
+                menu: "Kessha",
+                colorTheme: "Bishsha Laamiyya",
+                designTheme: "Dizaayine Laamiyya",
+                aboutUs: "Nuussi",
+                feedback: "Qoppo",
+                shareApp: "Shaariya (Share)",
+                booksSuggest: "Nabbabiya Maxaafata",
+                quoteText: '"Oychiyayssi Eraanchcha Gidees"',
+                subQuoteText: "Ayyaanaametta oyssa oychite; tuma erite!",
+                inputLabel: "Hagaana oychite:",
+                placeholder: "Ne ayyaanaametta oyssa hagaana gelissa...",
+                submitBtn: "Oychite",
+                answerTitle: "Zaaro",
+                searching: "Koyyeana de'ees...",
+                notFound: "Ha oyssay eriyo kessha giddon beettibeenna. Hara qaalaan paatte.",
+                emptyAlert: "Hayyo kasetidi ne oyssa gelissa!",
+                copiedAlert: "Zaaroy duqettiis!",
+                linkCopiedAlert: "Appe liinkey duqettiis!",
+                aboutTitle: "Nuussi",
+                aboutText: "Oortodookse Zaaro: Itoophiya Oortodookse Tawahedo Woosa Keetha timirtte addan zaaro immiya dijiitaale madaarakka.",
+                feedbackTitle: "Qoppo",
+                booksTitle: "Nabbabiya Maxaafata",
+                footer: "Maatahiggan naagettiis | Created by Ezra Samuel Abebe"
+            },
+            kff: {
+                title: "Oortodookse Qancho",
+                menu: "Ketta",
+                colorTheme: "Bishsha Biyye",
+                designTheme: "Dizaayine Biyye",
+                aboutUs: "Nu goppoo",
+                feedback: "Qoppo",
+                shareApp: "Beshi (Share)",
+                booksSuggest: "Nabbabiyee Maxaafata",
+                quoteText: '"Elliyasi Erano De\'yiyo"',
+                subQuoteText: "Ne qello kelli; hakko eri!",
+                inputLabel: "Hinnen kelli:",
+                placeholder: "Ne spiritual qello hinnino eeshi...",
+                submitBtn: "Kelli",
+                answerTitle: "Qancho",
+                searching: "Koyyeana de'ees...",
+                notFound: "Hin qello eriyee borro giddoni beettiteenno. Wole qaallini yaalli.",
+                emptyAlert: "Hayyo kasetidi ne qello eeshi!",
+                copiedAlert: "Qancho kaphpheete!",
+                linkCopiedAlert: "App link kaphpheete!",
+                aboutTitle: "Nu goppoo",
+                aboutText: "Oortodookse Qancho: Itoophiya Oortodookse Tawahedo amane timirtin qancho immiya platformie.",
+                feedbackTitle: "Qoppo",
+                booksTitle: "Nabbabiyee Maxaafata",
+                footer: "Wabe higgenni naagettiis | Created by Ezra Samuel Abebe"
+            },
+            sgw: {
+                title: "ኦርቶዶክሳዊ መልስ",
+                menu: "ማውጫ",
+                colorTheme: "ቀለም መቀየሪያ",
+                designTheme: "ዲዛይን መቀየሪያ",
+                aboutUs: "ስለ እኛ",
+                feedback: "ለአስተያየት",
+                shareApp: "ያጋሩ",
+                booksSuggest: "የንባብ መጻሕፍት ጥቆማ",
+                quoteText: '"መጠየቅ ያደርጋል ሊቅ"',
+                subQuoteText: "መንፈሳዊ ጥያቄዎን ይጠይቁ፤ እውነቱን ይወቁ!",
+                inputLabel: "እዚህ ይጠይቁ፡",
+                placeholder: "የመንፈሳዊ ጥያቄዎን እዚህ ያስገቡ...",
+                submitBtn: "ይጠይቁ",
+                answerTitle: "መልስ",
+                searching: "በመፈለግ ላይ...",
+                notFound: "ይህ ጥያቄ በአሁኑ የእውቀት መዝገብ ውስጥ አልተገኘም። ጥያቄውን በሌላ ቃል ይሞክሩ።",
+                emptyAlert: "እባክዎን አስቀድመው ጥያቄዎን ያስገቡ!",
+                copiedAlert: "መልሱ ኮፒ ተደርጓል!",
+                linkCopiedAlert: "የአፕሊኬሽኑ ሊንክ ተቀድቷል!",
+                aboutTitle: "ስለ እኛ",
+                aboutText: "ኦርቶዶክሳዊ መልስ በጉራጊኛ መልስ የሚሰጥ መድረክ ነው።",
+                feedbackTitle: "ለአስተያየት",
+                booksTitle: "የንባብ መጻሕፍት ጥቆማ",
+                footer: "መብቱ በሕግ የተጠበቀ ነው | Created by Ezra Samuel Abebe"
+            },
+            ar: {
+                title: "الرد الأرثوذكسي",
+                menu: "القائمة",
+                colorTheme: "تغيير المظهر",
+                designTheme: "تغيير التصميم",
+                aboutUs: "من نحن",
+                feedback: "للآراء والتعليقات",
+                shareApp: "مشاركة التطبيق",
+                booksSuggest: "كتب مقترحة للقراءة",
+                quoteText: '"السؤال يمنح الحكمة"',
+                subQuoteText: "اطرح سؤالك الروحي؛ واعرف الحقيقة!",
+                inputLabel: "اسأل هنا:",
+                placeholder: "أدخل سؤالك الروحي هنا...",
+                submitBtn: "إرسال السؤال",
+                answerTitle: "الإجابة",
+                searching: "جاري البحث...",
+                notFound: "لم يتم العثور على هذا السؤال في قاعدة المعرفة الحالية. يرجى المحاولة باستخدام كلمات رئيسية أخرى.",
+                emptyAlert: "يرجى إدخال سؤالك أولاً!",
+                copiedAlert: "تم نسخ الإجابة!",
+                linkCopiedAlert: "تم نسخ رابط التطبيق!",
+                aboutTitle: "من نحن",
+                aboutText: "الرد الأرثوذكسي: منصة رقمية تقدم إجابات دقيقة بلغات متعددة للأسئلة الروحية والتاريخية والكتابية بناءً على تعاليم كنيسة التوحيد الأرثوذكسية الإثيوبية.",
+                feedbackTitle: "للآراء والتعليقات",
+                booksTitle: "كتب مقترحة للقراءة",
+                footer: "جميع الحقوق محفوظة | Created by Ezra Samuel Abebe"
+            },
+            el: {
+                title: "Ορθόδοξη Απάντηση",
+                menu: "Μενού",
+                colorTheme: "Αλλαγή Θέματος",
+                designTheme: "Αλλαγή Σχεδίου",
+                aboutUs: "Σχετικά με εμάς",
+                feedback: "Σχόλια",
+                shareApp: "Κοινοποίηση",
+                booksSuggest: "Προτεινόμενα Βιβλία",
+                quoteText: '"Το να ρωτάς σε κάνει σοφό"',
+                subQuoteText: "Ρωτήστε τις πνευματικές σας απορίες!",
+                inputLabel: "Ρωτήστε εδώ:",
+                placeholder: "Εισάγετε την ερώτησή σας...",
+                submitBtn: "Υποβολή",
+                answerTitle: "Απάντηση",
+                searching: "Αναζήτηση...",
+                notFound: "Αυτή η ερώτηση δεν βρέθηκε στη βάση δεδομένων.",
+                emptyAlert: "Παρακαλώ εισάγετε μια ερώτηση!",
+                copiedAlert: "Αντιγράφηκε!",
+                linkCopiedAlert: "Ο σύνδεσμος αντιγράφηκε!",
+                aboutTitle: "Σχετικά με εμάς",
+                aboutText: "Ψηφιακή πλατφόρμα ορθόδοξων απαντήσεων.",
+                feedbackTitle: "Σχόλια",
+                booksTitle: "Προτεινόμενα Βιβλία",
+                footer: "Όλα τα δικαιώματα διατηρούνται | Created by Ezra Samuel Abebe"
+            },
+            he: {
+                title: "תשובה אורתודוקסית",
+                menu: "תפריט",
+                colorTheme: "שנה ערכת נושא",
+                designTheme: "שנה עיצוב",
+                aboutUs: "עלינו",
+                feedback: "משוב",
+                shareApp: "שתף אפליקציה",
+                booksSuggest: "ספרים מומלצים",
+                quoteText: '"לשאול הופך אותך לחכם"',
+                subQuoteText: "שאל את השאלות הרוחניות שלך!",
+                inputLabel: "שאל כאן:",
+                placeholder: "הכנס את השאלה שלך כאן...",
+                submitBtn: "שאל",
+                answerTitle: "תשובה",
+                searching: "מחפש...",
+                notFound: "שאלה זו לא נמצאה במאגר המידע.",
+                emptyAlert: "אנא הזן שאלה תחילה!",
+                copiedAlert: "התשובה הועתקה!",
+                linkCopiedAlert: "הקישור הועתק!",
+                aboutTitle: "עלינו",
+                aboutText: "פלטפורמה דיגיטלית למתן תשובות אורתודוקסיות.",
+                feedbackTitle: "משוב",
+                booksTitle: "ספרים מומלצים",
+                footer: "כל הזכויות שמורות | Created by Ezra Samuel Abebe"
+            }
+        };
+
+        // UI Language Switcher
+        function updateUI(lang) {
+            currentLang = lang;
+            const t = translations[lang] || translations.am;
+            
+            document.getElementById('docTitle').innerText = t.title;
+            document.getElementById('uiMainTitle').innerText = t.title;
+            document.getElementById('uiMenuTitle').innerText = t.menu;
+            document.getElementById('uiColorTheme').innerText = t.colorTheme;
+            document.getElementById('uiDesignTheme').innerText = t.designTheme;
+            document.getElementById('uiAboutUs').innerText = t.aboutUs;
+            document.getElementById('uiFeedback').innerText = t.feedback;
+            document.getElementById('uiShareApp').innerText = t.shareApp;
+            document.getElementById('uiBooksSuggest').innerText = t.booksSuggest;
+            document.getElementById('uiQuoteText').innerText = t.quoteText;
+            document.getElementById('uiSubQuoteText').innerText = t.subQuoteText;
+            document.getElementById('uiInputLabel').innerText = t.inputLabel;
+            document.getElementById('userQuestion').placeholder = t.placeholder;
+            document.getElementById('uiSubmitBtn').innerText = t.submitBtn;
+            document.getElementById('uiModalAboutTitle').innerText = t.aboutTitle;
+            document.getElementById('uiModalAboutText').innerText = t.aboutText;
+            document.getElementById('uiModalFeedbackTitle').innerText = t.feedbackTitle;
+            document.getElementById('uiModalBooksTitle').innerText = t.booksTitle;
+            document.getElementById('uiFooter').innerText = t.footer;
+        }
+
         document.addEventListener('DOMContentLoaded', () => {
             const sidebar = document.getElementById('sidebar');
             const overlay = document.getElementById('overlay');
@@ -578,469 +906,187 @@
             closeSidebar.addEventListener('click', hideSidebar);
             overlay.addEventListener('click', hideSidebar);
 
-            // Multilingual Dictionary & Auto Responses
-            const translations = {
-                am: {
-                    title: "ኦርቶዶክሳዊ መልስ",
-                    menu: "ማውጫ",
-                    colorTheme: "ቀለም መቀየሪያ",
-                    designTheme: "ዲዛይን መቀየሪያ",
-                    aboutUs: "ስለ እኛ",
-                    feedback: "ለአስተያየት",
-                    shareApp: "ያጋሩ",
-                    booksSuggest: "የንባብ መጻሕፍት ጥቆማ",
-                    quoteText: '"መጠየቅ ያደርጋል ሊቅ"',
-                    subQuoteText: "መንፈሳዊ ጥያቄዎን ይጠይቁ፤ እውነቱን ይወቁ!",
-                    inputLabel: "እዚህ ይጠይቁ፡",
-                    placeholder: "የመንፈሳዊ ጥያቄዎን እዚህ ያስገቡ...",
-                    submitBtn: "ይጠይቁ",
-                    answerTitle: "መልስ",
-                    searching: "በመፈለግ ላይ...",
-                    emptyAlert: "እባክዎን አስቀድመው ጥያቄዎን ያስገቡ!",
-                    copiedAlert: "መልሱ ኮፒ ተደርጓል!",
-                    linkCopiedAlert: "የአፕሊኬሽኑ ሊንክ ተቀድቷል (Copied)!",
-                    aboutTitle: "ስለ እኛ",
-                    aboutText: "ኦርቶዶክሳዊ መልስ፡ በኢትዮጵያ ኦርቶዶክስ ተዋሕዶ ቤተክርስቲያን አስተምህሮ እና ሥርዓት መሠረት ለሚነሱ መንፈሳዊ፣ ታሪካዊ እና መጽሐፍ ቅዱሳዊ ጥያቄዎች በብዙ ቋንቋዎች ትክክለኛውን መልስ የሚሰጥ ዲጂታል መድረክ ነው።",
-                    feedbackTitle: "ለአስተያየት",
-                    booksTitle: "የንባብ መጻሕፍት ጥቆማ",
-                    footer: "መብቱ በሕግ የተጠበቀ ነው | Created by Ezra Samuel Abebe",
-                    sampleAnswer: "እግዚአብሔር ይመስገን! ጥያቄዎ በተመረጠው ቋንቋ (አማርኛ) መልስ አግኝቷል። በኢትዮጵያ ኦርቶዶክስ ተዋሕዶ ቤተክርስቲያን አስተምህሮ መሠረት እውነትን መፈለግና መጠየቅ ለመንፈሳዊ ዕድገት ትልቅ መንገድ ነው።"
-                },
-                en: {
-                    title: "Orthodox Answer",
-                    menu: "Menu",
-                    colorTheme: "Change Theme",
-                    designTheme: "Change Design",
-                    aboutUs: "About Us",
-                    feedback: "Feedback",
-                    shareApp: "Share App",
-                    booksSuggest: "Recommended Books",
-                    quoteText: '"Asking Makes One Wise"',
-                    subQuoteText: "Ask your spiritual questions; know the truth!",
-                    inputLabel: "Ask here:",
-                    placeholder: "Enter your spiritual question here...",
-                    submitBtn: "Ask",
-                    answerTitle: "Answer",
-                    searching: "Searching...",
-                    emptyAlert: "Please enter your question first!",
-                    copiedAlert: "Answer copied to clipboard!",
-                    linkCopiedAlert: "App link copied to clipboard!",
-                    aboutTitle: "About Us",
-                    aboutText: "Orthodox Answer is a digital platform providing authentic answers in multiple languages for spiritual, historical, and biblical questions based on the doctrine of the Ethiopian Orthodox Tewahedo Church.",
-                    feedbackTitle: "Feedback",
-                    booksTitle: "Recommended Books",
-                    footer: "All Rights Reserved | Created by Ezra Samuel Abebe",
-                    sampleAnswer: "Praise be to God! Your question has been answered in English. According to the teachings of the Ethiopian Orthodox Tewahedo Church, seeking truth is vital for spiritual growth."
-                },
-                ti: {
-                    title: "ኦርቶዶክሳዊ መልሲ",
-                    menu: "ማውጫ",
-                    colorTheme: "ሕብሪ ምቅያር",
-                    designTheme: "ዲዛይን ምቅያር",
-                    aboutUs: "ብዛዕባና",
-                    feedback: "ርእይቶ ንምሃብ",
-                    shareApp: "ኣካፍሉ (Share)",
-                    booksSuggest: "ምክሪ መጻሕፍቲ ንባብ",
-                    quoteText: '"ምሕታት ሊቅ ይገብር"',
-                    subQuoteText: "መንፈሳዊ ሕቶኹም ሕተቱ፤ ሓቂ ፍለጡ!",
-                    inputLabel: "ኣብዚ ሕተቱ፡",
-                    placeholder: "መንፈሳዊ ሕቶኹም ኣብዚ ኣእትዉ...",
-                    submitBtn: "ሕተቱ",
-                    answerTitle: "መልሲ",
-                    searching: "ደለይቲ ኣለና...",
-                    emptyAlert: "በጃኹም ፈሊጥኩም ሕቶኹም ኣእትዉ!",
-                    copiedAlert: "መልሲ ተቐዲሑ ኣሎ!",
-                    linkCopiedAlert: "ሊንክ ናይዚ ኣፕ ተቐዲሑ ኣሎ!",
-                    aboutTitle: "ብዛዕባና",
-                    aboutText: "ኦርቶዶክሳዊ መልሲ፡ ብመሰረት ትምህርትን ስርዓትን ቤተክርስቲያን ኦርቶዶክስ ተዋሕዶ ኢትዮጵያ ንዝለዓሉ መንፈሳውያን፣ ታሪካውያንን መጽሓፍ ቅዱሳውያንን ሕቶታት ብብዙሕ ቋንቋታት ትክክለኛ መልሲ ዝህብ ዲጂታል መድረኽ እዩ።",
-                    feedbackTitle: "ርእይቶ ንምሃብ",
-                    booksTitle: "ምክሪ መጻሕፍቲ ንባብ",
-                    footer: "መሰሉ ብሕጊ እተሓለወ እዩ | Created by Ezra Samuel Abebe",
-                    sampleAnswer: "እግዚአብሔር ይመስገን! ሕቶኻ ብትግርኛ ተመሊሱ ኣሎ። ከም ትምህርቲ ቤተክርስቲያን ኦርቶዶክስ ተዋሕዶ ሓቂ ምድላይ ንመንፈሳዊ ዕብየት ኣገዳሲ እዩ።"
-                },
-                om: {
-                    title: "Deebii Ortoodoksii",
-                    menu: "Baafata",
-                    colorTheme: "Halluu Jijjiiri",
-                    designTheme: "Diizaayinii Jijjiiri",
-                    aboutUs: "Waa'ee Keenya",
-                    feedback: "Yaadaaf",
-                    shareApp: "Qoodaa (Share)",
-                    booksSuggest: "Madaallii Kitaabota Dubbisaa",
-                    quoteText: '"Gaafachuun Beekaa Nama Taasisa"',
-                    subQuoteText: "Gaaffii keessan gaafadhaa; dhugaa bira gahaa!",
-                    inputLabel: "Asitti gaafadhaa:",
-                    placeholder: "Gaaffii keessan asitti galchaa...",
-                    submitBtn: "Gaafadhu",
-                    answerTitle: "Deebii",
-                    searching: "Barbaadamaa jira...",
-                    emptyAlert: "Mee jalqaba gaaffii keessan galchaa!",
-                    copiedAlert: "Deebiin waraabbameera!",
-                    linkCopiedAlert: "Linkiin 'App' kanaa waraabbameera!",
-                    aboutTitle: "Waa'ee Keenya",
-                    aboutText: "Deebii Ortoodoksii: Akka barsiisa fi sirna Mana Krestaana Ortoodoksii Tawaahidoo Itoophiyaatti gaaffilee afuuraa, seenaa fi Kitaaba Qulqulluu ka'aniif afaanota hedduun deebii sirrii kan kennu agarsiisa dijiitaalaati.",
-                    feedbackTitle: "Yaadaaf",
-                    booksTitle: "Madaallii Kitaabota Dubbisaa",
-                    footer: "Mirgi seeraan eegamaadha | Created by Ezra Samuel Abebe",
-                    sampleAnswer: "Galanni Waaqayyof haa ta'u! Gaaffiin keessan Afaan Oromootiin deebii argatee jira."
-                },
-                sid: {
-                    title: "Ortodoksaawu Dawaro",
-                    menu: "Gudunfa",
-                    colorTheme: "Bishsha Soorri",
-                    designTheme: "Dizaayine Soorri",
-                    aboutUs: "Nushetta",
-                    feedback: "Heddoora",
-                    shareApp: "Beehi (Share)",
-                    booksSuggest: "Nabbawate Maxaaffa",
-                    quoteText: '"Xattammoanne Beekcho Ikkani"',
-                    subQuoteText: "Ayaanaamittate xattammoki xattammi; halaalakki afi!",
-                    inputLabel: "Tiniini xattammi:",
-                    placeholder: "Ayaanaamittate xattammoki tiniini eessiri...",
-                    submitBtn: "Xattammi",
-                    answerTitle: "Dawaro",
-                    searching: "Hasisaanni no...",
-                    emptyAlert: "Mee balaxxe xattammoki eessiri!",
-                    copiedAlert: "Dawaro kaphphantino!",
-                    linkCopiedAlert: "Appete liinkie kaphphantino!",
-                    aboutTitle: "Nushetta",
-                    aboutText: "Ortodoksaawu Dawaro: Itaphiyu Ortodokse Tawahedo Ammana bikiinin ayaanaamittate xattammooto dawaro quante eeltanno dijitaale ikkino.",
-                    feedbackTitle: "Heddoora",
-                    booksTitle: "Nabbawate Maxaaffa",
-                    footer: "Qoosso higgenni agarantino | Created by Ezra Samuel Abebe",
-                    sampleAnswer: "Magano galatamo! Xa'mmoki Sidaamu Afoonni qolantino."
-                },
-                wal: {
-                    title: "Oortodookse Zaaro",
-                    menu: "Kessha",
-                    colorTheme: "Bishsha Laamiyya",
-                    designTheme: "Dizaayine Laamiyya",
-                    aboutUs: "Nuussi",
-                    feedback: "Qoppo",
-                    shareApp: "Shaariya (Share)",
-                    booksSuggest: "Nabbabiya Maxaafata",
-                    quoteText: '"Oychiyayssi Eraanchcha Gidees"',
-                    subQuoteText: "Ayyaanaametta oyssa oychite; tuma erite!",
-                    inputLabel: "Hagaana oychite:",
-                    placeholder: "Ne ayyaanaametta oyssa hagaana gelissa...",
-                    submitBtn: "Oychite",
-                    answerTitle: "Zaaro",
-                    searching: "Koyyeana de'ees...",
-                    emptyAlert: "Hayyo kasetidi ne oyssa gelissa!",
-                    copiedAlert: "Zaaroy duqettiis!",
-                    linkCopiedAlert: "Appe liinkey duqettiis!",
-                    aboutTitle: "Nuussi",
-                    aboutText: "Oortodookse Zaaro: Itoophiya Oortodookse Tawahedo Woosa Keetha timirtte addan zaaro immiya dijiitaale madaarakka.",
-                    feedbackTitle: "Qoppo",
-                    booksTitle: "Nabbabiya Maxaafata",
-                    footer: "Maatahiggan naagettiis | Created by Ezra Samuel Abebe",
-                    sampleAnswer: "Xoossay galatetto! Ne oyssay Wolayttattun zaaretisiis."
-                },
-                kff: {
-                    title: "Oortodookse Qancho",
-                    menu: "Ketta",
-                    colorTheme: "Bishsha Biyye",
-                    designTheme: "Dizaayine Biyye",
-                    aboutUs: "Nu goppoo",
-                    feedback: "Qoppo",
-                    shareApp: "Beshi (Share)",
-                    booksSuggest: "Nabbabiyee Maxaafata",
-                    quoteText: '"Elliyasi Erano De\'yiyo"',
-                    subQuoteText: "Ne qello kelli; hakko eri!",
-                    inputLabel: "Hinnen kelli:",
-                    placeholder: "Ne spiritual qello hinnino eeshi...",
-                    submitBtn: "Kelli",
-                    answerTitle: "Qancho",
-                    searching: "Koyyeana de'ees...",
-                    emptyAlert: "Hayyo kasetidi ne qello eeshi!",
-                    copiedAlert: "Qancho kaphpheete!",
-                    linkCopiedAlert: "App link kaphpheete!",
-                    aboutTitle: "Nu goppoo",
-                    aboutText: "Oortodookse Qancho: Itoophiya Oortodookse Tawahedo amane timirtin qancho immiya platformie.",
-                    feedbackTitle: "Qoppo",
-                    booksTitle: "Nabbabiyee Maxaafata",
-                    footer: "Wabe higgenni naagettiis | Created by Ezra Samuel Abebe",
-                    sampleAnswer: "Yeroo galateeto! Ne kello Kaffoonoon amaniete."
-                },
-                sgw: {
-                    title: "ኦርቶዶክሳዊ መልስ",
-                    menu: "ማውጫ",
-                    colorTheme: "ቀለም መቀየሪያ",
-                    designTheme: "ዲዛይን መቀየሪያ",
-                    aboutUs: "ስለ እኛ",
-                    feedback: "ለአስተያየት",
-                    shareApp: "ያጋሩ",
-                    booksSuggest: "የንባብ መጻሕፍት ጥቆማ",
-                    quoteText: '"መጠየቅ ያደርጋል ሊቅ"',
-                    subQuoteText: "መንፈሳዊ ጥያቄዎን ይጠይቁ፤ እውነቱን ይወቁ!",
-                    inputLabel: "እዚህ ይጠይቁ፡",
-                    placeholder: "የመንፈሳዊ ጥያቄዎን እዚህ ያስገቡ...",
-                    submitBtn: "ይጠይቁ",
-                    answerTitle: "መልስ",
-                    searching: "በመፈለግ ላይ...",
-                    emptyAlert: "እባክዎን አስቀድመው ጥያቄዎን ያስገቡ!",
-                    copiedAlert: "መልሱ ኮፒ ተደርጓል!",
-                    linkCopiedAlert: "የአፕሊኬሽኑ ሊንክ ተቀድቷል!",
-                    aboutTitle: "ስለ እኛ",
-                    aboutText: "ኦርቶዶክሳዊ መልስ በጉራጊኛ መልስ የሚሰጥ መድረክ ነው።",
-                    feedbackTitle: "ለአስተያየት",
-                    booksTitle: "የንባብ መጻሕፍት ጥቆማ",
-                    footer: "መብቱ በሕግ የተጠበቀ ነው | Created by Ezra Samuel Abebe",
-                    sampleAnswer: "እግዚአብሔር ይመርመር! የኸነ ጥያቄህ በጉራጊኛ መልስ አግኝቷል።"
-                },
-                ar: {
-                    title: "الرد الأرثوذكسي",
-                    menu: "القائمة",
-                    colorTheme: "تغيير المظهر",
-                    designTheme: "تغيير التصميم",
-                    aboutUs: "من نحن",
-                    feedback: "للآراء والتعليقات",
-                    shareApp: "مشاركة التطبيق",
-                    booksSuggest: "كتب مقترحة للقراءة",
-                    quoteText: '"السؤال يمنح الحكمة"',
-                    subQuoteText: "اطرح سؤالك الروحي؛ واعرف الحقيقة!",
-                    inputLabel: "اسأل هنا:",
-                    placeholder: "أدخل سؤالك الروحي هنا...",
-                    submitBtn: "إرسال السؤال",
-                    answerTitle: "الإجابة",
-                    searching: "جاري البحث...",
-                    emptyAlert: "يرجى إدخال سؤالك أولاً!",
-                    copiedAlert: "تم نسخ الإجابة!",
-                    linkCopiedAlert: "تم نسخ رابط التطبيق!",
-                    aboutTitle: "من نحن",
-                    aboutText: "الرد الأرثوذكسي: منصة رقمية تقدم إجابات دقيقة بلغات متعددة للأسئلة الروحية والتاريخية والكتابية بناءً على تعاليم كنيسة التوحيد الأرثوذكسية الإثيوبية.",
-                    feedbackTitle: "للآراء والتعليقات",
-                    booksTitle: "كتب مقترحة للقراءة",
-                    footer: "جميع الحقوق محفوظة | Created by Ezra Samuel Abebe",
-                    sampleAnswer: "الحمد لله! تم الرد على سؤالك باللغة العربية بناءً على تعاليم الكنيسة."
-                },
-                el: {
-                    title: "Ορθόδοξη Απάντηση",
-                    menu: "Μενού",
-                    colorTheme: "Αλλαγή Θέματος",
-                    designTheme: "Αλλαγή Σχεδίου",
-                    aboutUs: "Σχετικά με εμάς",
-                    feedback: "Σχόλια",
-                    shareApp: "Κοινοποίηση",
-                    booksSuggest: "Προτεινόμενα Βιβλία",
-                    quoteText: '"Το να ρωτάς σε κάνει σοφό"',
-                    subQuoteText: "Κάντε την πνευματική σας ερώτηση. Μάθετε την αλήθεια!",
-                    inputLabel: "Ρωτήστε εδώ:",
-                    placeholder: "Εισαγάγετε την ερώτησή σας εδώ...",
-                    submitBtn: "Υποβολή",
-                    answerTitle: "Απάντηση",
-                    searching: "Αναζήτηση...",
-                    emptyAlert: "Παρακαλώ εισαγάγετε πρώτα την ερώτησή σας!",
-                    copiedAlert: "Η απάντηση αντιγράφηκε!",
-                    linkCopiedAlert: "Ο σύνδεσμος αντιγράφηκε!",
-                    aboutTitle: "Σχετικά με εμάς",
-                    aboutText: "Ψηφιακή πλατφόρμα παροχής ορθόδοξων απαντήσεων.",
-                    feedbackTitle: "Σχόλια",
-                    booksTitle: "Προτεινόμενα Βιβλία",
-                    footer: "Με επιφύλαξη παντός δικαιώματος | Created by Ezra Samuel Abebe",
-                    sampleAnswer: "Δόξα τω Θεώ! Η ερώτησή σας απαντήθηκε στα Ελληνικά."
-                },
-                he: {
-                    title: "תשובה אורתודוקסית",
-                    menu: "תפריט",
-                    colorTheme: "שינוי עיצוב",
-                    designTheme: "שינוי סגנון",
-                    aboutUs: "עלינו",
-                    feedback: "משוב",
-                    shareApp: "שתף אפליקציה",
-                    booksSuggest: "ספרים מומלצים",
-                    quoteText: '"לשאול הופך אותך לחכם"',
-                    subQuoteText: "שאל את שאלתך הרוחנית; דע את האמת!",
-                    inputLabel: "שאל כאן:",
-                    placeholder: "הכנס את שאלתך כאן...",
-                    submitBtn: "שאל",
-                    answerTitle: "תשובה",
-                    searching: "מחפש...",
-                    emptyAlert: "אנא הכנס את שאלתך תחילה!",
-                    copiedAlert: "התשובה הועתקה!",
-                    linkCopiedAlert: "הקישור הועתק!",
-                    aboutTitle: "עלינו",
-                    aboutText: "פלטפורמה דיגיטלית למתן תשובות אורתודוקסיות.",
-                    feedbackTitle: "משוב",
-                    booksTitle: "ספרים מומלצים",
-                    footer: "כל הזכויות שמורות | Created by Ezra Samuel Abebe",
-                    sampleAnswer: "ברוך השם! תשובתך ניתנה בשפה העברית."
-                }
-            };
-
-            const langBtns = document.querySelectorAll('.lang-btn');
-            let currentLang = 'am';
-
-            const submitBtn = document.getElementById('submitBtn');
-            const userQuestion = document.getElementById('userQuestion');
-            const answerSection = document.getElementById('answerSection');
-            const answerText = document.getElementById('answerText');
-
-            // Function to update UI Labels and translate existing answer LIVE
-            function updateLanguageUI(lang) {
-                const t = translations[lang] || translations['am'];
-                currentLang = lang;
-
-                document.getElementById('docTitle').innerText = t.title;
-                document.getElementById('uiMainTitle').innerText = t.title;
-                document.getElementById('uiMenuTitle').innerText = t.menu;
-                document.getElementById('uiColorTheme').innerText = t.colorTheme;
-                document.getElementById('uiDesignTheme').innerText = t.designTheme;
-                document.getElementById('uiAboutUs').innerText = t.aboutUs;
-                document.getElementById('uiFeedback').innerText = t.feedback;
-                document.getElementById('uiShareApp').innerText = t.shareApp;
-                document.getElementById('uiBooksSuggest').innerText = t.booksSuggest;
-                document.getElementById('uiQuoteText').innerText = t.quoteText;
-                document.getElementById('uiSubQuoteText').innerText = t.subQuoteText;
-                document.getElementById('uiInputLabel').innerText = t.inputLabel;
-                userQuestion.placeholder = t.placeholder;
-                document.getElementById('uiSubmitBtn').innerText = t.submitBtn;
-                document.getElementById('uiAnswerTitle').innerText = t.answerTitle;
-                
-                document.getElementById('uiModalAboutTitle').innerText = t.aboutTitle;
-                document.getElementById('uiModalAboutText').innerText = t.aboutText;
-                document.getElementById('uiModalFeedbackTitle').innerText = t.feedbackTitle;
-                document.getElementById('uiModalBooksTitle').innerText = t.booksTitle;
-                document.getElementById('uiFooter').innerText = t.footer;
-
-                // Live Answer Translation Fix
-                if (!answerSection.classList.contains('hidden')) {
-                    answerText.innerText = t.sampleAnswer;
-                }
-            }
-
-            langBtns.forEach(btn => {
-                btn.addEventListener('click', () => {
-                    langBtns.forEach(b => b.classList.remove('active'));
-                    btn.classList.add('active');
-                    const lang = btn.getAttribute('data-lang');
-                    updateLanguageUI(lang);
+            // Language Bar Click Listener
+            const langButtons = document.querySelectorAll('.lang-btn');
+            langButtons.forEach(btn => {
+                btn.addEventListener('click', (e) => {
+                    langButtons.forEach(b => b.classList.remove('active'));
+                    e.target.classList.add('active');
+                    const lang = e.target.getAttribute('data-lang');
+                    updateUI(lang);
                 });
             });
 
-            submitBtn.addEventListener('click', () => {
-                const question = userQuestion.value.trim();
-                const t = translations[currentLang] || translations['am'];
-
-                if (question === '') {
-                    alert(t.emptyAlert);
-                    return;
-                }
-
-                answerSection.classList.remove('hidden');
-                answerText.innerText = t.searching;
-                
-                setTimeout(() => {
-                    answerText.innerText = t.sampleAnswer;
-                    // LocalStorage History Saving
-                    localStorage.setItem('last_asked_question', question);
-                    localStorage.setItem('last_used_lang', currentLang);
-                }, 400);
-            });
-
-            // Restore Previous Session Question/Answer if exists
-            const savedQuestion = localStorage.getItem('last_asked_question');
-            const savedLang = localStorage.getItem('last_used_lang');
-            if (savedQuestion && savedLang) {
-                userQuestion.value = savedQuestion;
-                const targetBtn = document.querySelector(`.lang-btn[data-lang="${savedLang}"]`);
-                if (targetBtn) targetBtn.click();
-            }
-
-            // Text-To-Speech (Voice Reader) Feature
-            const ttsBtn = document.getElementById('ttsBtn');
-            ttsBtn.addEventListener('click', () => {
-                if ('speechSynthesis' in window) {
-                    window.speechSynthesis.cancel();
-                    const utterance = new SpeechSynthesisUtterance(answerText.innerText);
-                    utterance.lang = currentLang === 'en' ? 'en-US' : (currentLang === 'ar' ? 'ar-SA' : 'am-ET');
-                    window.speechSynthesis.speak(utterance);
-                    ttsBtn.classList.toggle('active');
-                } else {
-                    alert('ይህ ብራውዘር የድምፅ ንባብ አያደግፍም!');
-                }
-            });
-
-            // Tool Option Actions
-            let isZoomed = false;
-            document.getElementById('zoomInBtn').addEventListener('click', () => {
-                isZoomed = !isZoomed;
-                answerText.style.fontSize = isZoomed ? '22px' : '16px';
-            });
-
-            const answerCard = document.getElementById('answerCard');
-            document.getElementById('fullScreenBtn').addEventListener('click', () => {
-                answerCard.classList.toggle('fullscreen-mode');
-            });
-
-            let likes = 0, dislikes = 0;
-            document.getElementById('likeBtn').addEventListener('click', () => {
-                likes++;
-                document.getElementById('likeCount').innerText = likes;
-            });
-
-            document.getElementById('dislikeBtn').addEventListener('click', () => {
-                dislikes++;
-                document.getElementById('dislikeCount').innerText = dislikes;
-            });
-
-            document.getElementById('copyBtn').addEventListener('click', () => {
-                const t = translations[currentLang] || translations['am'];
-                navigator.clipboard.writeText(answerText.innerText);
-                alert(t.copiedAlert);
-            });
-
-            // Answer Share Button
-            document.getElementById('shareBtn').addEventListener('click', () => {
-                const t = translations[currentLang] || translations['am'];
-                if (navigator.share) {
-                    navigator.share({
-                        title: t.title,
-                        text: answerText.innerText,
-                        url: window.location.href
-                    }).catch(() => {});
-                } else {
-                    navigator.clipboard.writeText(answerText.innerText);
-                    alert(t.copiedAlert);
-                }
-            });
-
-            // Sidebar Share App Function Fix
-            document.getElementById('shareAppBtn').addEventListener('click', (e) => {
-                e.preventDefault();
-                const t = translations[currentLang] || translations['am'];
-                if (navigator.share) {
-                    navigator.share({
-                        title: t.title,
-                        text: t.subQuoteText,
-                        url: window.location.href
-                    }).catch(() => {});
-                } else {
-                    navigator.clipboard.writeText(window.location.href);
-                    alert(t.linkCopiedAlert);
-                }
-                hideSidebar();
-            });
-
+            // Theme Toggle
             document.getElementById('colorThemeBtn').addEventListener('click', (e) => {
                 e.preventDefault();
                 document.body.classList.toggle('theme-dark');
-                hideSidebar();
             });
 
-            document.getElementById('designThemeBtn').addEventListener('click', (e) => {
+            // Share App Button
+            document.getElementById('shareAppBtn').addEventListener('click', (e) => {
                 e.preventDefault();
-                alert('የዲዛይን ስታይል ተቀይሯል!');
-                hideSidebar();
+                const t = translations[currentLang] || translations.am;
+                navigator.clipboard.writeText(window.location.href);
+                alert(t.linkCopiedAlert);
             });
+
+            // Submit / Search Listener
+            document.getElementById('submitBtn').addEventListener('click', performSearch);
         });
 
+        // Search Functionality with Supabase / Fallback
+        async function performSearch() {
+            const query = document.getElementById('userQuestion').value.trim();
+            const t = translations[currentLang] || translations.am;
+            const answerSection = document.getElementById('answerSection');
+            const answersList = document.getElementById('answersList');
+
+            if (!query) {
+                alert(t.emptyAlert);
+                return;
+            }
+
+            answerSection.classList.remove('hidden');
+            answersList.innerHTML = `
+                <div class="answer-card">
+                    <p><i class="fa-solid fa-spinner fa-spin"></i> ${t.searching}</p>
+                </div>
+            `;
+
+            let results = [];
+
+            if (supabaseClient) {
+                try {
+                    // Search in Supabase 'orthodox_answers' table across question, answer, category
+                    const { data, error } = await supabaseClient
+                        .from('orthodox_answers')
+                        .select('*')
+                        .or(`question.ilike.%${query}%,answer.ilike.%${query}%,category.ilike.%${query}%`)
+                        .eq('language', currentLang);
+
+                    if (!error && data && data.length > 0) {
+                        results = data;
+                    }
+                } catch (err) {
+                    console.error("Supabase search error:", err);
+                }
+            }
+
+            // Render Results
+            answersList.innerHTML = '';
+
+            if (results.length > 0) {
+                results.forEach((item, index) => {
+                    renderAnswerCard(item.question, item.answer, item.category || '', index);
+                });
+            } else {
+                // If no exact database record, render Not Found Message
+                answersList.innerHTML = `
+                    <div class="answer-card">
+                        <div class="answer-header">
+                            <h4><i class="fa-solid fa-circle-exclamation" style="color:var(--red);"></i> ${t.answerTitle}</h4>
+                        </div>
+                        <div class="answer-body">
+                            <p>${t.notFound}</p>
+                        </div>
+                    </div>
+                `;
+            }
+        }
+
+        // Render Answer Card Helper Function
+        function renderAnswerCard(question, answer, category, index) {
+            const t = translations[currentLang] || translations.am;
+            const answersList = document.getElementById('answersList');
+
+            const card = document.createElement('div');
+            card.className = 'answer-card';
+            card.id = `card-${index}`;
+
+            card.innerHTML = `
+                <div class="answer-header">
+                    <h4><i class="fa-solid fa-cross"></i> ${question ? question : t.answerTitle}</h4>
+                    <div class="answer-tools">
+                        <button onclick="speakText('text-${index}')" title="Read Aloud"><i class="fa-solid fa-volume-high"></i></button>
+                        <button onclick="zoomText('text-${index}')" title="Zoom"><i class="fa-solid fa-magnifying-glass-plus"></i></button>
+                        <button onclick="toggleFullScreen('card-${index}')" title="Full Screen"><i class="fa-solid fa-expand"></i></button>
+                        <button onclick="likeAnswer(this)" title="Like"><i class="fa-regular fa-thumbs-up"></i> <span>0</span></button>
+                        <button onclick="dislikeAnswer(this)" title="Dislike"><i class="fa-regular fa-thumbs-down"></i> <span>0</span></button>
+                        <button onclick="copyAnswer('text-${index}')" title="Copy"><i class="fa-regular fa-copy"></i></button>
+                        <button onclick="shareAnswer('text-${index}')" title="Share"><i class="fa-solid fa-share-nodes"></i></button>
+                    </div>
+                </div>
+                <div class="answer-body" id="text-${index}">
+                    <p>${answer}</p>
+                    ${category ? `<span class="category-badge">${category}</span>` : ''}
+                </div>
+            `;
+
+            answersList.appendChild(card);
+        }
+
+        // Interactive Tool Actions
+        function speakText(elementId) {
+            const text = document.getElementById(elementId).innerText;
+            const utterance = new SpeechSynthesisUtterance(text);
+            window.speechSynthesis.speak(utterance);
+        }
+
+        function zoomText(elementId) {
+            const el = document.getElementById(elementId);
+            const currentSize = parseFloat(window.getComputedStyle(el).fontSize);
+            el.style.fontSize = (currentSize >= 24 ? 16 : currentSize + 2) + 'px';
+        }
+
+        function toggleFullScreen(cardId) {
+            const card = document.getElementById(cardId);
+            card.classList.toggle('fullscreen-mode');
+        }
+
+        function likeAnswer(btn) {
+            const span = btn.querySelector('span');
+            span.innerText = parseInt(span.innerText) + 1;
+        }
+
+        function dislikeAnswer(btn) {
+            const span = btn.querySelector('span');
+            span.innerText = parseInt(span.innerText) + 1;
+        }
+
+        function copyAnswer(elementId) {
+            const text = document.getElementById(elementId).innerText;
+            const t = translations[currentLang] || translations.am;
+            navigator.clipboard.writeText(text);
+            alert(t.copiedAlert);
+        }
+
+        function shareAnswer(elementId) {
+            const text = document.getElementById(elementId).innerText;
+            if (navigator.share) {
+                navigator.share({
+                    title: 'ኦርቶዶክሳዊ መልስ',
+                    text: text,
+                    url: window.location.href
+                });
+            } else {
+                copyAnswer(elementId);
+            }
+        }
+
+        // Modal Controls
         function openModal(id) {
-            document.getElementById(id).style.display = "block";
+            document.getElementById(id).style.display = 'block';
         }
 
         function closeModal(id) {
-            document.getElementById(id).style.display = "none";
+            document.getElementById(id).style.display = 'none';
+        }
+
+        window.onclick = function(event) {
+            if (event.target.classList.contains('modal')) {
+                event.target.style.display = 'none';
+            }
         }
     </script>
 </body>
