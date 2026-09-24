@@ -2,2202 +2,2497 @@
 <html lang="am">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<meta name="theme-color" content="#006B3C">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<meta name="theme-color" content="#006b3c">
 
-<title id="docTitle">ኦርቶዶክሳዊ መልስ</title>
-
-<link rel="stylesheet"
-href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+<title>ኦርቶዶክሳዊ መልስ</title>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
 
 <style>
-:root{
-    --green:#006B3C;
-    --green-dark:#004d2b;
-    --gold:#D4AF37;
-    --gold-light:#f9f3d9;
-    --red:#D21034;
-    --blue:#003399;
-
-    --bg:#f7f9fc;
-    --card:#fff;
-    --text:#1a1a1a;
-    --muted:#666;
-
-    --shadow:0 4px 14px rgba(0,0,0,.10);
-}
-
 *{
-    margin:0;
-    padding:0;
-    box-sizing:border-box;
+  box-sizing:border-box;
+  margin:0;
+  padding:0;
 }
 
 html{
-    scroll-behavior:smooth;
+  scroll-behavior:smooth;
 }
 
 body{
-    min-height:100vh;
-    background:var(--bg);
-    color:var(--text);
-    font-family:
-    "Noto Sans Ethiopic",
-    "Segoe UI",
-    Tahoma,
-    Arial,
-    sans-serif;
-}
-
-body.dark{
-    --bg:#101512;
-    --card:#1b211e;
-    --text:#eeeeee;
-    --muted:#bdbdbd;
-    --gold-light:#302c18;
-}
-
-body.soft{
-    --bg:#f5f1e8;
-    --card:#fffdf7;
+  font-family:"Noto Sans Ethiopic","Abyssinica SIL",Arial,sans-serif;
+  background:#f4f7f5;
+  color:#17231d;
+  line-height:1.7;
 }
 
 button,
 textarea,
-input{
-    font:inherit;
+select{
+  font-family:inherit;
 }
 
 button{
-    cursor:pointer;
+  cursor:pointer;
 }
 
-/* NAVBAR */
-
-.navbar{
-    position:sticky;
-    top:0;
-    z-index:100;
-    background:linear-gradient(135deg,var(--green),var(--blue));
-    color:white;
-    padding:10px 16px;
-    border-bottom:4px solid var(--gold);
-    box-shadow:var(--shadow);
+.header{
+  position:sticky;
+  top:0;
+  z-index:1000;
+  background:#006b3c;
+  color:#fff;
+  box-shadow:0 3px 15px #0003;
 }
 
-.nav-left{
-    display:flex;
-    align-items:center;
-    gap:12px;
+.header-inner{
+  max-width:1100px;
+  min-height:72px;
+  margin:auto;
+  padding:10px 15px;
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  position:relative;
 }
 
+.brand{
+  display:flex;
+  align-items:center;
+  gap:10px;
+}
+
+.logo{
+  width:50px;
+  height:50px;
+  border-radius:50%;
+  background:#fff;
+  border:2px solid #d4aa35;
+  color:#006b3c;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  font-size:28px;
+  font-weight:bold;
+}
+
+.brand-title{
+  font-size:18px;
+  font-weight:800;
+}
+
+.brand-subtitle{
+  font-size:11px;
+  opacity:.9;
+}
+
+.header-actions{
+  display:flex;
+  align-items:center;
+  gap:7px;
+}
+
+.lang-btn,
 .menu-btn{
-    width:48px;
-    height:44px;
-    border:0;
-    background:transparent;
-    color:var(--gold);
-    font-size:28px;
-    border-radius:8px;
-}
-
-.menu-btn:hover{
-    background:rgba(255,255,255,.12);
-}
-
-.brand-container{
-    display:flex;
-    align-items:center;
-    gap:10px;
-}
-
-.logo-box{
-    width:50px;
-    height:50px;
-    border-radius:50%;
-    border:2px solid var(--gold);
-    background:var(--gold-light);
-    display:flex;
-    align-items:center;
-    justify-content:center;
-}
-
-.logo-box i{
-    color:var(--green);
-    font-size:25px;
-}
-
-.main-title{
-    font-size:21px;
-    font-weight:800;
-    color:var(--gold);
-    text-shadow:1px 1px 3px #0008;
-}
-
-/* SIDEBAR */
-
-.sidebar{
-    position:fixed;
-    left:0;
-    top:0;
-    width:min(320px,88vw);
-    height:100vh;
-    background:var(--card);
-    z-index:300;
-
-    transform:translateX(-105%);
-    transition:transform .25s ease;
-
-    padding:18px;
-    overflow-y:auto;
-
-    box-shadow:6px 0 20px #0005;
-}
-
-.sidebar.open{
-    transform:translateX(0);
-}
-
-.sidebar-header{
-    display:flex;
-    align-items:center;
-    justify-content:space-between;
-
-    border-bottom:2px solid var(--gold);
-    padding-bottom:12px;
-    margin-bottom:14px;
-}
-
-.sidebar-header h3{
-    color:var(--green);
-}
-
-.close-btn{
-    border:0;
-    background:transparent;
-    color:var(--red);
-    font-size:26px;
-    padding:4px 8px;
-}
-
-.sidebar-links{
-    list-style:none;
-}
-
-.sidebar-links li{
-    margin:7px 0;
-}
-
-.sidebar-action{
-    width:100%;
-    border:0;
-    background:transparent;
-    color:var(--text);
-    text-align:left;
-
-    display:flex;
-    align-items:center;
-    gap:12px;
-
-    padding:13px 11px;
-    border-radius:8px;
-}
-
-.sidebar-action:hover{
-    background:var(--gold-light);
-    color:var(--green);
-}
-
-.sidebar-action i{
-    width:23px;
-    text-align:center;
-    color:var(--green);
-}
-
-.overlay{
-    position:fixed;
-    inset:0;
-    background:#0008;
-    z-index:250;
-
-    opacity:0;
-    visibility:hidden;
-    transition:.2s;
-}
-
-.overlay.open{
-    opacity:1;
-    visibility:visible;
-}
-
-/* LANGUAGE */
-
-.lang-scroll-container{
-    background:var(--card);
-    border-bottom:2px solid var(--gold);
-    overflow-x:auto;
-    white-space:nowrap;
-    padding:11px 0;
-}
-
-.lang-bar{
-    display:inline-flex;
-    gap:9px;
-    padding:0 15px;
+  min-width:44px;
+  height:42px;
+  border-radius:10px;
+  border:1px solid #ffffff55;
+  background:#ffffff18;
+  color:#fff;
+  font-weight:bold;
 }
 
 .lang-btn{
-    border:1.5px solid var(--gold);
-    background:transparent;
-    color:var(--text);
-
-    padding:7px 15px;
-    border-radius:22px;
-
-    font-weight:700;
+  padding:0 9px;
 }
 
-.lang-btn.active{
-    background:var(--gold);
-    color:#111;
+.menu{
+  display:none;
+  position:absolute;
+  right:12px;
+  top:67px;
+  width:270px;
+  background:#fff;
+  color:#17231d;
+  border-radius:15px;
+  box-shadow:0 10px 35px #0004;
+  overflow:hidden;
 }
 
-/* MAIN */
-
-.main-container{
-    width:100%;
-    max-width:900px;
-    margin:auto;
-    padding:0 15px 30px;
+.menu.open{
+  display:block;
 }
 
-.quote-section{
-    text-align:center;
-    margin:20px 0;
-    padding:18px;
-
-    border-left:5px solid var(--red);
-    border-right:5px solid var(--green);
-
-    background:var(--card);
-    border-radius:9px;
-
-    box-shadow:var(--shadow);
+.menu button{
+  width:100%;
+  padding:13px 15px;
+  border:0;
+  border-bottom:1px solid #edf0ee;
+  background:#fff;
+  color:#17231d;
+  text-align:left;
+  font-size:15px;
 }
 
-.quote-text{
-    color:var(--green);
-    font-size:22px;
-    margin-bottom:7px;
-    font-weight:800;
+.menu button:hover{
+  background:#f0f6f2;
 }
 
-.sub-quote-text{
-    color:var(--red);
-    font-size:15px;
+.hero{
+  background:
+    linear-gradient(135deg,#005d35,#007d45,#07965a);
+  color:#fff;
+  text-align:center;
+  padding:55px 18px 60px;
 }
 
-/* QUESTION */
-
-.input-card{
-    background:var(--card);
-    padding:20px;
-
-    border-radius:12px;
-    border-top:4px solid var(--gold);
-
-    box-shadow:var(--shadow);
+.hero-content{
+  max-width:850px;
+  margin:auto;
 }
 
-.input-label{
-    display:block;
-    color:var(--green);
-    font-size:18px;
-    font-weight:800;
-    margin-bottom:9px;
+.hero h1{
+  font-size:clamp(28px,6vw,48px);
+  line-height:1.35;
+  margin-bottom:12px;
+}
+
+.hero p{
+  max-width:750px;
+  margin:auto;
+  font-size:17px;
+}
+
+.container{
+  width:min(100% - 28px,920px);
+  margin:auto;
+}
+
+.main{
+  padding:30px 0 60px;
+}
+
+.card{
+  background:#fff;
+  border-radius:20px;
+  padding:22px;
+  margin-bottom:22px;
+  box-shadow:0 5px 25px #00000012;
+}
+
+.card h2{
+  color:#006b3c;
+  font-size:23px;
+  margin-bottom:5px;
+}
+
+.card-description{
+  color:#68756e;
+  font-size:14px;
+  margin-bottom:16px;
 }
 
 textarea{
-    width:100%;
-    min-height:110px;
-
-    padding:13px;
-
-    border:1px solid #c9c9c9;
-    border-radius:7px;
-
-    resize:vertical;
-
-    font-size:16px;
-
-    background:var(--bg);
-    color:var(--text);
-
-    outline:none;
+  width:100%;
+  min-height:155px;
+  resize:vertical;
+  border:2px solid #dfe8e2;
+  border-radius:14px;
+  padding:15px;
+  outline:none;
+  font-size:16px;
+  background:#fbfdfb;
 }
 
 textarea:focus{
-    border-color:var(--green);
-    box-shadow:0 0 0 3px #006b3c22;
+  border-color:#00834b;
 }
 
-.ask-btn{
-    width:100%;
-    margin-top:12px;
-
-    border:0;
-    border-radius:7px;
-
-    background:var(--green);
-    color:white;
-
-    padding:13px;
-
-    font-size:16px;
-    font-weight:800;
+.form-row{
+  display:flex;
+  gap:10px;
+  margin-top:12px;
 }
 
-.ask-btn:hover{
-    background:var(--green-dark);
+.primary-btn{
+  flex:1;
+  min-height:52px;
+  border:0;
+  border-radius:13px;
+  background:#006b3c;
+  color:#fff;
+  font-size:17px;
+  font-weight:800;
 }
 
-.ask-btn:disabled{
-    opacity:.65;
-    cursor:wait;
+.primary-btn:disabled{
+  opacity:.6;
+  cursor:not-allowed;
 }
 
-/* ANSWER */
-
-.answer-section{
-    margin-top:25px;
+.secondary-btn{
+  min-height:52px;
+  padding:0 18px;
+  border:1px solid #cbd8d0;
+  border-radius:13px;
+  background:#fff;
+  color:#006b3c;
+  font-weight:bold;
 }
 
-.hidden{
-    display:none!important;
+.status{
+  display:none;
+  margin-top:14px;
+  padding:12px 15px;
+  border-radius:12px;
+  font-size:14px;
+}
+
+.status.show{
+  display:block;
+}
+
+.status.loading{
+  background:#eef7f2;
+  color:#006b3c;
+}
+
+.status.success{
+  background:#e9f7ed;
+  color:#146b35;
+}
+
+.status.error{
+  background:#fff0f0;
+  color:#a32424;
 }
 
 .answer-card{
-    background:var(--card);
+  display:none;
+}
 
-    border:2px solid var(--gold);
-    border-radius:11px;
-
-    padding:20px;
-
-    box-shadow:var(--shadow);
-
-    margin-bottom:15px;
-
-    height:auto;
-    min-height:0;
-    max-height:none;
-    overflow:visible;
+.answer-card.show{
+  display:block;
 }
 
 .answer-header{
-    display:flex;
-    justify-content:space-between;
-    align-items:center;
-
-    gap:10px;
-    flex-wrap:wrap;
-
-    border-bottom:1px solid #ccc;
-
-    padding-bottom:12px;
-    margin-bottom:16px;
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  border-bottom:1px solid #e5ebe7;
+  padding-bottom:12px;
+  margin-bottom:16px;
 }
 
-.answer-header h4{
-    color:var(--green);
-    font-size:18px;
+.answer-title{
+  color:#006b3c;
+  font-size:22px;
+  font-weight:800;
 }
 
-.answer-tools{
-    display:flex;
-    gap:7px;
-    flex-wrap:wrap;
+.answer-language{
+  background:#edf6f0;
+  color:#006b3c;
+  border-radius:20px;
+  padding:3px 10px;
+  font-size:12px;
+  font-weight:bold;
 }
 
-.tool-btn{
-    border:1px solid var(--gold);
-    background:transparent;
-    color:var(--text);
-
-    padding:7px 10px;
-    border-radius:6px;
+.answer-body{
+  font-size:16px;
+  white-space:pre-wrap;
+  word-break:break-word;
 }
 
-.tool-btn:hover{
-    background:var(--gold-light);
+.source{
+  margin-top:20px;
+  padding:14px;
+  background:#f5f8f5;
+  border-left:4px solid #d4aa35;
+  border-radius:8px;
 }
 
-.answer-content{
-    line-height:1.9;
+.source strong{
+  color:#006b3c;
+}
+
+.answer-actions{
+  display:flex;
+  flex-wrap:wrap;
+  gap:8px;
+  margin-top:18px;
+}
+
+.small-btn{
+  border:1px solid #d6dfd9;
+  background:#fff;
+  color:#28513d;
+  border-radius:9px;
+  padding:9px 12px;
+}
+
+.language-panel{
+  display:none;
+  margin-top:15px;
+  padding-top:15px;
+  border-top:1px solid #e4ebe6;
+}
+
+.language-panel.show{
+  display:block;
+}
+
+.language-panel label{
+  display:block;
+  font-weight:bold;
+  color:#006b3c;
+  margin-bottom:7px;
+}
+
+.language-select{
+  width:100%;
+  height:48px;
+  padding:0 12px;
+  border:1px solid #ccd9d1;
+  border-radius:10px;
+  background:#fff;
+  color:#17231d;
+  font-size:15px;
+}
+
+.info-grid{
+  display:grid;
+  grid-template-columns:repeat(3,1fr);
+  gap:15px;
+}
+
+.info-box{
+  background:#fff;
+  border-radius:16px;
+  padding:20px;
+  text-align:center;
+  box-shadow:0 3px 15px #0000000f;
+}
+
+.info-icon{
+  font-size:28px;
+}
+
+.info-box h3{
+  color:#006b3c;
+  font-size:17px;
+}
+
+.info-box p{
+  font-size:13px;
+  color:#68746e;
+}
+
+.recent-item{
+  border-bottom:1px solid #e8ece9;
+  padding:12px 0;
+}
+
+.recent-question{
+  font-weight:700;
+}
+
+.recent-date{
+  font-size:11px;
+  color:#7a8580;
+}
+
+.footer{
+  background:#073b27;
+  color:#fff;
+  text-align:center;
+  padding:30px 15px;
+}
+
+.footer-title{
+  font-size:19px;
+  font-weight:800;
+}
+
+.footer p{
+  font-size:12px;
+  opacity:.85;
+  margin-top:7px;
+}
+
+.modal{
+  display:none;
+  position:fixed;
+  inset:0;
+  z-index:2000;
+  background:#0009;
+  padding:20px;
+  align-items:center;
+  justify-content:center;
+}
+
+.modal.open{
+  display:flex;
+}
+
+.modal-content{
+  width:min(100%,500px);
+  max-height:85vh;
+  overflow:auto;
+  background:#fff;
+  color:#17231d;
+  border-radius:18px;
+  padding:23px;
+}
+
+.modal-header{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  margin-bottom:15px;
+}
+
+.modal-header h2{
+  color:#006b3c;
+}
+
+.close-btn{
+  width:38px;
+  height:38px;
+  border:0;
+  border-radius:50%;
+  background:#eee;
+  font-size:20px;
+}
+
+body.dark{
+  background:#101614;
+  color:#e9f1ed;
+}
+
+body.dark .card,
+body.dark .info-box,
+body.dark .modal-content{
+  background:#18201c;
+  color:#e9f1ed;
+}
+
+body.dark textarea,
+body.dark .language-select{
+  background:#111713;
+  color:#fff;
+  border-color:#34463c;
+}
+
+body.dark .menu,
+body.dark .menu button{
+  background:#18201c;
+  color:#eee;
+}
+
+body.dark .menu button{
+  border-color:#29352e;
+}
+
+body.dark .secondary-btn,
+body.dark .small-btn{
+  background:#18201c;
+  color:#dceae2;
+  border-color:#405248;
+}
+
+body.dark .source{
+  background:#202b25;
+}
+
+body.dark .language-panel{
+  border-color:#344239;
+}
+
+@media(max-width:700px){
+
+  .brand-title{
     font-size:16px;
+  }
 
-    height:auto;
-    max-height:none;
-    overflow:visible;
-    word-wrap:break-word;
-}
+  .brand-subtitle{
+    font-size:9px;
+  }
 
-.answer-content p{
-    margin-bottom:12px;
-}
+  .hero{
+    padding:45px 15px 50px;
+  }
 
-.answer-content ul,
-.answer-content ol{
-    padding-left:25px;
-    margin-bottom:12px;
-}
+  .card{
+    padding:17px;
+    border-radius:16px;
+  }
 
-.answer-content strong{
-    color:var(--green);
-}
+  .info-grid{
+    grid-template-columns:1fr;
+  }
 
-.answer-content h1,
-.answer-content h2,
-.answer-content h3{
-    color:var(--green);
-    margin:15px 0 8px;
-}
-
-/* SEARCH RESULTS */
-
-.results-section{
-    margin-top:25px;
-}
-
-.results-title{
-    color:var(--green);
-    font-size:20px;
-    margin-bottom:12px;
-}
-
-.result-list{
-    display:flex;
+  .form-row{
     flex-direction:column;
-    gap:12px;
+  }
 
-    height:auto;
-    max-height:none;
-    overflow:visible;
-}
+  .secondary-btn{
+    width:100%;
+  }
 
-.result-item{
-    background:var(--card);
-    border-left:5px solid var(--gold);
-    border-radius:9px;
-    padding:15px;
-    box-shadow:var(--shadow);
-}
-
-.result-item h4{
-    color:var(--green);
-    margin-bottom:8px;
-}
-
-.result-item p{
-    line-height:1.8;
-}
-
-.result-open{
-    margin-top:10px;
-    border:1px solid var(--gold);
-    background:var(--gold-light);
-    color:var(--green);
-    padding:8px 12px;
-    border-radius:6px;
-    font-weight:700;
-}
-
-/* DASHBOARD */
-
-.dashboard-section{
-    margin-top:25px;
-}
-
-.section-title{
-    color:var(--green);
-    margin-bottom:12px;
-    font-size:21px;
-}
-
-.question-list{
-    display:flex;
-    flex-direction:column;
-    gap:10px;
-
-    height:auto;
-    max-height:none;
-    overflow:visible;
-}
-
-.question-item{
-    background:var(--card);
-    border-left:4px solid var(--gold);
-    padding:14px;
-    border-radius:8px;
-    box-shadow:var(--shadow);
-}
-
-.question-item small{
-    color:var(--muted);
-    display:block;
-    margin-top:7px;
-}
-
-/* LOADING */
-
-.loading{
-    text-align:center;
-    padding:20px;
-    color:var(--green);
-}
-
-.spinner{
-    display:inline-block;
-    width:24px;
-    height:24px;
-    border:3px solid #ddd;
-    border-top-color:var(--green);
-    border-radius:50%;
-    animation:spin .8s linear infinite;
-    vertical-align:middle;
-    margin-right:8px;
-}
-
-@keyframes spin{
-    to{
-        transform:rotate(360deg);
-    }
-}
-
-/* FOOTER */
-
-footer{
-    margin-top:30px;
-    background:var(--green-dark);
-    color:white;
-    text-align:center;
-    padding:22px 15px;
-}
-
-footer strong{
-    color:var(--gold);
-}
-
-/* TOAST */
-
-.toast{
-    position:fixed;
-    left:50%;
-    bottom:25px;
-
-    transform:translate(-50%,20px);
-
-    background:#222;
-    color:white;
-
-    padding:12px 18px;
-    border-radius:8px;
-
-    z-index:1000;
-
-    opacity:0;
-    visibility:hidden;
-
-    transition:.25s;
-
-    max-width:90%;
-    text-align:center;
-}
-
-.toast.show{
-    opacity:1;
-    visibility:visible;
-    transform:translate(-50%,0);
-}
-
-/* MOBILE */
-
-@media(max-width:600px){
-
-    .navbar{
-        padding:8px 10px;
-    }
-
-    .main-title{
-        font-size:17px;
-    }
-
-    .logo-box{
-        width:43px;
-        height:43px;
-    }
-
-    .menu-btn{
-        width:42px;
-        font-size:25px;
-    }
-
-    .quote-text{
-        font-size:19px;
-    }
-
-    .sub-quote-text{
-        font-size:14px;
-    }
-
-    .input-card,
-    .answer-card{
-        padding:15px;
-    }
+  .menu{
+    width:calc(100vw - 24px);
+  }
 }
 </style>
 </head>
 
 <body>
 
-<div class="overlay" id="overlay"></div>
+<header class="header">
 
-<!-- SIDEBAR -->
+<div class="header-inner">
 
-<aside class="sidebar" id="sidebar">
+<div class="brand">
 
-    <div class="sidebar-header">
-        <h3 id="menuTitle">ምናሌ</h3>
+<div class="logo">✝</div>
 
-        <button
-            class="close-btn"
-            id="closeMenu"
-            aria-label="Close">
+<div>
+<div class="brand-title" id="brandTitle">
+ኦርቶዶክሳዊ መልስ
+</div>
 
-            <i class="fas fa-times"></i>
-
-        </button>
-    </div>
-
-    <ul class="sidebar-links">
-
-        <li>
-            <button
-                class="sidebar-action"
-                data-target="home">
-
-                <i class="fas fa-home"></i>
-                <span id="homeMenu">መነሻ</span>
-
-            </button>
-        </li>
-
-        <li>
-            <button
-                class="sidebar-action"
-                data-target="question">
-
-                <i class="fas fa-circle-question"></i>
-                <span id="questionMenu">ጥያቄ ይጠይቁ</span>
-
-            </button>
-        </li>
-
-        <li>
-            <button
-                class="sidebar-action"
-                data-target="dashboard">
-
-                <i class="fas fa-list"></i>
-                <span id="dashboardMenu">
-                    የጥያቄዎች ዳሽቦርድ
-                </span>
-
-            </button>
-        </li>
-
-        <li>
-            <button
-                class="sidebar-action"
-                id="darkModeBtn">
-
-                <i class="fas fa-moon"></i>
-                <span id="darkText">የጨለማ ሁኔታ</span>
-
-            </button>
-        </li>
-
-        <li>
-            <button
-                class="sidebar-action"
-                id="softModeBtn">
-
-                <i class="fas fa-palette"></i>
-                <span>ለስላሳ ቀለም</span>
-
-            </button>
-        </li>
-
-        <li>
-            <button
-                class="sidebar-action"
-                id="greenModeBtn">
-
-                <i class="fas fa-leaf"></i>
-                <span>አረንጓዴ ቀለም</span>
-
-            </button>
-        </li>
-
-    </ul>
-
-</aside>
-
-<!-- NAVBAR -->
-
-<header class="navbar">
-
-    <div class="nav-left">
-
-        <button
-            class="menu-btn"
-            id="menuBtn"
-            aria-label="Open menu"
-            aria-expanded="false">
-
-            <i class="fas fa-bars"></i>
-
-        </button>
-
-        <div class="brand-container">
-
-            <div class="logo-box">
-                <i class="fas fa-cross"></i>
-            </div>
-
-            <div class="main-title">
-                ኦርቶዶክሳዊ መልስ
-            </div>
-
-        </div>
-
-    </div>
-
-</header>
-
-<!-- LANGUAGE -->
-
-<div class="lang-scroll-container">
-
-    <div class="lang-bar">
-
-        <button
-            class="lang-btn active"
-            data-lang="am">
-            አማ
-        </button>
-
-        <button
-            class="lang-btn"
-            data-lang="en">
-            En
-        </button>
-
-    </div>
+<div class="brand-subtitle" id="brandSubtitle">
+መንፈሳዊ ጥያቄና መልስ
+</div>
+</div>
 
 </div>
 
-<!-- MAIN -->
+<div class="header-actions">
 
-<main class="main-container" id="home">
+<button
+class="lang-btn"
+id="languageButton"
+type="button">
+EN
+</button>
 
-    <section class="quote-section">
+<button
+class="menu-btn"
+id="menuButton"
+type="button">
+☰
+</button>
 
-        <div
-            class="quote-text"
-            id="heroTitle">
+</div>
 
-            የመንፈሳዊ ጥያቄዎን ይጠይቁ
+<nav
+class="menu"
+id="mainMenu">
 
-        </div>
+<button
+type="button"
+data-section="home">
+🏠 <span data-i18n="home">መነሻ</span>
+</button>
 
-        <div
-            class="sub-quote-text"
-            id="heroSubtitle">
+<button
+type="button"
+data-section="ask">
+❓ <span data-i18n="ask">ጥያቄ ጠይቅ</span>
+</button>
 
-            በእውቀትና በእምነት
-            መንፈሳዊ ሕይወትዎን ይደግፉ
+<button
+type="button"
+data-section="recent">
+📋 <span data-i18n="recent">የቅርብ ጥያቄዎች</span>
+</button>
 
-        </div>
+<button
+type="button"
+id="languageMenuButton">
+🌐 <span data-i18n="language">ቋንቋ</span>
+</button>
 
-    </section>
+<button
+type="button"
+id="darkModeButton">
+🌙 <span data-i18n="dark">ጨለማ ሁነታ</span>
+</button>
 
-    <!-- QUESTION -->
+<button
+type="button"
+id="booksButton">
+📖 <span data-i18n="books">መጻሕፍት</span>
+</button>
 
-    <section
-        class="input-card"
-        id="question">
+<button
+type="button"
+id="aboutButton">
+ℹ️ <span data-i18n="about">ስለ አፑ</span>
+</button>
 
-        <label
-            class="input-label"
-            for="questionInput"
-            id="questionLabel">
+</nav>
 
-            ጥያቄዎን እዚህ ይጻፉ
+</div>
+</header>
 
-        </label>
 
-        <textarea
-            id="questionInput"
-            placeholder="የመንፈሳዊ ጥያቄዎን ይጻፉ..."
-            maxlength="5000"></textarea>
+<section
+class="hero"
+id="home">
 
-        <button
-            class="ask-btn"
-            id="askBtn">
+<div class="hero-content">
 
-            <i class="fas fa-paper-plane"></i>
+<h1 id="heroTitle">
+መጠየቅ ያደርጋል ሊቅ
+</h1>
 
-            <span id="askText">
-                መልስ ፈልግ
-            </span>
+<p id="heroText">
+መንፈሳዊ ጥያቄዎን ይጠይቁ፤
+በኦርቶዶክሳዊ ትምህርት መሠረት
+መልስ ያግኙ።
+</p>
 
-        </button>
+</div>
+</section>
 
-    </section>
 
-    <!-- ANSWER -->
+<main class="main">
 
-    <section
-        class="answer-section hidden"
-        id="answerSection">
+<div class="container">
 
-        <div class="answer-card">
 
-            <div class="answer-header">
+<section
+class="card"
+id="ask">
 
-                <h4>
+<h2 id="askTitle">
+መንፈሳዊ ጥያቄዎን ይጠይቁ
+</h2>
 
-                    <i class="fas fa-book-open"></i>
+<p
+class="card-description"
+id="askDescription">
+ጥያቄዎን በግልጽ ይጻፉ።
+</p>
 
-                    <span id="answerTitle">
-                        መልስ
-                    </span>
+<textarea
+id="questionInput"
+maxlength="3000"
+placeholder="ጥያቄዎን እዚህ ይጻፉ..."
+></textarea>
 
-                </h4>
+<div class="form-row">
 
-                <div class="answer-tools">
+<button
+class="primary-btn"
+id="askButton"
+type="button">
+🔎 መልስ ፈልግ
+</button>
 
-                    <button
-                        class="tool-btn"
-                        id="copyBtn"
-                        title="Copy">
+<button
+class="secondary-btn"
+id="clearButton"
+type="button">
+አጽዳ
+</button>
 
-                        <i class="fas fa-copy"></i>
+</div>
 
-                    </button>
+<div
+class="language-panel"
+id="languagePanel">
 
-                    <button
-                        class="tool-btn"
-                        id="speakBtn"
-                        title="Read">
+<label for="languageSelect">
+የመልስ ቋንቋ
+</label>
 
-                        <i class="fas fa-volume-high"></i>
+<select
+class="language-select"
+id="languageSelect">
 
-                    </button>
+<option value="am">አማርኛ</option>
+<option value="en">English</option>
+<option value="ti">ትግርኛ</option>
+<option value="om">Afaan Oromoo</option>
+<option value="ar">العربية</option>
+<option value="fr">Français</option>
+<option value="de">Deutsch</option>
+<option value="it">Italiano</option>
+<option value="es">Español</option>
+<option value="pt">Português</option>
+<option value="ru">Русский</option>
 
-                </div>
+</select>
 
-            </div>
+</div>
 
-            <div
-                class="answer-content"
-                id="answerContent">
-            </div>
+<div
+class="status"
+id="status">
+</div>
 
-        </div>
+</section>
 
-    </section>
 
-    <!-- SEARCH RESULTS -->
+<section
+class="card answer-card"
+id="answerCard">
 
-    <section
-        class="results-section hidden"
-        id="resultsSection">
+<div class="answer-header">
 
-        <h3
-            class="results-title"
-            id="resultsTitle">
+<div
+class="answer-title"
+id="answerTitle">
+መልስ
+</div>
 
-            ተዛማጅ ትምህርቶች
+<span
+class="answer-language"
+id="answerLanguage">
+AM
+</span>
 
-        </h3>
+</div>
 
-        <div
-            class="result-list"
-            id="resultList">
-        </div>
+<div
+class="answer-body"
+id="answerBody">
+</div>
 
-    </section>
+<div
+class="source"
+id="sourceBox"
+style="display:none">
 
-    <!-- DASHBOARD -->
+<strong id="sourceLabel">
+ምንጭ
+</strong>
 
-    <section
-        class="dashboard-section"
-        id="dashboard">
+<div id="sourceText"></div>
 
-        <h2
-            class="section-title"
-            id="dashboardTitle">
+</div>
 
-            የቅርብ ጥያቄዎች
+<div class="answer-actions">
 
-        </h2>
+<button
+class="small-btn"
+id="copyButton"
+type="button">
+📋 Copy
+</button>
 
-        <div
-            class="question-list"
-            id="questionList">
+<button
+class="small-btn"
+id="shareButton"
+type="button">
+↗ Share
+</button>
 
-            <div class="loading">
-                <span class="spinner"></span>
-                በመጫን ላይ...
-            </div>
+<button
+class="small-btn"
+id="speakButton"
+type="button">
+🔊 አንብብ
+</button>
 
-        </div>
+</div>
 
-    </section>
+</section>
 
+
+<section class="info-grid">
+
+<div class="info-box">
+
+<div class="info-icon">📖</div>
+
+<h3 data-i18n="booksInfo">
+ቅዱሳት መጻሕፍት
+</h3>
+
+<p id="booksInfoText">
+በታማኝ መንፈሳዊ ምንጮች ላይ
+የተመሠረተ መልስ።
+</p>
+
+</div>
+
+
+<div class="info-box">
+
+<div class="info-icon">✝</div>
+
+<h3 data-i18n="teaching">
+ኦርቶዶክሳዊ ትምህርት
+</h3>
+
+<p id="teachingText">
+የቤተ ክርስቲያንን ትምህርት
+የሚያከብር።
+</p>
+
+</div>
+
+
+<div class="info-box">
+
+<div class="info-icon">🌍</div>
+
+<h3 data-i18n="languages">
+11 ቋንቋዎች
+</h3>
+
+<p id="languagesText">
+በተለያዩ ቋንቋዎች ለመጠቀም።
+</p>
+
+</div>
+
+</section>
+
+
+<section
+class="card"
+id="recent"
+style="margin-top:22px">
+
+<h2 id="recentTitle">
+የቅርብ ጥያቄዎች
+</h2>
+
+<p
+class="card-description"
+id="recentDescription">
+በዚህ መድረክ የተጠየቁ ጥያቄዎች።
+</p>
+
+<div id="recentQuestions">
+እየጫነ...
+</div>
+
+</section>
+
+</div>
 </main>
 
-<footer>
 
-    <strong>ኦርቶዶክሳዊ መልስ</strong>
+<footer class="footer">
 
-    <div style="margin-top:7px;">
-        የመንፈሳዊ ጥያቄና መልስ
-    </div>
+<div
+class="footer-title"
+id="footerTitle">
+ኦርቶዶክሳዊ መልስ
+</div>
+
+<p id="footerDescription">
+መንፈሳዊ ጥያቄና መልስ
+</p>
+
+<p>
+Created by Ezra Samuel Abebe
+</p>
 
 </footer>
 
+
 <div
-    class="toast"
-    id="toast">
+class="modal"
+id="booksModal">
+
+<div class="modal-content">
+
+<div class="modal-header">
+
+<h2 id="booksModalTitle">
+መጻሕፍት
+</h2>
+
+<button
+class="close-btn"
+data-close="booksModal"
+type="button">
+×
+</button>
+
 </div>
 
+<ul>
+<li>መጽሐፍ ቅዱስ</li>
+<li>የቅዱሳን አባቶች ትምህርት</li>
+<li>የቤተ ክርስቲያን ትውፊት</li>
+<li>መንፈሳዊ ትምህርቶች</li>
+</ul>
+
+</div>
+</div>
+
+
+<div
+class="modal"
+id="aboutModal">
+
+<div class="modal-content">
+
+<div class="modal-header">
+
+<h2 id="aboutModalTitle">
+ስለ ኦርቶዶክሳዊ መልስ
+</h2>
+
+<button
+class="close-btn"
+data-close="aboutModal"
+type="button">
+×
+</button>
+
+</div>
+
+<p id="aboutText">
+ኦርቶዶክሳዊ መልስ መንፈሳዊ
+ጥያቄዎችን በኦርቶዶክሳዊ ትምህርትና
+ታማኝ ምንጮች መሠረት ለመመለስ
+የተዘጋጀ መድረክ ነው።
+</p>
+
+</div>
+</div>
+
+
 <script>
-/* =========================================================
-   SUPABASE CONNECTION
-   ========================================================= */
 
-const SUPABASE_URL = "YOUR_SUPABASE_URL";
-const SUPABASE_ANON_KEY = "YOUR_SUPABASE_ANON_KEY";
+/* =====================================================
+   SUPABASE
+   ===================================================== */
 
-let supabaseClient = null;
+const SUPABASE_URL =
+"https://geznekrpdubpgsegseer.supabase.co";
 
-try{
-    if(
-        SUPABASE_URL !== "YOUR_SUPABASE_URL" &&
-        SUPABASE_ANON_KEY !== "YOUR_SUPABASE_ANON_KEY"
-    ){
-        supabaseClient =
-            window.supabase.createClient(
-                SUPABASE_URL,
-                SUPABASE_ANON_KEY
-            );
-    }
-}catch(error){
-    console.error("Supabase initialization error:",error);
-}
+const SUPABASE_ANON_KEY =
+"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imdlem5la3JwZHVicGdzZWdzZWVyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTAwMjUyNTYsImV4cCI6MjEwNTYwMTI1Nn0.spxmqIhfeHPjD4SXI8mTlCY611-_0Mw3w7RoRloYPkQ";
 
-/* =========================================================
+const db =
+window.supabase.createClient(
+  SUPABASE_URL,
+  SUPABASE_ANON_KEY
+);
+
+
+/* =====================================================
    ELEMENTS
-   ========================================================= */
+   ===================================================== */
 
-const menuBtn =
-    document.getElementById("menuBtn");
+const menuButton =
+document.getElementById("menuButton");
 
-const closeMenu =
-    document.getElementById("closeMenu");
-
-const sidebar =
-    document.getElementById("sidebar");
-
-const overlay =
-    document.getElementById("overlay");
-
-const askBtn =
-    document.getElementById("askBtn");
+const mainMenu =
+document.getElementById("mainMenu");
 
 const questionInput =
-    document.getElementById("questionInput");
+document.getElementById("questionInput");
 
-const answerSection =
-    document.getElementById("answerSection");
+const askButton =
+document.getElementById("askButton");
 
-const answerContent =
-    document.getElementById("answerContent");
+const clearButton =
+document.getElementById("clearButton");
 
-const resultsSection =
-    document.getElementById("resultsSection");
+const statusBox =
+document.getElementById("status");
 
-const resultList =
-    document.getElementById("resultList");
+const answerCard =
+document.getElementById("answerCard");
 
-const questionList =
-    document.getElementById("questionList");
+const answerBody =
+document.getElementById("answerBody");
 
-const toast =
-    document.getElementById("toast");
+const answerLanguage =
+document.getElementById("answerLanguage");
 
-/* =========================================================
-   MENU
-   ========================================================= */
+const sourceBox =
+document.getElementById("sourceBox");
 
-function openMenu(){
+const sourceText =
+document.getElementById("sourceText");
 
-    sidebar.classList.add("open");
-    overlay.classList.add("open");
+const languagePanel =
+document.getElementById("languagePanel");
 
-    menuBtn.setAttribute(
-        "aria-expanded",
-        "true"
-    );
+const languageSelect =
+document.getElementById("languageSelect");
+
+
+/* =====================================================
+   11 LANGUAGES
+   ===================================================== */
+
+const LANGUAGES = {
+
+am:{
+name:"አማርኛ",
+short:"AM",
+placeholder:"ጥያቄዎን እዚህ ይጻፉ..."
+},
+
+en:{
+name:"English",
+short:"EN",
+placeholder:"Write your question here..."
+},
+
+ti:{
+name:"ትግርኛ",
+short:"TI",
+placeholder:"ሕቶኻ ኣብዚ ጽሓፍ..."
+},
+
+om:{
+name:"Afaan Oromoo",
+short:"OM",
+placeholder:"Gaaffii kee asitti barreessi..."
+},
+
+ar:{
+name:"العربية",
+short:"AR",
+placeholder:"اكتب سؤالك هنا..."
+},
+
+fr:{
+name:"Français",
+short:"FR",
+placeholder:"Écrivez votre question ici..."
+},
+
+de:{
+name:"Deutsch",
+short:"DE",
+placeholder:"Schreiben Sie Ihre Frage hier..."
+},
+
+it:{
+name:"Italiano",
+short:"IT",
+placeholder:"Scrivi qui la tua domanda..."
+},
+
+es:{
+name:"Español",
+short:"ES",
+placeholder:"Escriba su pregunta aquí..."
+},
+
+pt:{
+name:"Português",
+short:"PT",
+placeholder:"Escreva sua pergunta aqui..."
+},
+
+ru:{
+name:"Русский",
+short:"RU",
+placeholder:"Напишите свой вопрос здесь..."
 }
-
-function closeSidebar(){
-
-    sidebar.classList.remove("open");
-    overlay.classList.remove("open");
-
-    menuBtn.setAttribute(
-        "aria-expanded",
-        "false"
-    );
-}
-
-menuBtn.addEventListener(
-    "click",
-    openMenu
-);
-
-closeMenu.addEventListener(
-    "click",
-    closeSidebar
-);
-
-overlay.addEventListener(
-    "click",
-    closeSidebar
-);
-
-document.querySelectorAll(
-    ".sidebar-action[data-target]"
-).forEach(button=>{
-
-    button.addEventListener(
-        "click",
-        ()=>{
-
-            const target =
-                document.getElementById(
-                    button.dataset.target
-                );
-
-            closeSidebar();
-
-            if(target){
-                target.scrollIntoView({
-                    behavior:"smooth",
-                    block:"start"
-                });
-            }
-
-        }
-    );
-
-});
-
-/* =========================================================
-   THEME
-   ========================================================= */
-
-document.getElementById(
-    "darkModeBtn"
-).addEventListener(
-    "click",
-    ()=>{
-
-        document.body.classList.toggle(
-            "dark"
-        );
-
-    }
-);
-
-document.getElementById(
-    "softModeBtn"
-).addEventListener(
-    "click",
-    ()=>{
-
-        document.body.classList.remove(
-            "dark"
-        );
-
-        document.body.classList.add(
-            "soft"
-        );
-
-    }
-);
-
-document.getElementById(
-    "greenModeBtn"
-).addEventListener(
-    "click",
-    ()=>{
-
-        document.body.classList.remove(
-            "dark",
-            "soft"
-        );
-
-    }
-);
-
-/* =========================================================
-   TRANSLATIONS
-   ========================================================= */
-
-const translations = {
-
-    am:{
-        title:"ኦርቶዶክሳዊ መልስ",
-        hero:"የመንፈሳዊ ጥያቄዎን ይጠይቁ",
-        subtitle:"በእውቀትና በእምነት መንፈሳዊ ሕይወትዎን ይደግፉ",
-        label:"ጥያቄዎን እዚህ ይጻፉ",
-        placeholder:"የመንፈሳዊ ጥያቄዎን ይጻፉ...",
-        ask:"መልስ ፈልግ",
-        answer:"መልስ",
-        related:"ተዛማጅ ትምህርቶች",
-        dashboard:"የቅርብ ጥያቄዎች",
-        loading:"በመጫን ላይ...",
-        noResult:"ተዛማጅ መልስ አልተገኘም።",
-        error:"ይቅርታ፣ መልሱን ማምጣት አልተቻለም።",
-        connection:"Supabase ግንኙነት አልተዘጋጀም።",
-        copied:"መልሱ ተቀድቷል።",
-        menu:"ምናሌ",
-        home:"መነሻ",
-        question:"ጥያቄ ይጠይቁ",
-        dashboardMenu:"የጥያቄዎች ዳሽቦርድ",
-        dark:"የጨለማ ሁኔታ",
-        soft:"ለስላሳ ቀለም",
-        green:"አረንጓዴ ቀለም",
-        search:"በመፈለግ ላይ..."
-    },
-
-    en:{
-        title:"Orthodox Answer",
-        hero:"Ask Your Spiritual Question",
-        subtitle:"Support your spiritual life with knowledge and faith",
-        label:"Write your question here",
-        placeholder:"Write your spiritual question...",
-        ask:"Find Answer",
-        answer:"Answer",
-        related:"Related Teachings",
-        dashboard:"Recent Questions",
-        loading:"Loading...",
-        noResult:"No related answer was found.",
-        error:"Sorry, the answer could not be loaded.",
-        connection:"Supabase connection is not configured.",
-        copied:"Answer copied.",
-        menu:"Menu",
-        home:"Home",
-        question:"Ask a Question",
-        dashboardMenu:"Questions Dashboard",
-        dark:"Dark Mode",
-        soft:"Soft Color",
-        green:"Green Color",
-        search:"Searching..."
-    }
 
 };
 
-let currentLanguage = "am";
 
-/* =========================================================
-   LANGUAGE
-   ========================================================= */
+/* =====================================================
+   UI TRANSLATIONS
+   ===================================================== */
 
-function setLanguage(lang){
+const UI = {
 
-    currentLanguage =
-        translations[lang]
-        ? lang
-        : "am";
+am:{
+brand:"ኦርቶዶክሳዊ መልስ",
+subtitle:"መንፈሳዊ ጥያቄና መልስ",
+hero:"መጠየቅ ያደርጋል ሊቅ",
+heroText:"መንፈሳዊ ጥያቄዎን ይጠይቁ፤ በኦርቶዶክሳዊ ትምህርት መሠረት መልስ ያግኙ።",
+ask:"መንፈሳዊ ጥያቄዎን ይጠይቁ",
+askDesc:"ጥያቄዎን በግልጽ ይጻፉ።",
+find:"🔎 መልስ ፈልግ",
+clear:"አጽዳ",
+answer:"መልስ",
+source:"ምንጭ",
+home:"መነሻ",
+askMenu:"ጥያቄ ጠይቅ",
+recent:"የቅርብ ጥያቄዎች",
+language:"ቋንቋ",
+dark:"ጨለማ ሁነታ",
+books:"መጻሕፍት",
+about:"ስለ አፑ",
+searching:"መልስ እየፈለግን ነው...",
+empty:"እባክዎ ጥያቄዎን ይጻፉ።",
+saved:"ጥያቄዎ ተመዝግቧል።",
+notFound:"ለዚህ ጥያቄ በSupabase ውስጥ ተዛማጅ መልስ አልተገኘም።",
+error:"መረጃውን ማምጣት አልተቻለም።",
+recentTitle:"የቅርብ ጥያቄዎች",
+recentDesc:"በዚህ መድረክ የተጠየቁ ጥያቄዎች።",
+booksInfo:"ቅዱሳት መጻሕፍት",
+booksInfoText:"በታማኝ መንፈሳዊ ምንጮች ላይ የተመሠረተ መልስ።",
+teaching:"ኦርቶዶክሳዊ ትምህርት",
+teachingText:"የቤተ ክርስቲያንን ትምህርት የሚያከብር።",
+languages:"11 ቋንቋዎች",
+languageLabel:"የመልስ ቋንቋ"
+},
 
-    const t =
-        translations[currentLanguage];
+en:{
+brand:"Orthodox Answer",
+subtitle:"Spiritual Questions & Answers",
+hero:"Asking makes you wise",
+heroText:"Ask your spiritual question and find an answer based on Orthodox teaching.",
+ask:"Ask Your Spiritual Question",
+askDesc:"Write your question clearly.",
+find:"🔎 Find Answer",
+clear:"Clear",
+answer:"Answer",
+source:"Source",
+home:"Home",
+askMenu:"Ask a Question",
+recent:"Recent Questions",
+language:"Language",
+dark:"Dark Mode",
+books:"Books",
+about:"About",
+searching:"Searching for an answer...",
+empty:"Please write your question.",
+saved:"Your question has been saved.",
+notFound:"No matching answer was found in Supabase.",
+error:"The information could not be loaded.",
+recentTitle:"Recent Questions",
+recentDesc:"Questions submitted through this platform.",
+booksInfo:"Holy Scriptures",
+booksInfoText:"Answers based on trusted spiritual sources.",
+teaching:"Orthodox Teaching",
+teachingText:"Respecting the teaching of the Church.",
+languages:"11 Languages",
+languageLabel:"Answer Language"
+},
 
-    document.documentElement.lang =
-        currentLanguage;
+ti:{
+brand:"ኦርቶዶክሳዊ መልሲ",
+subtitle:"መንፈሳዊ ሕቶን መልስን",
+hero:"ምሕታት ሊቅ ይገብረካ",
+heroText:"መንፈሳዊ ሕቶኻ ሕተት፤ ብትምህርቲ ኦርቶዶክስ መልሲ ርኸብ።",
+ask:"መንፈሳዊ ሕቶኻ ሕተት",
+askDesc:"ሕቶኻ ብግልጺ ጽሓፍ።",
+find:"🔎 መልሲ ድለ",
+clear:"ኣጽርይ",
+answer:"መልሲ",
+source:"ምንጪ",
+home:"መበገሲ",
+askMenu:"ሕቶ ሕተት",
+recent:"ናይ ቀረባ ሕቶታት",
+language:"ቋንቋ",
+dark:"ጸልማት ሁነታ",
+books:"መጻሕፍቲ",
+about:"ብዛዕባ",
+searching:"መልሲ እናደለና ኢና...",
+empty:"በጃኻ ሕቶኻ ጽሓፍ።",
+saved:"ሕቶኻ ተመዝጊቡ።",
+notFound:"ኣብ Supabase ዝሰማማዕ መልሲ ኣይተረኽበን።",
+error:"ሓበሬታ ምምጻእ ኣይተኻእለን።",
+recentTitle:"ናይ ቀረባ ሕቶታት",
+recentDesc:"ኣብዚ መድረኽ ዝቐረቡ ሕቶታት።",
+booksInfo:"ቅዱሳት መጻሕፍቲ",
+booksInfoText:"ኣብ ዝተኣማመኑ መንፈሳዊ ምንጭታት ዝተመስረተ መልሲ።",
+teaching:"ትምህርቲ ኦርቶዶክስ",
+teachingText:"ትምህርቲ ቤተ ክርስቲያን ዝኽብር።",
+languages:"11 ቋንቋታት",
+languageLabel:"ቋንቋ መልሲ"
+},
 
-    document.getElementById(
-        "docTitle"
-    ).textContent = t.title;
+om:{
+brand:"Deebii Ortodoksii",
+subtitle:"Gaaffii fi Deebii Hafuuraa",
+hero:"Gaafachuun ogeessa si taasisa",
+heroText:"Gaaffii kee gaafadhu; deebii barsiisa Ortodoksii irratti hundaa'e argadhu.",
+ask:"Gaaffii Hafuuraa Kee Gaafadhu",
+askDesc:"Gaaffii kee ifatti barreessi.",
+find:"🔎 Deebii Barbaadi",
+clear:"Haqi",
+answer:"Deebii",
+source:"Madda",
+home:"Mana",
+askMenu:"Gaaffii Gaafadhu",
+recent:"Gaaffilee Dhihoo",
+language:"Afaan",
+dark:"Haala Dukkanaa",
+books:"Kitaabota",
+about:"Waa'ee",
+searching:"Deebii barbaadaa jira...",
+empty:"Maaloo gaaffii kee barreessi.",
+saved:"Gaaffiin kee galmaa'eera.",
+notFound:"Supabase keessatti deebiin wal fakkaatu hin argamne.",
+error:"Odeeffannoo fiduu hin dandeenye.",
+recentTitle:"Gaaffilee Dhihoo",
+recentDesc:"Gaaffilee karaa kanaan dhiyaatan.",
+booksInfo:"Kitaaba Qulqulluu",
+booksInfoText:"Deebii maddoota hafuuraa amanamoo irratti hundaa'e.",
+teaching:"Barsiisa Ortodoksii",
+teachingText:"Barsiisa Mana Kiristaanaa kabaju.",
+languages:"Afaanota 11",
+languageLabel:"Afaan Deebii"
+},
 
-    document.getElementById(
-        "heroTitle"
-    ).textContent = t.hero;
+ar:{
+brand:"الإجابة الأرثوذكسية",
+subtitle:"الأسئلة والأجوبة الروحية",
+hero:"السؤال يجعلك حكيماً",
+heroText:"اطرح سؤالك الروحي واحصل على إجابة مبنية على التعليم الأرثوذكسي.",
+ask:"اطرح سؤالك الروحي",
+askDesc:"اكتب سؤالك بوضوح.",
+find:"🔎 ابحث عن إجابة",
+clear:"مسح",
+answer:"الإجابة",
+source:"المصدر",
+home:"الرئيسية",
+askMenu:"اسأل سؤالاً",
+recent:"الأسئلة الأخيرة",
+language:"اللغة",
+dark:"الوضع الداكن",
+books:"الكتب",
+about:"حول التطبيق",
+searching:"جارٍ البحث عن إجابة...",
+empty:"يرجى كتابة سؤالك.",
+saved:"تم حفظ سؤالك.",
+notFound:"لم يتم العثور على إجابة مطابقة في Supabase.",
+error:"تعذر تحميل المعلومات.",
+recentTitle:"الأسئلة الأخيرة",
+recentDesc:"الأسئلة المرسلة عبر هذه المنصة.",
+booksInfo:"الكتب المقدسة",
+booksInfoText:"إجابات مبنية على مصادر روحية موثوقة.",
+teaching:"التعليم الأرثوذكسي",
+teachingText:"احترام تعليم الكنيسة.",
+languages:"11 لغة",
+languageLabel:"لغة الإجابة"
+},
 
-    document.getElementById(
-        "heroSubtitle"
-    ).textContent = t.subtitle;
+fr:{
+brand:"Réponse Orthodoxe",
+subtitle:"Questions et réponses spirituelles",
+hero:"Demander rend sage",
+heroText:"Posez votre question spirituelle et trouvez une réponse fondée sur l'enseignement orthodoxe.",
+ask:"Posez votre question spirituelle",
+askDesc:"Écrivez clairement votre question.",
+find:"🔎 Chercher une réponse",
+clear:"Effacer",
+answer:"Réponse",
+source:"Source",
+home:"Accueil",
+askMenu:"Poser une question",
+recent:"Questions récentes",
+language:"Langue",
+dark:"Mode sombre",
+books:"Livres",
+about:"À propos",
+searching:"Recherche d'une réponse...",
+empty:"Veuillez écrire votre question.",
+saved:"Votre question a été enregistrée.",
+notFound:"Aucune réponse correspondante n'a été trouvée dans Supabase.",
+error:"Impossible de charger les informations.",
+recentTitle:"Questions récentes",
+recentDesc:"Questions envoyées sur cette plateforme.",
+booksInfo:"Saintes Écritures",
+booksInfoText:"Réponses fondées sur des sources spirituelles fiables.",
+teaching:"Enseignement orthodoxe",
+teachingText:"Respect de l'enseignement de l'Église.",
+languages:"11 langues",
+languageLabel:"Langue de réponse"
+},
 
-    document.getElementById(
-        "questionLabel"
-    ).textContent = t.label;
+de:{
+brand:"Orthodoxe Antwort",
+subtitle:"Geistliche Fragen und Antworten",
+hero:"Fragen macht weise",
+heroText:"Stellen Sie Ihre geistliche Frage und erhalten Sie eine Antwort auf Grundlage der orthodoxen Lehre.",
+ask:"Ihre geistliche Frage",
+askDesc:"Schreiben Sie Ihre Frage klar auf.",
+find:"🔎 Antwort suchen",
+clear:"Löschen",
+answer:"Antwort",
+source:"Quelle",
+home:"Startseite",
+askMenu:"Frage stellen",
+recent:"Letzte Fragen",
+language:"Sprache",
+dark:"Dunkelmodus",
+books:"Bücher",
+about:"Über",
+searching:"Antwort wird gesucht...",
+empty:"Bitte schreiben Sie Ihre Frage.",
+saved:"Ihre Frage wurde gespeichert.",
+notFound:"Keine passende Antwort in Supabase gefunden.",
+error:"Informationen konnten nicht geladen werden.",
+recentTitle:"Letzte Fragen",
+recentDesc:"Über diese Plattform gestellte Fragen.",
+booksInfo:"Heilige Schriften",
+booksInfoText:"Antworten auf Grundlage vertrauenswürdiger geistlicher Quellen.",
+teaching:"Orthodoxe Lehre",
+teachingText:"Achtung vor der Lehre der Kirche.",
+languages:"11 Sprachen",
+languageLabel:"Antwortsprache"
+},
 
-    questionInput.placeholder =
-        t.placeholder;
+it:{
+brand:"Risposta Ortodossa",
+subtitle:"Domande e risposte spirituali",
+hero:"Chiedere rende saggi",
+heroText:"Fai la tua domanda spirituale e trova una risposta basata sull'insegnamento ortodosso.",
+ask:"Fai la tua domanda spirituale",
+askDesc:"Scrivi chiaramente la tua domanda.",
+find:"🔎 Cerca risposta",
+clear:"Cancella",
+answer:"Risposta",
+source:"Fonte",
+home:"Home",
+askMenu:"Fai una domanda",
+recent:"Domande recenti",
+language:"Lingua",
+dark:"Modalità scura",
+books:"Libri",
+about:"Informazioni",
+searching:"Ricerca della risposta...",
+empty:"Scrivi la tua domanda.",
+saved:"La tua domanda è stata salvata.",
+notFound:"Nessuna risposta corrispondente trovata in Supabase.",
+error:"Impossibile caricare le informazioni.",
+recentTitle:"Domande recenti",
+recentDesc:"Domande inviate tramite questa piattaforma.",
+booksInfo:"Sacra Scrittura",
+booksInfoText:"Risposte basate su fonti spirituali affidabili.",
+teaching:"Insegnamento ortodosso",
+teachingText:"Rispetto dell'insegnamento della Chiesa.",
+languages:"11 lingue",
+languageLabel:"Lingua della risposta"
+},
 
-    document.getElementById(
-        "askText"
-    ).textContent = t.ask;
+es:{
+brand:"Respuesta Ortodoxa",
+subtitle:"Preguntas y respuestas espirituales",
+hero:"Preguntar te hace sabio",
+heroText:"Haz tu pregunta espiritual y encuentra una respuesta basada en la enseñanza ortodoxa.",
+ask:"Haz tu pregunta espiritual",
+askDesc:"Escribe claramente tu pregunta.",
+find:"🔎 Buscar respuesta",
+clear:"Borrar",
+answer:"Respuesta",
+source:"Fuente",
+home:"Inicio",
+askMenu:"Hacer una pregunta",
+recent:"Preguntas recientes",
+language:"Idioma",
+dark:"Modo oscuro",
+books:"Libros",
+about:"Acerca de",
+searching:"Buscando una respuesta...",
+empty:"Escribe tu pregunta.",
+saved:"Tu pregunta ha sido guardada.",
+notFound:"No se encontró una respuesta correspondiente en Supabase.",
+error:"No se pudo cargar la información.",
+recentTitle:"Preguntas recientes",
+recentDesc:"Preguntas enviadas mediante esta plataforma.",
+booksInfo:"Sagradas Escrituras",
+booksInfoText:"Respuestas basadas en fuentes espirituales confiables.",
+teaching:"Enseñanza ortodoxa",
+teachingText:"Respeto por la enseñanza de la Iglesia.",
+languages:"11 idiomas",
+languageLabel:"Idioma de respuesta"
+},
 
-    document.getElementById(
-        "answerTitle"
-    ).textContent = t.answer;
+pt:{
+brand:"Resposta Ortodoxa",
+subtitle:"Perguntas e respostas espirituais",
+hero:"Perguntar torna você sábio",
+heroText:"Faça sua pergunta espiritual e encontre uma resposta baseada no ensinamento ortodoxo.",
+ask:"Faça sua pergunta espiritual",
+askDesc:"Escreva sua pergunta claramente.",
+find:"🔎 Procurar resposta",
+clear:"Limpar",
+answer:"Resposta",
+source:"Fonte",
+home:"Início",
+askMenu:"Fazer uma pergunta",
+recent:"Perguntas recentes",
+language:"Idioma",
+dark:"Modo escuro",
+books:"Livros",
+about:"Sobre",
+searching:"Procurando uma resposta...",
+empty:"Escreva sua pergunta.",
+saved:"Sua pergunta foi salva.",
+notFound:"Nenhuma resposta correspondente foi encontrada no Supabase.",
+error:"Não foi possível carregar as informações.",
+recentTitle:"Perguntas recentes",
+recentDesc:"Perguntas enviadas por esta plataforma.",
+booksInfo:"Sagradas Escrituras",
+booksInfoText:"Respostas baseadas em fontes espirituais confiáveis.",
+teaching:"Ensino Ortodoxo",
+teachingText:"Respeitando o ensinamento da Igreja.",
+languages:"11 idiomas",
+languageLabel:"Idioma da resposta"
+},
 
-    document.getElementById(
-        "resultsTitle"
-    ).textContent = t.related;
-
-    document.getElementById(
-        "dashboardTitle"
-    ).textContent = t.dashboard;
-
-    document.getElementById(
-        "menuTitle"
-    ).textContent = t.menu;
-
-    document.getElementById(
-        "homeMenu"
-    ).textContent = t.home;
-
-    document.getElementById(
-        "questionMenu"
-    ).textContent = t.question;
-
-    document.getElementById(
-        "dashboardMenu"
-    ).textContent =
-        t.dashboardMenu;
-
-    document.getElementById(
-        "darkText"
-    ).textContent = t.dark;
-
-    document.querySelectorAll(
-        ".lang-btn"
-    ).forEach(btn=>{
-
-        btn.classList.toggle(
-            "active",
-            btn.dataset.lang ===
-            currentLanguage
-        );
-
-    });
-
+ru:{
+brand:"Православный Ответ",
+subtitle:"Духовные вопросы и ответы",
+hero:"Вопрос делает мудрее",
+heroText:"Задайте духовный вопрос и получите ответ на основе православного учения.",
+ask:"Задайте духовный вопрос",
+askDesc:"Напишите свой вопрос ясно.",
+find:"🔎 Найти ответ",
+clear:"Очистить",
+answer:"Ответ",
+source:"Источник",
+home:"Главная",
+askMenu:"Задать вопрос",
+recent:"Последние вопросы",
+language:"Язык",
+dark:"Тёмный режим",
+books:"Книги",
+about:"О приложении",
+searching:"Поиск ответа...",
+empty:"Пожалуйста, напишите вопрос.",
+saved:"Ваш вопрос сохранён.",
+notFound:"В Supabase не найден подходящий ответ.",
+error:"Не удалось загрузить информацию.",
+recentTitle:"Последние вопросы",
+recentDesc:"Вопросы, отправленные через эту платформу.",
+booksInfo:"Священное Писание",
+booksInfoText:"Ответы основаны на надёжных духовных источниках.",
+teaching:"Православное учение",
+teachingText:"Уважение к учению Церкви.",
+languages:"11 языков",
+languageLabel:"Язык ответа"
 }
 
-document.querySelectorAll(
-    ".lang-btn"
-).forEach(button=>{
+};
 
-    button.addEventListener(
-        "click",
-        ()=>{
 
-            setLanguage(
-                button.dataset.lang
-            );
+/* =====================================================
+   CURRENT LANGUAGE
+   ===================================================== */
 
-        }
-    );
+let currentLang =
+localStorage.getItem("orthodox_language") || "am";
+
+if(!LANGUAGES[currentLang]){
+  currentLang="am";
+}
+
+languageSelect.value=currentLang;
+
+
+/* =====================================================
+   MENU
+   ===================================================== */
+
+menuButton.onclick=function(e){
+
+  e.stopPropagation();
+
+  mainMenu.classList.toggle("open");
+
+};
+
+document.addEventListener("click",function(e){
+
+  if(
+    !mainMenu.contains(e.target) &&
+    e.target!==menuButton
+  ){
+    mainMenu.classList.remove("open");
+  }
 
 });
 
-/* =========================================================
-   TOAST
-   ========================================================= */
 
-let toastTimer = null;
+document
+.querySelectorAll("[data-section]")
+.forEach(function(btn){
 
-function showToast(message){
+  btn.onclick=function(){
 
-    toast.textContent = message;
+    const id =
+    btn.getAttribute("data-section");
 
-    toast.classList.add("show");
+    document
+    .getElementById(id)
+    .scrollIntoView({
+      behavior:"smooth"
+    });
 
-    clearTimeout(toastTimer);
+    mainMenu.classList.remove("open");
+  };
 
-    toastTimer =
-        setTimeout(
-            ()=>{
-                toast.classList.remove(
-                    "show"
-                );
-            },
-            3000
-        );
-}
+});
 
-/* =========================================================
-   TEXT NORMALIZATION
-   ========================================================= */
 
-function normalizeText(value){
+/* =====================================================
+   LANGUAGE PANEL
+   ===================================================== */
 
-    return String(value || "")
-        .toLowerCase()
-        .normalize("NFKC")
-        .replace(/[^\p{L}\p{N}\s]/gu," ")
-        .replace(/\s+/g," ")
-        .trim();
+document
+.getElementById("languageMenuButton")
+.onclick=function(){
 
-}
+  languagePanel.classList.toggle("show");
 
-/* =========================================================
-   SEARCH WORDS
-   ========================================================= */
+  mainMenu.classList.remove("open");
 
-function getSearchWords(question){
+};
 
-    const normalized =
-        normalizeText(question);
 
-    const words =
-        normalized
-        .split(" ")
-        .filter(word=>word.length >= 2);
+languageSelect.onchange=function(){
 
-    return [
-        ...new Set(words)
-    ];
+  setLanguage(
+    languageSelect.value
+  );
 
-}
+};
 
-/* =========================================================
-   SCORE MATCH
-   ========================================================= */
 
-function scoreAnswer(row, question){
+document
+.getElementById("languageButton")
+.onclick=function(){
 
-    const query =
-        normalizeText(question);
+  const codes =
+  Object.keys(LANGUAGES);
 
-    if(!query){
-        return 0;
+  let index =
+  codes.indexOf(currentLang);
+
+  index++;
+
+  if(index>=codes.length){
+    index=0;
+  }
+
+  setLanguage(codes[index]);
+
+};
+
+
+function setLanguage(lang){
+
+  if(!UI[lang]){
+    lang="am";
+  }
+
+  currentLang=lang;
+
+  localStorage.setItem(
+    "orthodox_language",
+    lang
+  );
+
+  const t=UI[lang];
+
+  document.documentElement.lang=lang;
+
+  document.getElementById(
+    "brandTitle"
+  ).textContent=t.brand;
+
+  document.getElementById(
+    "brandSubtitle"
+  ).textContent=t.subtitle;
+
+  document.getElementById(
+    "heroTitle"
+  ).textContent=t.hero;
+
+  document.getElementById(
+    "heroText"
+  ).textContent=t.heroText;
+
+  document.getElementById(
+    "askTitle"
+  ).textContent=t.ask;
+
+  document.getElementById(
+    "askDescription"
+  ).textContent=t.askDesc;
+
+  document.getElementById(
+    "askButton"
+  ).textContent=t.find;
+
+  document.getElementById(
+    "clearButton"
+  ).textContent=t.clear;
+
+  document.getElementById(
+    "answerTitle"
+  ).textContent=t.answer;
+
+  document.getElementById(
+    "sourceLabel"
+  ).textContent=t.source;
+
+  document.getElementById(
+    "recentTitle"
+  ).textContent=t.recentTitle;
+
+  document.getElementById(
+    "recentDescription"
+  ).textContent=t.recentDesc;
+
+  document.getElementById(
+    "booksInfoText"
+  ).textContent=t.booksInfoText;
+
+  document.getElementById(
+    "teachingText"
+  ).textContent=t.teachingText;
+
+  document.getElementById(
+    "languagesText"
+  ).textContent=
+  t.languages;
+
+  document.getElementById(
+    "footerTitle"
+  ).textContent=t.brand;
+
+  document.getElementById(
+    "footerDescription"
+  ).textContent=t.subtitle;
+
+  questionInput.placeholder =
+  LANGUAGES[lang].placeholder;
+
+  languageSelect.value=lang;
+
+  document.getElementById(
+    "languageButton"
+  ).textContent =
+  LANGUAGES[lang].short;
+
+  document
+  .querySelectorAll("[data-i18n]")
+  .forEach(function(el){
+
+    const key =
+    el.getAttribute("data-i18n");
+
+    if(t[key]){
+      el.textContent=t[key];
     }
 
-    const words =
-        getSearchWords(query);
+  });
 
-    const title =
-        normalizeText(
-            row.title ||
-            row.question ||
-            row.name ||
-            ""
-        );
+}
 
-    const answer =
-        normalizeText(
-            row.answer ||
-            row.content ||
-            row.response ||
-            row.text ||
-            ""
-        );
 
-    const category =
-        normalizeText(
-            row.category ||
-            row.topic ||
-            ""
-        );
+/* =====================================================
+   DARK MODE
+   ===================================================== */
 
-    const sourceText =
-        title + " " +
-        answer + " " +
-        category;
+document
+.getElementById("darkModeButton")
+.onclick=function(){
 
-    let score = 0;
+  document.body.classList.toggle("dark");
 
-    /* Exact phrase */
+  localStorage.setItem(
+    "orthodox_dark",
+    document.body.classList.contains("dark")
+  );
+
+  mainMenu.classList.remove("open");
+
+};
+
+if(
+  localStorage.getItem("orthodox_dark")==="true"
+){
+  document.body.classList.add("dark");
+}
+
+
+/* =====================================================
+   MODALS
+   ===================================================== */
+
+function openModal(id){
+
+  document
+  .getElementById(id)
+  .classList.add("open");
+
+}
+
+function closeModal(id){
+
+  document
+  .getElementById(id)
+  .classList.remove("open");
+
+}
+
+document
+.getElementById("booksButton")
+.onclick=function(){
+
+  openModal("booksModal");
+
+  mainMenu.classList.remove("open");
+
+};
+
+document
+.getElementById("aboutButton")
+.onclick=function(){
+
+  openModal("aboutModal");
+
+  mainMenu.classList.remove("open");
+
+};
+
+document
+.querySelectorAll("[data-close]")
+.forEach(function(btn){
+
+  btn.onclick=function(){
+
+    closeModal(
+      btn.getAttribute("data-close")
+    );
+
+  };
+
+});
+
+
+/* =====================================================
+   STATUS
+   ===================================================== */
+
+function showStatus(text,type){
+
+  statusBox.textContent=text;
+
+  statusBox.className=
+  "status show "+type;
+
+}
+
+
+/* =====================================================
+   DATABASE HELPERS
+   ===================================================== */
+
+function getValue(row,names){
+
+  for(
+    const name of names
+  ){
+
     if(
-        query.length >= 3 &&
-        sourceText.includes(query)
+      row[name] !== undefined &&
+      row[name] !== null &&
+      String(row[name]).trim()!==""
     ){
-        score += 70;
-    }
 
-    /* Individual words */
-    words.forEach(word=>{
-
-        if(title.includes(word)){
-            score += 35;
-        }
-
-        if(category.includes(word)){
-            score += 25;
-        }
-
-        if(answer.includes(word)){
-            score += 12;
-        }
-
-    });
-
-    /* Related word stems */
-    words.forEach(word=>{
-
-        if(word.length >= 4){
-
-            const stem =
-                word.substring(
-                    0,
-                    Math.max(
-                        3,
-                        word.length - 1
-                    )
-                );
-
-            if(
-                title.includes(stem)
-            ){
-                score += 12;
-            }
-
-            if(
-                answer.includes(stem)
-            ){
-                score += 5;
-            }
-
-        }
-
-    });
-
-    return score;
-
-}
-
-/* =========================================================
-   GET ALL ANSWERS FROM SUPABASE
-   ========================================================= */
-
-async function loadAnswerLibrary(){
-
-    if(!supabaseClient){
-        throw new Error(
-            "SUPABASE_NOT_CONFIGURED"
-        );
-    }
-
-    /*
-      We do not use a small LIMIT here.
-      Supabase/PostgREST can still paginate large
-      datasets internally. We request the library
-      in batches so the application can search more
-      than the first few rows.
-    */
-
-    const allRows = [];
-
-    const pageSize = 1000;
-
-    let from = 0;
-
-    while(true){
-
-        const to =
-            from + pageSize - 1;
-
-        const {data,error} =
-            await supabaseClient
-            .from("orthodox_answers")
-            .select("*")
-            .range(from,to);
-
-        if(error){
-            throw error;
-        }
-
-        if(!data || data.length === 0){
-            break;
-        }
-
-        allRows.push(...data);
-
-        if(data.length < pageSize){
-            break;
-        }
-
-        from += pageSize;
-
-        /*
-          Safety limit for extremely large databases.
-          This does not create a visual scroll limit.
-        */
-        if(from >= 100000){
-            break;
-        }
+      return String(row[name]);
 
     }
 
-    return allRows;
+  }
+
+  return "";
 
 }
 
-/* =========================================================
-   FIND RELATED ANSWERS
-   ========================================================= */
 
-async function findRelatedAnswers(question){
+/*
+  የቋንቋ column ካለ እንጠቀማለን።
+  የcolumn ስም language/lang/locale
+  ሊሆን ይችላል።
+*/
 
-    const rows =
-        await loadAnswerLibrary();
+function getRowLanguage(row){
 
-    const scored =
-        rows
-        .map(row=>({
-            row,
-            score:scoreAnswer(
-                row,
-                question
-            )
-        }))
-        .filter(item=>item.score > 0)
-        .sort(
-            (a,b)=>
-                b.score-a.score
-        );
-
-    return scored;
+  return getValue(
+    row,
+    [
+      "language",
+      "lang",
+      "locale"
+    ]
+  ).toLowerCase();
 
 }
 
-/* =========================================================
-   GET ANSWER TEXT
-   ========================================================= */
+
+/*
+  የጥያቄ እና የመልስ መስኮችን
+  ከተለያዩ የcolumn ስሞች ለመውሰድ።
+*/
+
+function getQuestionText(row){
+
+  return getValue(
+    row,
+    [
+      "question",
+      "question_text",
+      "title",
+      "keyword",
+      "keywords",
+      "name_text"
+    ]
+  );
+
+}
+
 
 function getAnswerText(row){
 
-    return (
-        row.answer ||
-        row.content ||
-        row.response ||
-        row.text ||
-        row.description ||
-        ""
-    );
+  return getValue(
+    row,
+    [
+      "answer",
+      "answer_text",
+      "content",
+      "response",
+      "description"
+    ]
+  );
 
 }
 
-function getTitle(row){
 
-    return (
-        row.title ||
-        row.question ||
-        row.name ||
-        row.topic ||
-        "መልስ"
-    );
+function getSourceText(row){
+
+  return getValue(
+    row,
+    [
+      "source",
+      "sources",
+      "reference",
+      "references",
+      "book",
+      "scripture"
+    ]
+  );
 
 }
 
-/* =========================================================
-   DISPLAY MARKDOWN SAFELY
-   ========================================================= */
 
-function renderMarkdown(text){
+/* =====================================================
+   SAVE QUESTION
+   ===================================================== */
 
-    if(!text){
-        return "";
+async function saveQuestion(question){
+
+  const result =
+  await db
+  .from("questions")
+  .insert({
+    question:question
+  });
+
+  if(result.error){
+    throw result.error;
+  }
+
+}
+
+
+/* =====================================================
+   LOAD ORTHODOX ANSWERS
+   ===================================================== */
+
+async function loadAnswers(){
+
+  const result =
+  await db
+  .from("orthodox_answers")
+  .select("*")
+  .limit(1000);
+
+  if(result.error){
+    throw result.error;
+  }
+
+  return result.data || [];
+
+}
+
+
+/* =====================================================
+   NORMALIZE
+   ===================================================== */
+
+function normalizeText(text){
+
+  return String(text || "")
+  .toLowerCase()
+  .normalize("NFKC")
+  .replace(/[.,!?;:()[\]{}"'`]/g," ")
+  .replace(/\s+/g," ")
+  .trim();
+
+}
+
+
+/* =====================================================
+   FIND BEST ANSWER
+   ===================================================== */
+
+function findBestAnswer(question,rows){
+
+  const q =
+  normalizeText(question);
+
+  const words =
+  q
+  .split(" ")
+  .filter(function(word){
+
+    return word.length>=2;
+
+  });
+
+  let best=null;
+  let bestScore=0;
+
+  rows.forEach(function(row){
+
+    const rowLang =
+    getRowLanguage(row);
+
+    /*
+      የቋንቋ መለያ ካለ በተመረጠው
+      ቋንቋ ብቻ እንዲፈልግ።
+    */
+
+    if(
+      rowLang &&
+      rowLang!==currentLang
+    ){
+      return;
     }
 
-    try{
-
-        if(
-            window.marked &&
-            typeof marked.parse === "function"
-        ){
-
-            return marked.parse(
-                String(text)
-            );
-
-        }
-
-    }catch(error){
-
-        console.warn(
-            "Markdown error:",
-            error
-        );
-
-    }
-
-    return String(text)
-        .replace(
-            /\n/g,
-            "<br>"
-        );
-
-}
-
-/* =========================================================
-   SHOW MAIN ANSWER
-   ========================================================= */
-
-function showMainAnswer(row){
-
-    const title =
-        getTitle(row);
-
-    const text =
-        getAnswerText(row);
-
-    document.getElementById(
-        "answerTitle"
-    ).textContent =
-        title;
-
-    answerContent.innerHTML =
-        renderMarkdown(text);
-
-    answerSection.classList.remove(
-        "hidden"
+    const questionText =
+    normalizeText(
+      getQuestionText(row)
     );
 
-    answerSection.scrollIntoView({
-        behavior:"smooth",
-        block:"start"
+    const answerText =
+    normalizeText(
+      getAnswerText(row)
+    );
+
+    const keywords =
+    normalizeText(
+      getValue(
+        row,
+        [
+          "keyword",
+          "keywords",
+          "tags"
+        ]
+      )
+    );
+
+    const searchable =
+    [
+      questionText,
+      answerText,
+      keywords
+    ]
+    .join(" ");
+
+    if(!searchable){
+      return;
+    }
+
+    let score=0;
+
+    /*
+      exact question
+    */
+
+    if(
+      questionText===q
+    ){
+      score+=100;
+    }
+
+    /*
+      full phrase
+    */
+
+    if(
+      questionText &&
+      q.includes(questionText)
+    ){
+      score+=40;
+    }
+
+    if(
+      questionText &&
+      questionText.includes(q)
+    ){
+      score+=40;
+    }
+
+    /*
+      words
+    */
+
+    words.forEach(function(word){
+
+      if(
+        searchable.includes(word)
+      ){
+        score+=2;
+      }
+
+      if(
+        questionText.includes(word)
+      ){
+        score+=4;
+      }
+
+      if(
+        keywords.includes(word)
+      ){
+        score+=5;
+      }
+
     });
 
-}
+    if(score>bestScore){
 
-/* =========================================================
-   SHOW RELATED RESULTS
-   ========================================================= */
+      bestScore=score;
 
-function showRelatedResults(results){
-
-    resultList.innerHTML = "";
-
-    if(!results.length){
-
-        resultsSection.classList.add(
-            "hidden"
-        );
-
-        return;
+      best={
+        row:row,
+        score:score
+      };
 
     }
 
-    results.forEach(
-        (item,index)=>{
+  });
 
-            const row =
-                item.row;
-
-            const card =
-                document.createElement(
-                    "article"
-                );
-
-            card.className =
-                "result-item";
-
-            const title =
-                document.createElement(
-                    "h4"
-                );
-
-            title.textContent =
-                getTitle(row);
-
-            const preview =
-                document.createElement(
-                    "p"
-                );
-
-            const text =
-                getAnswerText(row);
-
-            preview.textContent =
-                text.length > 300
-                ? text.substring(0,300)+"..."
-                : text;
-
-            const button =
-                document.createElement(
-                    "button"
-                );
-
-            button.className =
-                "result-open";
-
-            button.innerHTML =
-                '<i class="fas fa-book-open"></i> ' +
-                (
-                    currentLanguage === "am"
-                    ? "መልሱን አንብብ"
-                    : "Read Answer"
-                );
-
-            button.addEventListener(
-                "click",
-                ()=>{
-                    showMainAnswer(row);
-                }
-            );
-
-            card.appendChild(title);
-            card.appendChild(preview);
-            card.appendChild(button);
-
-            resultList.appendChild(card);
-
-        }
-    );
-
-    resultsSection.classList.remove(
-        "hidden"
-    );
+  return best;
 
 }
 
-/* =========================================================
-   ASK QUESTION
-   ========================================================= */
 
-async function askQuestion(){
+/* =====================================================
+   ASK
+   ===================================================== */
 
-    const question =
-        questionInput.value.trim();
+askButton.onclick=async function(){
 
-    const t =
-        translations[currentLanguage];
+  const question =
+  questionInput.value.trim();
 
-    if(!question){
+  const t=UI[currentLang];
 
-        showToast(
-            currentLanguage === "am"
-            ? "እባክዎ ጥያቄዎን ይጻፉ።"
-            : "Please write your question."
-        );
+  if(!question){
 
-        questionInput.focus();
-
-        return;
-    }
-
-    askBtn.disabled = true;
-
-    askBtn.innerHTML =
-        '<span class="spinner"></span>' +
-        t.search;
-
-    answerSection.classList.add(
-        "hidden"
+    showStatus(
+      t.empty,
+      "error"
     );
 
-    resultsSection.classList.add(
-        "hidden"
+    questionInput.focus();
+
+    return;
+  }
+
+  askButton.disabled=true;
+
+  answerCard.classList.remove("show");
+
+  showStatus(
+    t.searching,
+    "loading"
+  );
+
+  try{
+
+    /*
+      1. ጥያቄውን ወደ questions አስቀምጥ
+    */
+
+    await saveQuestion(question);
+
+
+    /*
+      2. መልሶችን Supabase ከሚገኘው
+         orthodox_answers አምጣ
+    */
+
+    const rows =
+    await loadAnswers();
+
+
+    /*
+      3. በቋንቋ + ቃላት ተዛማጅ መልስ ፈልግ
+    */
+
+    const best =
+    findBestAnswer(
+      question,
+      rows
     );
 
-    try{
 
-        if(!supabaseClient){
+    if(best){
 
-            throw new Error(
-                "SUPABASE_NOT_CONFIGURED"
-            );
+      const answer =
+      getAnswerText(best.row);
 
-        }
+      const source =
+      getSourceText(best.row);
 
-        /*
-          Save the question.
-          If the table does not exist or RLS blocks
-          insertion, we continue to search answers.
-        */
+      answerBody.textContent =
+      answer ||
+      t.notFound;
 
-        try{
+      answerLanguage.textContent =
+      LANGUAGES[currentLang].short;
 
-            await supabaseClient
-            .from("questions")
-            .insert({
-                question:question
-            });
+      if(source){
 
-        }catch(saveError){
+        sourceBox.style.display="block";
 
-            console.warn(
-                "Question save warning:",
-                saveError
-            );
+        sourceText.textContent=
+        source;
 
-        }
+      }else{
 
-        const results =
-            await findRelatedAnswers(
-                question
-            );
+        sourceBox.style.display="none";
 
-        if(!results.length){
+      }
 
-            answerContent.innerHTML =
-                "<p>" +
-                t.noResult +
-                "</p>";
+    }else{
 
-            document.getElementById(
-                "answerTitle"
-            ).textContent =
-                t.answer;
+      answerBody.textContent=
+      t.notFound;
 
-            answerSection.classList.remove(
-                "hidden"
-            );
-
-            return;
-
-        }
-
-        /*
-          First/highest scoring answer.
-        */
-        showMainAnswer(
-            results[0].row
-        );
-
-        /*
-          Show all useful related answers,
-          not only the first result.
-        */
-        showRelatedResults(
-            results.slice(
-                0,
-                30
-            )
-        );
-
-        loadRecentQuestions();
-
-    }catch(error){
-
-        console.error(
-            "Search error:",
-            error
-        );
-
-        let message =
-            t.error;
-
-        if(
-            error.message ===
-            "SUPABASE_NOT_CONFIGURED"
-        ){
-
-            message =
-                t.connection;
-
-        }
-
-        answerContent.innerHTML =
-            "<p>" +
-            message +
-            "</p>";
-
-        document.getElementById(
-            "answerTitle"
-        ).textContent =
-            t.answer;
-
-        answerSection.classList.remove(
-            "hidden"
-        );
-
-    }finally{
-
-        askBtn.disabled = false;
-
-        askBtn.innerHTML =
-            '<i class="fas fa-paper-plane"></i>' +
-            '<span id="askText">' +
-            t.ask +
-            '</span>';
+      sourceBox.style.display="none";
 
     }
 
-}
+    answerCard.classList.add("show");
 
-/* =========================================================
-   ASK BUTTON
-   ========================================================= */
+    showStatus(
+      t.saved,
+      "success"
+    );
 
-askBtn.addEventListener(
-    "click",
-    askQuestion
-);
+    await loadRecentQuestions();
 
-questionInput.addEventListener(
-    "keydown",
-    event=>{
+    answerCard.scrollIntoView({
+      behavior:"smooth",
+      block:"start"
+    });
 
-        if(
-            event.key === "Enter" &&
-            event.ctrlKey
-        ){
+  }catch(error){
 
-            event.preventDefault();
+    console.error(
+      "Orthodox Answer Error:",
+      error
+    );
 
-            askQuestion();
+    showStatus(
+      UI[currentLang].error+
+      " "+error.message,
+      "error"
+    );
 
-        }
+  }finally{
 
-    }
-);
+    askButton.disabled=false;
 
-/* =========================================================
-   COPY ANSWER
-   ========================================================= */
+  }
 
-document.getElementById(
-    "copyBtn"
-).addEventListener(
-    "click",
-    async ()=>{
+};
 
-        const text =
-            answerContent.innerText.trim();
 
-        if(!text){
-            return;
-        }
+/* =====================================================
+   CLEAR
+   ===================================================== */
 
-        try{
+clearButton.onclick=function(){
 
-            await navigator.clipboard.writeText(
-                text
-            );
+  questionInput.value="";
 
-            showToast(
-                translations[
-                    currentLanguage
-                ].copied
-            );
+  answerBody.textContent="";
 
-        }catch(error){
+  answerCard.classList.remove("show");
 
-            showToast(
-                currentLanguage === "am"
-                ? "መቅዳት አልተቻለም።"
-                : "Copy failed."
-            );
+  statusBox.className="status";
 
-        }
+  questionInput.focus();
 
-    }
-);
+};
 
-/* =========================================================
-   SPEECH
-   ========================================================= */
 
-document.getElementById(
-    "speakBtn"
-).addEventListener(
-    "click",
-    ()=>{
-
-        if(
-            !("speechSynthesis" in window)
-        ){
-
-            showToast(
-                currentLanguage === "am"
-                ? "የድምፅ ንባብ በዚህ መሣሪያ አይደገፍም።"
-                : "Speech is not supported."
-            );
-
-            return;
-
-        }
-
-        const text =
-            answerContent.innerText.trim();
-
-        if(!text){
-            return;
-        }
-
-        speechSynthesis.cancel();
-
-        const utterance =
-            new SpeechSynthesisUtterance(
-                text
-            );
-
-        utterance.lang =
-            currentLanguage === "am"
-            ? "am-ET"
-            : "en-US";
-
-        speechSynthesis.speak(
-            utterance
-        );
-
-    }
-);
-
-/* =========================================================
+/* =====================================================
    RECENT QUESTIONS
-   ========================================================= */
+   ===================================================== */
 
 async function loadRecentQuestions(){
 
-    if(!supabaseClient){
+  const box =
+  document.getElementById(
+    "recentQuestions"
+  );
 
-        questionList.innerHTML =
-            "<div class='question-item'>" +
-            translations[
-                currentLanguage
-            ].connection +
-            "</div>";
+  try{
 
-        return;
+    const result =
+    await db
+    .from("questions")
+    .select(
+      "id,created_at,question"
+    )
+    .order(
+      "created_at",
+      {
+        ascending:false
+      }
+    )
+    .limit(10);
 
+    if(result.error){
+      throw result.error;
     }
 
-    try{
+    const data =
+    result.data || [];
 
-        const {
-            data,
-            error
-        } =
-            await supabaseClient
-            .from("questions")
-            .select("*")
-            .order(
-                "created_at",
-                {
-                    ascending:false
-                }
-            )
-            .limit(20);
+    if(!data.length){
 
-        if(error){
-            throw error;
-        }
+      box.textContent=
+      currentLang==="en"
+      ?"No questions yet."
+      :"ጥያቄ የለም።";
 
-        questionList.innerHTML = "";
-
-        if(!data || !data.length){
-
-            questionList.innerHTML =
-                "<div class='question-item'>" +
-                (
-                    currentLanguage === "am"
-                    ? "ጥያቄ አልተገኘም።"
-                    : "No questions found."
-                ) +
-                "</div>";
-
-            return;
-
-        }
-
-        data.forEach(row=>{
-
-            const item =
-                document.createElement(
-                    "div"
-                );
-
-            item.className =
-                "question-item";
-
-            const text =
-                document.createElement(
-                    "div"
-                );
-
-            text.textContent =
-                row.question || "";
-
-            const small =
-                document.createElement(
-                    "small"
-                );
-
-            if(row.created_at){
-
-                const date =
-                    new Date(
-                        row.created_at
-                    );
-
-                small.textContent =
-                    date.toLocaleString(
-                        currentLanguage === "am"
-                        ? "am-ET"
-                        : "en-US"
-                    );
-
-            }
-
-            item.appendChild(text);
-            item.appendChild(small);
-
-            questionList.appendChild(
-                item
-            );
-
-        });
-
-    }catch(error){
-
-        console.error(
-            "Questions loading error:",
-            error
-        );
-
-        questionList.innerHTML =
-            "<div class='question-item'>" +
-            (
-                currentLanguage === "am"
-                ? "ጥያቄዎችን ማምጣት አልተቻለም።"
-                : "Questions could not be loaded."
-            ) +
-            "</div>";
-
+      return;
     }
+
+    box.innerHTML="";
+
+    data.forEach(function(row){
+
+      const item =
+      document.createElement(
+        "div"
+      );
+
+      item.className=
+      "recent-item";
+
+      const q =
+      document.createElement(
+        "div"
+      );
+
+      q.className=
+      "recent-question";
+
+      q.textContent =
+      row.question || "";
+
+      const date =
+      document.createElement(
+        "div"
+      );
+
+      date.className=
+      "recent-date";
+
+      date.textContent =
+      row.created_at
+      ?new Date(
+        row.created_at
+      ).toLocaleString()
+      :"";
+
+      item.appendChild(q);
+
+      item.appendChild(date);
+
+      box.appendChild(item);
+
+    });
+
+  }catch(error){
+
+    console.error(error);
+
+    box.textContent=
+    "ጥያቄዎችን ማምጣት አልተቻለም።";
+
+  }
 
 }
 
-/* =========================================================
-   INITIALIZE
-   ========================================================= */
 
-setLanguage("am");
+/* =====================================================
+   COPY
+   ===================================================== */
+
+document
+.getElementById("copyButton")
+.onclick=async function(){
+
+  const text=
+  answerBody.textContent;
+
+  if(!text){
+    return;
+  }
+
+  try{
+
+    await navigator.clipboard.writeText(
+      text
+    );
+
+    showStatus(
+      currentLang==="en"
+      ?"Answer copied."
+      :"መልሱ ተቀድቷል።",
+      "success"
+    );
+
+  }catch(error){
+
+    showStatus(
+      currentLang==="en"
+      ?"Could not copy."
+      :"መቅዳት አልተቻለም።",
+      "error"
+    );
+
+  }
+
+};
+
+
+/* =====================================================
+   SHARE
+   ===================================================== */
+
+document
+.getElementById("shareButton")
+.onclick=async function(){
+
+  const text=
+  answerBody.textContent;
+
+  if(!text){
+    return;
+  }
+
+  if(navigator.share){
+
+    try{
+
+      await navigator.share({
+        title:UI[currentLang].brand,
+        text:text,
+        url:location.href
+      });
+
+    }catch(error){}
+
+  }else{
+
+    try{
+
+      await navigator.clipboard.writeText(
+        text+"\n\n"+location.href
+      );
+
+      showStatus(
+        currentLang==="en"
+        ?"Answer copied for sharing."
+        :"መልሱ ለመጋራት ተቀድቷል።",
+        "success"
+      );
+
+    }catch(error){}
+
+  }
+
+};
+
+
+/* =====================================================
+   SPEECH
+   ===================================================== */
+
+document
+.getElementById("speakButton")
+.onclick=function(){
+
+  const text =
+  answerBody.textContent;
+
+  if(!text){
+    return;
+  }
+
+  if(!window.speechSynthesis){
+
+    showStatus(
+      "የድምፅ ንባብ አይደገፍም።",
+      "error"
+    );
+
+    return;
+  }
+
+  speechSynthesis.cancel();
+
+  const speech =
+  new SpeechSynthesisUtterance(
+    text
+  );
+
+  speech.lang =
+  currentLang==="am"
+  ?"am-ET"
+  :currentLang==="ti"
+  ?"ti-ET"
+  :currentLang==="om"
+  ?"om-ET"
+  :currentLang;
+
+  speech.rate=.9;
+
+  speechSynthesis.speak(
+    speech
+  );
+
+};
+
+
+/* =====================================================
+   INITIALIZE
+   ===================================================== */
+
+setLanguage(currentLang);
 
 loadRecentQuestions();
 
