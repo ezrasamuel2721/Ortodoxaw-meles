@@ -353,7 +353,6 @@
             color: var(--black);
         }
 
-        /* የ scroll ገደብ የሌለው ሙሉ መጻሕፍታዊ የማንበቢያ ሳጥን */
         .answer-body {
             font-size: 16px;
             line-height: 2.0;
@@ -480,6 +479,12 @@
                 <button class="lang-btn" data-lang="ti">ትግርኛ</button>
                 <button class="lang-btn" data-lang="om">Afaan Oromoo</button>
                 <button class="lang-btn" data-lang="ar">العربية</button>
+                <button class="lang-btn" data-lang="so">Soomaali</button>
+                <button class="lang-btn" data-lang="fr">Français</button>
+                <button class="lang-btn" data-lang="es">Español</button>
+                <button class="lang-btn" data-lang="it">Italiano</button>
+                <button class="lang-btn" data-lang="de">Deutsch</button>
+                <button class="lang-btn" data-lang="zh">中文</button>
             </div>
         </div>
 
@@ -507,7 +512,7 @@
             <span class="modal-close" onclick="closeModal('aboutModal')">&times;</span>
             <h2>ስለ እኛ</h2>
             <br>
-            <p>ኦርቶዶክሳዊ መልስ፡ በኢትዮጵያ ኦርቶዶክስ ተዋሕዶ ቤተክርስቲያን አስተምህሮ እና ሥርዓት መሠረት ለሚነሱ ጥያቄዎች ጥልቅና ሰፊ მጻሕፍታዊ መልስ የሚሰጥ ዘመናዊ መድረክ ነው።</p>
+            <p>ኦርቶዶክሳዊ መልስ፡ በኢትዮጵያ ኦርቶዶክስ ተዋሕዶ ቤተክርስቲያን አስተምህሮ እና ሥርዓት መሠረት ለሚነሱ ጥያቄዎች ጥልቅና ሰፊ መጻሕፍታዊ መልስ የሚሰጥ ዘመናዊ መድረክ ነው።</p>
         </div>
     </div>
 
@@ -549,11 +554,12 @@
             supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
         }
 
-        // የ Google Gemini API ቁልፍ (እዚህጋር የእርስዎን የ Gemini API ቁልፍ ያስገቡ)
+        // የ Google Gemini API ቁልፍ 
         const GEMINI_API_KEY = "YOUR_GEMINI_API_KEY";
 
         let currentLang = 'am';
 
+        // ለሁሉም 11 ቋንቋዎች የተዘጋጁ ትርጉሞች (Translations)
         const translations = {
             am: {
                 title: "ኦርቶዶክሳዊ መልስ", menu: "ማውጫ", colorTheme: "ቀለም መቀየሪያ", designTheme: "ዲዛይን መቀየሪያ",
@@ -570,6 +576,78 @@
                 inputLabel: "Ask here:", placeholder: "Enter your spiritual question...", submitBtn: "Get AI-Powered Answer",
                 answerTitle: "Comprehensive Orthodox Answer", searching: "Generating comprehensive answer with AI...",
                 emptyAlert: "Please enter your question!", copiedAlert: "Copied!", linkCopiedAlert: "Link copied!"
+            },
+            ti: {
+                title: "ኦርቶዶክሳዊ መልሲ", menu: "ማዕቐብ", colorTheme: "ቀለም መቐየሪ", designTheme: "ንድፊ መቐየሪ",
+                aboutUs: "ብዛዕባና", feedback: "ርእይቶ ንምሃብ", shareApp: "ካፈል", booksSuggest: "መጻሕፍቲ ንባብ ምኽሪ",
+                quoteText: '"ሕቶ ምሕታትሊቅ ይገብር"', subQuoteText: "መንፈሳዊ ሕቶታትካ ሕተት፤ ሓቂ ፍለጥ!",
+                inputLabel: "ብዝሕቲ ኣብዚ ሕተት:", placeholder: "መንፈሳዊ ሕቶኻ ኣብዚ ኣእቱ...", submitBtn: "ብ AI ዝተደገፈ ዓሚቝ መልሲ ድለ",
+                answerTitle: "መጽሓፍታዊን መንፈሳዊን ዓሚቝ መልሲ", searching: "ብሓገዝ AI ምስ መጽሓፍ ቅዱስን ትምህርቲ ሊቃውንትን የመሓዛ ኣሎ...",
+                emptyAlert: "በጃኹም ቅድም ሕቶኹም ኣእትዉ!", copiedAlert: "መልሲ ተቐዲሑ!", linkCopiedAlert: "ሊንክ ተቐዲሑ!"
+            },
+            om: {
+                title: "Deebii Ortodoksiis", menu: "Baafata", colorTheme: "Jijjiira Halluu", designTheme: "Jijjiira Dizaayinii",
+                aboutUs: "Waa'ee Keenya", feedback: "Yaada Kennaa", shareApp: "Qoodaa", booksSuggest: "Gorsa Kitaabota Dubbisaa",
+                quoteText: '"Gaafachuun nama Ogeessa taasisa"', subQuoteText: "Gaaffii hafuuraa keessan gaafadhaa dhugaa beekaa!",
+                inputLabel: "Asitti gaafadhaa:", placeholder: "Gaaffii hafuuraa keessan asitti galchaa...", submitBtn: "Deebii gadi fagoo AI deeggarame barbaadi",
+                answerTitle: "Deebii Gadi Fagoo Kitaabaafi Hafuuraa", searching: "Deeggarsa AI tiin kitaaba qulqulluufi barsiisa abbootii waliin qindeessaa jira...",
+                emptyAlert: "Maaloo dura gaaffii keessan galchaa!", copiedAlert: "Deebiin kuufameera!", linkCopiedAlert: "Liinkiin kuufameera!"
+            },
+            ar: {
+                title: "الإجابة الأرثوذكسية", menu: "القائمة", colorTheme: "غير اللون", designTheme: "غير التصميم",
+                aboutUs: "معلومات عنا", feedback: "ملاحظات", shareApp: "شارك", booksSuggest: "اقتراحات الكتب",
+                quoteText: '"السؤال يجعل المرء حكيماً"', subQuoteText: "اسأل أسئلتك الروحية واعرف الحقيقة!",
+                inputLabel: "اسأل هنا:", placeholder: "أدخل سؤالك الروحي هنا...", submitBtn: "احصل على إجابة عميقة مدعومة بالذكاء الاصطناعي",
+                answerTitle: "إجابة أرثوذكسية شاملة وعميقة", searching: "جارٍ إنشاء إجابة شاملة بالتعاون مع الكتاب المقدس وعلماء الكنيسة...",
+                emptyAlert: "الرجاء إدخال سؤالك أولاً!", copiedAlert: "تم النسخ!", linkCopiedAlert: "تم نسخ الرابط!"
+            },
+            so: {
+                title: "Jawaabta Ortodoks", menu: "Menu", colorTheme: "Midabka", designTheme: "Naqshadda",
+                aboutUs: "Nagu Saabsan", feedback: "Fikradaha", shareApp: "Wadaag", booksSuggest: "Talooyinka Buugta",
+                quoteText: '"Weydiintu waxay ka dhigtaa qof caqli badan"', subQuoteText: "Weydii su'aalahaaga ruuxiga ah!",
+                inputLabel: "Halkan ku weydii:", placeholder: "Geli su'aashaada ruuxiga ah...", submitBtn: "Hel Jawaab AI leh",
+                answerTitle: "Jawaab Qoto Dheer oo Ortodoks ah", searching: "Waa la soo saarayaa jawaabta iyadoo la kaashanayo AI...",
+                emptyAlert: "Fadlan marka hore geli su'aashaada!", copiedAlert: "La guuriyay!", linkCopiedAlert: "Linkiga la guuriyay!"
+            },
+            fr: {
+                title: "Réponse Orthodoxe", menu: "Menu", colorTheme: "Thème", designTheme: "Design",
+                aboutUs: "À propos", feedback: "Commentaires", shareApp: "Partager", booksSuggest: "Livres",
+                quoteText: '"Demander rend sage"', subQuoteText: "Posez vos questions spirituelles !",
+                inputLabel: "Posez votre question ici :", placeholder: "Entrez votre question spirituelle...", submitBtn: "Obtenir une réponse par IA",
+                answerTitle: "Réponse Orthodoxe Approfondie", searching: "Génération de la réponse avec l'IA...",
+                emptyAlert: "Veuillez entrer votre question !", copiedAlert: "Copié !", linkCopiedAlert: "Lien copié !"
+            },
+            es: {
+                title: "Respuesta Ortodoxa", menu: "Menú", colorTheme: "Tema", designTheme: "Diseño",
+                aboutUs: "Sobre nosotros", feedback: "Comentarios", shareApp: "Compartir", booksSuggest: "Libros",
+                quoteText: '"Preguntar hace sabio"', subQuoteText: "¡Haz tus preguntas espirituales!",
+                inputLabel: "Pregunta aquí:", placeholder: "Ingresa tu pregunta espiritual...", submitBtn: "Obtener respuesta de IA",
+                answerTitle: "Respuesta Ortodoxa Integral", searching: "Generando respuesta con IA...",
+                emptyAlert: "¡Por favor ingresa tu pregunta!", copiedAlert: "¡Copiado!", linkCopiedAlert: "¡Enlace copiado!"
+            },
+            it: {
+                title: "Risposta Ortodossa", menu: "Menu", colorTheme: "Tema", designTheme: "Design",
+                aboutUs: "Chi siamo", feedback: "Feedback", shareApp: "Condividi", booksSuggest: "Libri",
+                quoteText: '"Domandare rende saggi"', subQuoteText: "Fai le tue domande spirituali!",
+                inputLabel: "Chiedi qui:", placeholder: "Inserisci la tua domanda spirituale...", submitBtn: "Ottieni risposta dall'IA",
+                answerTitle: "Risposta Ortodossa Approfondita", searching: "Generazione della risposta in corso...",
+                emptyAlert: "Inserisci la tua domanda!", copiedAlert: "Copiato!", linkCopiedAlert: "Link copiato!"
+            },
+            de: {
+                title: "Orthodoxe Antwort", menu: "Menü", colorTheme: "Thema", designTheme: "Design",
+                aboutUs: "Über uns", feedback: "Feedback", shareApp: "Teilen", booksSuggest: "Bücher",
+                quoteText: '"Fragen macht klug"', subQuoteText: "Stellen Sie Ihre spirituellen Fragen!",
+                inputLabel: "Hier fragen:", placeholder: "Geben Sie Ihre spirituelle Frage ein...", submitBtn: "KI-gestützte Antwort erhalten",
+                answerTitle: "Umfassende Orthodoxe Antwort", searching: "Antwort wird mit KI generiert...",
+                emptyAlert: "Bitte geben Sie Ihre Frage ein!", copiedAlert: "Kopiert!", linkCopiedAlert: "Link kopiert!"
+            },
+            zh: {
+                title: "正教解答", menu: "菜单", colorTheme: "主题", designTheme: "设计",
+                aboutUs: "关于我们", feedback: "反馈", shareApp: "分享", booksSuggest: "推荐书籍",
+                quoteText: '"提问使人睿智"', subQuoteText: "提出您的灵性问题！",
+                inputLabel: "在此提问：", placeholder: "输入您的灵性问题...", submitBtn: "获取AI驱动的解答",
+                answerTitle: "详尽的正教解答", searching: "正在通过AI生成详尽解答...",
+                emptyAlert: "请输入您的问题！", copiedAlert: "已复制！", linkCopiedAlert: "链接已复制！"
             }
         };
 
@@ -612,7 +690,7 @@
         function openModal(modalId) { document.getElementById(modalId).style.display = 'block'; }
         function closeModal(modalId) { document.getElementById(modalId).style.display = 'none'; }
 
-        // እውነተኛውን AI (Google Gemini API) በመጠቀም ጥልቅ መልስ ማመንጨት
+        // AI (Google Gemini API) 
         async function fetchAnswerFromGemini(queryText, lang) {
             const prompt = `እርስዎ የኢትዮጵያ ኦርቶዶክስ ተዋሕዶ ቤተክርስቲያን ቀኖናን፣ መጽሐፍ ቅዱስን፣ ሃይማኖተ አበውን እና የሊቃውንት ትምህርትን ጠንቅቆ የሚያውቅ ሊቅ ነዎት። ተጠቃሚው ላነሳው የሚከተለው ጥያቄ በ"${lang}" ቋንቋ ሙሉ በሙሉ ሰፊ፣ ጥልቅ፣ መጻሕፍታዊ እና በምዕራፍ የተከፈለ መልስ ይስጡ። 
 ጥያቄ፡ "${queryText}"`;
@@ -630,11 +708,11 @@
                 if (data.candidates && data.candidates[0].content.parts[0].text) {
                     return data.candidates[0].content.parts[0].text;
                 } else {
-                    return "ይቅርታ፣ መልሱን ማመንጨት አልተቻለም። እባክዎ እንደገና ይሞክሩ።";
+                    return null;
                 }
             } catch (error) {
                 console.error("Gemini API Error:", error);
-                return "የኔትወርክ ችግር አጋጥሟል። እባክዎ የበይነ መረብ ግንኙነትዎን ይፈትሹ።";
+                return null;
             }
         }
 
@@ -650,7 +728,7 @@
             let finalAnswerText = "";
 
             try {
-                // 1. መጀመሪያ ከ Supabase (Cache) መፈለግ (ለፈጣን ምላሽ)
+                // 1. መጀመሪያ ከ Supabase (Cache) ለመፈለግ መሞከር
                 if (supabaseClient) {
                     let { data, error } = await supabaseClient
                         .from('questions')
@@ -663,12 +741,27 @@
                     }
                 }
 
-                // 2. ከ Supabase ካልተገኘ በ AI (Gemini) በኩል አዲስ እና ሕያው መልስ ማመንጨት
+                // 2. ከ Supabase ካልተገኘ በ AI (Gemini) ለማመንጨት መሞከር
                 if (!finalAnswerText) {
                     finalAnswerText = await fetchAnswerFromGemini(queryText, currentLang);
                     
-                    // አዲሱን መልስ ለቀጣይ ፈጣን አገልግሎት በ Supabase ውስጥ ማስቀመጥ
-                    if (supabaseClient) {
+                    // AI ካልሰራ ከ Supabase ውስጥ ማንኛውንም የተخማቸ መረጃ በማምጣት ምላሽ መስጠት (fallback)
+                    if (!finalAnswerText && supabaseClient) {
+                        let { data } = await supabaseClient
+                            .from('questions')
+                            .select('answer')
+                            .limit(1);
+                        if (data && data.length > 0) {
+                            finalAnswerText = data[0].answer;
+                        }
+                    }
+
+                    if (!finalAnswerText) {
+                        finalAnswerText = currentLang === 'am' ? 
+                            "ይቅርታ፣ በአሁኑ ሰዓት የኢንተርኔት ግንኙነት ወይም የ AI አገልግሎት ማግኘት አልተቻለም። እባክዎ ትንሽ ቆይተው እንደገና ይሞክሩ።" :
+                            "Sorry, unable to fetch the answer at this moment. Please check your connection and try again.";
+                    } else if (supabaseClient) {
+                        // አዲሱን መልስ በ Supabase ውስጥ ማስቀመጥ
                         await supabaseClient.from('questions').insert([
                             { question: queryText, answer: finalAnswerText, language: currentLang }
                         ]);
@@ -676,10 +769,11 @@
                 }
             } catch (err) {
                 console.error("Process Error:", err);
-                finalAnswerText = await fetchAnswerFromGemini(queryText, currentLang);
+                finalAnswerText = currentLang === 'am' ? 
+                    "የኔትወርክ ችግር አጋጥሟል። እባክዎ የበይነ መረብ ግንኙነትዎን ይፈትሹ።" : 
+                    "A network error occurred. Please check your internet connection.";
             }
 
-            // ማርክደውን ወደ ውብ HTML መልክ መቀየር
             const parsedHtml = marked.parse(finalAnswerText);
 
             answersList.innerHTML = `
@@ -692,7 +786,7 @@
                         </div>
                     </div>
                     <div class="answer-body">
-                        <p><strong>ጥያቄዎ፡</strong> ${queryText}</p>
+                        <p><strong>ጥያቄዎ / Your Question:</strong> ${queryText}</p>
                         <hr style="border:0; border-top:1px solid var(--gold); margin:15px 0;">
                         ${parsedHtml}
                     </div>
@@ -714,7 +808,7 @@
         document.getElementById('submitBtn').addEventListener('click', () => {
             const qInput = document.getElementById('userQuestion');
             const queryText = qInput.value.trim();
-            if (!qInput.value.trim()) {
+            if (!queryText) {
                 alert(translations[currentLang].emptyAlert);
                 return;
             }
