@@ -1,683 +1,454 @@
 <!DOCTYPE html>
 <html lang="am">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title id="docTitle">ኦርቶዶክሳዊ መልስ - የኢትዮጵያ ኦርቶዶክስ ተዋሕዶ</title>
-    <!-- FontAwesome Font icons -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    
-    <!-- Supabase JS Library Client -->
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    
-    <!-- Markdown Parser -->
-    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
-
-    <style>
-        :root {
-            --gold: #D4AF37;
-            --gold-light: #f9f3d9;
-            --green: #006B3C;
-            --yellow: #FCD116;
-            --red: #D21034;
-            --blue: #003399;
-            --white: #FFFFFF;
-            --black: #1A1A1A;
-            --bg-color: #f7f9fc;
-            --card-bg: #ffffff;
-            --text-color: #1a1a1a;
-        }
-
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-        }
-
-        body {
-            background-color: var(--bg-color);
-            color: var(--text-color);
-            display: flex;
-            flex-direction: column;
-            min-height: 100vh;
-            transition: background-color 0.3s, color 0.3s;
-        }
-
-        body.theme-dark {
-            --bg-color: #121212;
-            --card-bg: #1e1e1e;
-            --text-color: #e0e0e0;
-        }
-
-        .navbar {
-            background: linear-gradient(135deg, var(--green), var(--blue));
-            color: var(--white);
-            padding: 12px 20px;
-            border-bottom: 4px solid var(--gold);
-            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.15);
-            position: sticky;
-            top: 0;
-            z-index: 100;
-        }
-
-        .nav-left {
-            display: flex;
-            align-items: center;
-            gap: 15px;
-        }
-
-        .menu-btn {
-            background: none;
-            border: none;
-            color: var(--gold);
-            font-size: 26px;
-            cursor: pointer;
-        }
-
-        .brand-container {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-        }
-
-        .logo-box {
-            width: 50px;
-            height: 50px;
-            border-radius: 50%;
-            border: 2px solid var(--gold);
-            overflow: hidden;
-            background-color: var(--gold-light);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            flex-shrink: 0;
-        }
-
-        .logo-img {
-            width: 100%;
-            height: 100%;
-            object-fit: cover;
-        }
-
-        .main-title {
-            font-size: 22px;
-            font-weight: bold;
-            color: var(--gold);
-            text-shadow: 1px 1px 3px rgba(0,0,0,0.6);
-        }
-
-        .sidebar {
-            position: fixed;
-            top: 0;
-            left: -320px;
-            width: 310px;
-            height: 100%;
-            background-color: var(--card-bg);
-            box-shadow: 4px 0 15px rgba(0,0,0,0.3);
-            z-index: 200;
-            transition: 0.3s ease;
-            padding: 20px;
-            overflow-y: auto;
-        }
-
-        .sidebar.active {
-            left: 0;
-        }
-
-        .sidebar-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            border-bottom: 2px solid var(--gold);
-            padding-bottom: 10px;
-            margin-bottom: 20px;
-        }
-
-        .close-btn {
-            background: none;
-            border: none;
-            font-size: 24px;
-            cursor: pointer;
-            color: var(--red);
-        }
-
-        .sidebar-links {
-            list-style: none;
-        }
-
-        .sidebar-links li {
-            margin-bottom: 12px;
-        }
-
-        .sidebar-links a {
-            text-decoration: none;
-            color: var(--text-color);
-            font-size: 15px;
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            padding: 10px;
-            border-radius: 6px;
-            transition: 0.2s;
-        }
-
-        .sidebar-links a:hover {
-            background-color: var(--gold-light);
-            color: var(--green);
-        }
-
-        .contact-info {
-            font-size: 12px;
-            color: #666;
-            margin-top: 2px;
-            display: block;
-        }
-
-        .overlay {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(0, 0, 0, 0.5);
-            display: none;
-            z-index: 150;
-        }
-
-        .overlay.active {
-            display: block;
-        }
-
-        .lang-scroll-container {
-            background-color: var(--card-bg);
-            padding: 12px 0;
-            border-bottom: 2px solid var(--yellow);
-            overflow-x: auto;
-            white-space: nowrap;
-        }
-
-        .lang-bar {
-            display: inline-flex;
-            gap: 10px;
-            padding: 0 15px;
-        }
-
-        .lang-btn {
-            background-color: transparent;
-            border: 1.5px solid var(--gold);
-            color: var(--text-color);
-            padding: 6px 16px;
-            border-radius: 20px;
-            cursor: pointer;
-            font-weight: bold;
-            transition: 0.3s;
-            font-size: 14px;
-        }
-
-        .lang-btn.active, .lang-btn:hover {
-            background-color: var(--gold);
-            color: var(--black);
-        }
-
-        .quote-section {
-            text-align: center;
-            margin: 20px 15px;
-            padding: 15px;
-            border-left: 5px solid var(--red);
-            border-right: 5px solid var(--green);
-            background: var(--card-bg);
-            border-radius: 8px;
-            box-shadow: 0 2px 6px rgba(0,0,0,0.06);
-        }
-
-        .quote-text {
-            color: var(--green);
-            font-size: 22px;
-            font-weight: bold;
-            margin-bottom: 6px;
-        }
-
-        .sub-quote-text {
-            color: var(--red);
-            font-size: 15px;
-            font-weight: 600;
-        }
-
-        .main-container {
-            max-width: 900px;
-            margin: 0 auto;
-            padding: 15px;
-            flex: 1;
-            width: 100%;
-        }
-
-        .input-card {
-            background: var(--card-bg);
-            padding: 20px;
-            border-radius: 10px;
-            border-top: 4px solid var(--gold);
-            box-shadow: 0 4px 10px rgba(0,0,0,0.08);
-        }
-
-        .input-label {
-            display: block;
-            font-size: 18px;
-            font-weight: bold;
-            margin-bottom: 10px;
-            color: var(--green);
-        }
-
-        textarea {
-            width: 100%;
-            height: 110px;
-            padding: 12px;
-            border: 1px solid #ccc;
-            border-radius: 6px;
-            resize: vertical;
-            font-size: 16px;
-            background: var(--bg-color);
-            color: var(--text-color);
-        }
-
-        .ask-btn {
-            margin-top: 12px;
-            width: 100%;
-            background-color: var(--green);
-            color: var(--white);
-            border: none;
-            padding: 12px;
-            font-size: 16px;
-            font-weight: bold;
-            border-radius: 6px;
-            cursor: pointer;
-            transition: background 0.3s;
-        }
-
-        .ask-btn:hover {
-            background-color: #004d2b;
-        }
-
-        .answer-section {
-            margin-top: 25px;
-        }
-
-        .answer-section.hidden {
-            display: none;
-        }
-
-        .answer-card {
-            background: var(--card-bg);
-            border-radius: 10px;
-            border: 2px solid var(--gold);
-            padding: 25px;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
-            margin-bottom: 15px;
-        }
-
-        .answer-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            border-bottom: 1px solid #ddd;
-            padding-bottom: 12px;
-            margin-bottom: 20px;
-            flex-wrap: wrap;
-            gap: 10px;
-        }
-
-        .answer-header h4 {
-            color: var(--green);
-            font-size: 18px;
-        }
-
-        .answer-tools {
-            display: flex;
-            gap: 8px;
-            align-items: center;
-        }
-
-        .answer-tools button {
-            background: var(--bg-color);
-            border: 1px solid var(--gold);
-            padding: 6px 12px;
-            border-radius: 5px;
-            cursor: pointer;
-            color: var(--text-color);
-            font-weight: bold;
-            font-size: 13px;
-        }
-
-        .answer-tools button:hover {
-            background-color: var(--gold);
-            color: var(--black);
-        }
-
-        .answer-body {
-            font-size: 16px;
-            line-height: 1.8;
-            padding-right: 5px;
-            border-bottom: 1px dashed var(--gold);
-            padding-bottom: 20px;
-        }
-
-        .modal {
-            display: none;
-            position: fixed;
-            z-index: 300;
-            left: 0;
-            top: 0;
-            width: 100%;
-            height: 100%;
-            background-color: rgba(0,0,0,0.6);
-        }
-
-        .modal-content {
-            background-color: var(--card-bg);
-            margin: 15% auto;
-            padding: 20px;
-            border: 2px solid var(--gold);
-            border-radius: 8px;
-            width: 85%;
-            max-width: 500px;
-            position: relative;
-        }
-
-        .modal-close {
-            position: absolute;
-            right: 15px;
-            top: 10px;
-            font-size: 24px;
-            cursor: pointer;
-            color: var(--red);
-        }
-
-        .footer {
-            background: var(--black);
-            color: var(--gold);
-            text-align: center;
-            padding: 15px;
-            margin-top: auto;
-            border-top: 3px solid var(--red);
-            font-size: 14px;
-        }
-    </style>
-</head>
-<body class="theme-default">
-
-    <header class="navbar">
-        <div class="nav-left">
-            <button class="menu-btn" id="menuToggle"><i class="fa-solid fa-bars"></i></button>
-            <div class="brand-container">
-                <div class="logo-box">
-                    <img src="orthodox_answer_logo.jpg" alt="ሎጎ" class="logo-img" onerror="this.style.display='none'; this.parentElement.innerHTML='<i class=\"fa-solid fa-cross\" style=\"color:var(--green);font-size:20px;\"></i>';">
-                </div>
-                <h1 class="main-title" id="uiMainTitle">ኦርቶዶክሳዊ መልስ</h1>
-            </div>
-        </div>
-    </header>
-
-    <div class="sidebar" id="sidebar">
-        <div class="sidebar-header">
-            <h3 id="uiMenuTitle">ማውጫ</h3>
-            <button class="close-btn" id="closeSidebar"><i class="fa-solid fa-xmark"></i></button>
-        </div>
-        <ul class="sidebar-links">
-            <li><a href="#" id="colorThemeBtn"><i class="fa-solid fa-palette"></i> <span id="uiColorTheme">ቀለም መቀየሪያ</span></a></li>
-            <li><a href="#" id="designThemeBtn"><i class="fa-solid fa-brush"></i> <span id="uiDesignTheme">ዲዛይን መቀየሪያ</span></a></li>
-            <li><a href="#" onclick="openModal('aboutModal')"><i class="fa-solid fa-circle-info"></i> <span id="uiAboutUs">ስለ እኛ</span></a></li>
-            <li>
-                <a href="#" onclick="openModal('feedbackModal')">
-                    <i class="fa-solid fa-envelope"></i> 
-                    <div>
-                        <span id="uiFeedback">ለአስተያየት</span>
-                        <span class="contact-info">ezrasamuel2721@gmail.com</span>
-                        <span class="contact-info">0962244464</span>
-                    </div>
-                </a>
-            </li>
-            <li><a href="#" id="shareAppBtn"><i class="fa-solid fa-share-nodes"></i> <span id="uiShareApp">ያጋሩ</span></a></li>
-            <li><a href="#" onclick="openModal('booksModal')"><i class="fa-solid fa-book-bible"></i> <span id="uiBooksSuggest">የንባብ መጻሕፍት ጥቆማ</span></a></li>
-        </ul>
-    </div>
-    <div class="overlay" id="overlay"></div>
-
-    <main class="main-container">
-        
-        <div class="lang-scroll-container">
-            <div class="lang-bar" id="langBar">
-                <button class="lang-btn active" data-lang="am">አማርኛ</button>
-                <button class="lang-btn" data-lang="en">English</button>
-                <button class="lang-btn" data-lang="ti">ትግርኛ</button>
-                <button class="lang-btn" data-lang="om">Afaan Oromoo</button>
-                <button class="lang-btn" data-lang="sid">Sidaamu Afooo</button>
-                <button class="lang-btn" data-lang="wal">Wolayttatto</button>
-                <button class="lang-btn" data-lang="kaf">Kafa</button>
-                <button class="lang-btn" data-lang="gur">ጉራጊኛ</button>
-                <button class="lang-btn" data-lang="ar">العربية</button>
-                <button class="lang-btn" data-lang="so">Soomaali</button>
-                <button class="lang-btn" data-lang="fr">Français</button>
-                <button class="lang-btn" data-lang="es">Español</button>
-                <button class="lang-btn" data-lang="it">Italiano</button>
-                <button class="lang-btn" data-lang="de">Deutsch</button>
-                <button class="lang-btn" data-lang="zh">中文</button>
-            </div>
-        </div>
-
-        <section class="quote-section">
-            <h2 class="quote-text" id="uiQuoteText">"መጠየቅ ያደርጋል ሊቅ"</h2>
-            <h3 class="sub-quote-text" id="uiSubQuoteText">መንፈሳዊ ጥያቄዎን ይጠይቁ፤ እውነቱን ይወቁ!</h3>
-        </section>
-
-        <section class="question-section">
-            <div class="input-card">
-                <label for="userQuestion" class="input-label" id="uiInputLabel">እዚህ ይጠይቁ፡</label>
-                <textarea id="userQuestion" placeholder="የመንፈሳዊ ጥያቄዎን እዚህ ያስገቡ (ለምሳሌ፦ ጥምቀት ምንድነው?)..."></textarea>
-                <button id="submitBtn" class="ask-btn"><i class="fa-solid fa-search"></i> <span id="uiSubmitBtn">መጻሕፍታዊ ጥልቅ መልስ ፍለጋ</span></button>
-            </div>
-        </section>
-
-        <section class="answer-section hidden" id="answerSection">
-            <div id="answersList"></div>
-        </section>
-    </main>
-
-    <!-- ሞዳሎች -->
-    <div class="modal" id="aboutModal">
-        <div class="modal-content">
-            <span class="modal-close" onclick="closeModal('aboutModal')">&times;</span>
-            <h2>ስለ እኛ</h2>
-            <br>
-            <p>ኦርቶዶክሳዊ መልስ፡ በኢትዮጵያ ኦርቶዶክስ ተዋሕዶ ቤተክርስቲያን አስተምህሮ እና ሥርዓት መሠረት ለሚነሱ ጥያቄዎች ከመጻሕፍት የተሰባሰቡ አስተማማኝ መልሶችን የሚሰጥ መድረክ ነው።</p>
-        </div>
-    </div>
-
-    <div class="modal" id="feedbackModal">
-        <div class="modal-content">
-            <span class="modal-close" onclick="closeModal('feedbackModal')">&times;</span>
-            <h2>ለአስተያየት</h2>
-            <br>
-            <p><strong>ኢሜይል፡</strong> ezrasamuel2721@gmail.com</p>
-            <p><strong>ስልክ ቁጥር፡</strong> 0962244464</p>
-        </div>
-    </div>
-
-    <div class="modal" id="booksModal">
-        <div class="modal-content">
-            <span class="modal-close" onclick="closeModal('booksModal')">&times;</span>
-            <h2>የንባብ መጻሕፍት ጥቆማ</h2>
-            <br>
-            <ul>
-                <li>መጽሐፍ ቅዱስ</li>
-                <li>ሃይማኖተ አበው</li>
-                <li>ፍትሐ ነገሥት</li>
-                <li>መጽሐፈ ምሥጢር</li>
-            </ul>
-        </div>
-    </div>
-
-    <footer class="footer">
-        <p id="uiFooter">መብቱ በሕግ የተጠበቀ ነው | Created by Ezra Samuel Abebe</p>
-    </footer>
-
-    <script>
-        // Supabase ውቅር
-        const SUPABASE_URL = "https://geznekrpdubpgsegseer.supabase.co";
-        const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imdlem5la3JwZHVicGdzZWdzZWVyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTAwMjUyNTYsImV4cCI6MjEwNTYwMTI1Nn0.spxmqIhfeHPjD4SXI8mTlCY611-_0Mw3w7RoRloYPkQ";
-        
-        let supabaseClient = null;
-        if (typeof supabase !== 'undefined') {
-            supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-        }
-
-        let currentLang = 'am';
-
-        // የቋንቋዎች ትርጉም መዋቅር (Translations)
-        const translations = {
-            am: { title: "ኦርቶዶክሳዊ መልስ", menu: "ማውጫ", colorTheme: "ቀለም መቀየሪያ", designTheme: "ዲዛይን መቀየሪያ", aboutUs: "ስለ እኛ", feedback: "ለአስተያየት", shareApp: "ያጋሩ", booksSuggest: "የንባብ መጻሕፍት ጥቆማ", quoteText: '"መጠየቅ ያደርጋል ሊቅ"', subQuoteText: "መንፈሳዊ ጥያቄዎን ይጠይቁ፤ እውነቱን ይወቁ!", inputLabel: "እዚህ ይጠይቁ፡", placeholder: "የመንፈሳዊ ጥያቄዎን እዚህ ያስገቡ...", submitBtn: "መጻሕፍታዊ ጥልቅ መልስ ፍለጋ", answerTitle: "መጻሕፍታዊ እና መንፈሳዊ ጥልቅ መልስ", searching: "ከመጻሕፍት መዝገብ ቤት እየፈለገ ነው...", emptyAlert: "እባክዎን ጥያቄ ያስገቡ!", notFound: "ይቅርታ፣ በዚህ ጥያቄ ዙሪያ ከመጻሕፍት የተገኘ መረጃ አልተገኘም። እባክዎ ሌላ ጥያቄ ይሞክሩ።" },
-            en: { title: "Orthodox Answer", menu: "Menu", colorTheme: "Theme", designTheme: "Design", aboutUs: "About Us", feedback: "Feedback", shareApp: "Share", booksSuggest: "Books", quoteText: '"Asking Makes One Wise"', subQuoteText: "Ask your spiritual questions!", inputLabel: "Ask here:", placeholder: "Enter your spiritual question...", submitBtn: "Search Book Answer", answerTitle: "Comprehensive Orthodox Answer", searching: "Searching from the database...", emptyAlert: "Please enter your question!", notFound: "Sorry, no information found for this question." },
-            ti: { title: "ኦርቶዶክሳዊ መልሲ", menu: "ማዕቐብ", colorTheme: "ቀለም መቐየሪ", designTheme: "ንድፊ መቐየሪ", aboutUs: "ብዛዕባና", feedback: "ርእይቶ", shareApp: "ካፈል", booksSuggest: "መጻሕፍቲ", quoteText: '"ሕቶ ምሕታት ሊቅ ይገብር"', subQuoteText: "መንፈሳዊ ሕቶታትካ ሕተት!", inputLabel: "ኣብዚ ሕተት:", placeholder: "መንፈሳዊ ሕቶኻ ኣእቱ...", submitBtn: "መልሲ ድለ", answerTitle: "ዓሚቝ መልሲ", searching: "ካብ መዝገብ መጽሓፍቲ ይድለ ኣሎ...", emptyAlert: "ሕቶ ኣእቱ!", notFound: "ዝተረኽበ ሓበሬታ የለን።" },
-            om: { title: "Deebii Ortodoksiis", menu: "Baafata", colorTheme: "Halluu", designTheme: "Dizaayinii", aboutUs: "Waa'ee Keenya", feedback: "Yaada", shareApp: "Qoodaa", booksSuggest: "Kitaabota", quoteText: '"Gaafachuun Ogeessa taasisa"', subQuoteText: "Gaaffii keessan gaafadhaa!", inputLabel: "Asitti gaafadhaa:", placeholder: "Gaaffii keessan galchaa...", submitBtn: "Deebii Barbaadi", answerTitle: "Deebii Gadi Fagoo", searching: "Kuusaa irraa barbaadamaa jira...", emptyAlert: "Maaloo gaaffii galchaa!", notFound: "Deebiin hin argamne." },
-            sid: { title: "Ortodoksichu Dawro", menu: "Qine", colorTheme: "Baqqicha", designTheme: "Qixxa", aboutUs: "Winte", feedback: "Huluullote", shareApp: "Massi", booksSuggest: "Maxaafota", quoteText: '"Wadiin afiicanno"', subQuoteText: "Korocho xa'mino!", inputLabel: "Hanni xa'mi:", placeholder: "Xa'micho hanni galchi...", submitBtn: "Maxaafu dawro afi", answerTitle: "Maxaafu Dawro", searching: "Maxaafunni hasidhanni...", emptyAlert: "Xa'mo galchi!", notFound: "Hanni dawro dino." },
-            wal: { title: "Ortodoksistta Zaapphe", menu: "Kshhuwaa", colorTheme: "Allaara", designTheme: "Mellota", aboutUs: "Nu Gishshau", feedback: "Pireesuwaa", shareApp: "Sheshsha", booksSuggest: "Maxaafata", quoteText: '"Oyshuu eratetta pees"', subQuoteText: "Ayanaafa oyshuu oysha!", inputLabel: "Hagaarkka oysha:", placeholder: "Oyshuu hagaarkka geli...", submitBtn: "Maxaafaa zaapphe koy", answerTitle: "Maxaafaa Zaapphe", searching: "Maxaafappe koyetti de'ees...", emptyAlert: "Oyshuu geli!", notFound: "Zaapphe aybeekka baawu." },
-            kaf: { title: "Ortodoki Maano", menu: "Mana", colorTheme: "Buco", designTheme: "Koocho", aboutUs: "Nono", feedback: "Madu", shareApp: "Bato", booksSuggest: "Maxaafa", quoteText: '"Maanu dabboo"', subQuoteText: "Maanu shiiqo!", inputLabel: "Hano shiiqo:", placeholder: "Maanu hano shiiqo...", submitBtn: "Maano shiiqo", answerTitle: "Maxaafa Maano", searching: "Mano shiiqetiro...", emptyAlert: "Maanu shiiqo!", notFound: "Maano bawo." },
-            gur: { title: "ኦርቶዶክሳዊ መልስ", menu: "ማውጫ", colorTheme: "ቀለም", designTheme: "ዲዛይን", aboutUs: "ስለ እኛ", feedback: "አስተያየት", shareApp: "ያጋሩ", booksSuggest: "መጻሕፍት", quoteText: '"መጠየቅ ያደርጋል ሊቅ"', subQuoteText: "መንፈሳዊ ጥያቄዎን ይጠይቁ!", inputLabel: "እዚህ ይጠይቁ፡", placeholder: "ጥያቄዎን ያስገቡ...", submitBtn: "መልስ ፈልግ", answerTitle: "መጻሕፍታዊ መልስ", searching: "ከመጻሕፍት መዝገብ እየፈለገ ነው...", emptyAlert: "እባክዎ ጥያቄ ያስገቡ!", notFound: "ምንም መረጃ አልተገኘም።" },
-            ar: { title: "الإجابة الأرثوذكسية", menu: "القائمة", colorTheme: "اللون", designTheme: "التصميم", aboutUs: "معلومات عنا", feedback: "ملاحظات", shareApp: "شارك", booksSuggest: "الكتب", quoteText: '"السؤال يجعل المرء حكيماً"', subQuoteText: "اسأل أسئلتك الروحية!", inputLabel: "اسأل هنا:", placeholder: "أدخل سؤالك...", submitBtn: "بحث في الكتب", answerTitle: "إجابة شاملة", searching: "جاري البحث...", emptyAlert: "أدخل سؤالك!", notFound: "لم يتم العثور على نتائج." },
-            so: { title: "Jawaabta Ortodoks", menu: "Menu", colorTheme: "Midabka", designTheme: "Naqshadda", aboutUs: "Nagu Saabsan", feedback: "Fikradaha", shareApp: "Wadaag", booksSuggest: "Buugta", quoteText: '"Weydiintu waa cilmi"', subQuoteText: "Weydii su'aashaada!", inputLabel: "Halkan ku weydii:", placeholder: "Geli su'aashaada...", submitBtn: "Raadi Jawaabta", answerTitle: "Jawaabta Buugga", searching: "Waa la raadinayaa...", emptyAlert: "Fadlan geli su'aal!", notFound: "Wax jawaab ah lama helin." },
-            fr: { title: "Réponse Orthodoxe", menu: "Menu", colorTheme: "Thème", designTheme: "Design", aboutUs: "À propos", feedback: "Commentaires", shareApp: "Partager", booksSuggest: "Livres", quoteText: '"Demander rend sage"', subQuoteText: "Posez vos questions !", inputLabel: "Posez ici :", placeholder: "Entrez votre question...", submitBtn: "Rechercher", answerTitle: "Réponse", searching: "Recherche en cours...", emptyAlert: "Entrez une question !", notFound: "Aucun résultat trouvé." },
-            es: { title: "Respuesta Ortodoxa", menu: "Menú", colorTheme: "Tema", designTheme: "Diseño", aboutUs: "Sobre nosotros", feedback: "Comentarios", shareApp: "Compartir", booksSuggest: "Libros", quoteText: '"Preguntar hace sabio"', subQuoteText: "¡Haz tus preguntas!", inputLabel: "Pregunta aquí:", placeholder: "Ingresa tu pregunta...", submitBtn: "Buscar respuesta", answerTitle: "Respuesta", searching: "Buscando...", emptyAlert: "¡Ingresa una pregunta!", notFound: "No se encontró información." },
-            it: { title: "Risposta Ortodossa", menu: "Menu", colorTheme: "Tema", designTheme: "Design", aboutUs: "Chi siamo", feedback: "Feedback", shareApp: "Condividi", booksSuggest: "Libri", quoteText: '"Domandare rende saggi"', subQuoteText: "Fai le tue domande!", inputLabel: "Chiedi qui:", placeholder: "Inserisci la domanda...", submitBtn: "Cerca", answerTitle: "Risposta", searching: "Ricerca in corso...", emptyAlert: "Inserisci una domanda!", notFound: "Nessun risultato." },
-            de: { title: "Orthodoxe Antwort", menu: "Menü", colorTheme: "Thema", designTheme: "Design", aboutUs: "Über uns", feedback: "Feedback", shareApp: "Teilen", booksSuggest: "Bücher", quoteText: '"Fragen macht klug"', subQuoteText: "Stellen Sie Fragen!", inputLabel: "Hier fragen:", placeholder: "Geben Sie Ihre Frage ein...", submitBtn: "Suchen", answerTitle: "Antwort", searching: "Suche läuft...", emptyAlert: "Bitte Frage eingeben!", notFound: "Keine Antwort gefunden." },
-            zh: { title: "正教解答", menu: "菜单", colorTheme: "主题", designTheme: "设计", aboutUs: "关于我们", feedback: "反馈", shareApp: "分享", booksSuggest: "书籍", quoteText: '"提问使人睿智"', subQuoteText: "提出您的问题！", inputLabel: "在此提问：", placeholder: "输入问题...", submitBtn: "搜索解答", answerTitle: "解答", searching: "正在搜索...", emptyAlert: "请输入问题！", notFound: "未找到相关解答。" }
-        };
-
-        function updateUI() {
-            const t = translations[currentLang] || translations['am'];
-            document.getElementById('docTitle').innerText = t.title;
-            document.getElementById('uiMainTitle').innerText = t.title;
-            document.getElementById('uiMenuTitle').innerText = t.menu;
-            document.getElementById('uiColorTheme').innerText = t.colorTheme;
-            document.getElementById('uiDesignTheme').innerText = t.designTheme;
-            document.getElementById('uiAboutUs').innerText = t.aboutUs;
-            document.getElementById('uiFeedback').innerText = t.feedback;
-            document.getElementById('uiShareApp').innerText = t.shareApp;
-            document.getElementById('uiBooksSuggest').innerText = t.booksSuggest;
-            document.getElementById('uiQuoteText').innerText = t.quoteText;
-            document.getElementById('uiSubQuoteText').innerText = t.subQuoteText;
-            document.getElementById('uiInputLabel').innerText = t.inputLabel;
-            document.getElementById('userQuestion').placeholder = t.placeholder;
-            document.getElementById('uiSubmitBtn').innerText = t.submitBtn;
-        }
-
-        document.querySelectorAll('.lang-btn').forEach(btn => {
-            btn.addEventListener('click', () => {
-                document.querySelectorAll('.lang-btn').forEach(b => b.classList.remove('active'));
-                btn.classList.add('active');
-                currentLang = btn.getAttribute('data-lang');
-                updateUI();
-            });
-        });
-
-        const menuToggle = document.getElementById('menuToggle');
-        const sidebar = document.getElementById('sidebar');
-        const closeSidebar = document.getElementById('closeSidebar');
-        const overlay = document.getElementById('overlay');
-
-        menuToggle.addEventListener('click', () => { sidebar.classList.add('active'); overlay.classList.add('active'); });
-        closeSidebar.addEventListener('click', () => { sidebar.classList.remove('active'); overlay.classList.remove('active'); });
-        overlay.addEventListener('click', () => { sidebar.classList.remove('active'); overlay.classList.remove('active'); });
-
-        function openModal(modalId) { document.getElementById(modalId).style.display = 'block'; }
-        function closeModal(modalId) { document.getElementById(modalId).style.display = 'none'; }
-
-        // ከ Supabase ብቻ ጥያቄዎችን የማምጣት ዋና ተግባር (Pure Supabase Fetch)
-        async function fetchAnswerFromSupabase(queryText, lang) {
-            if (!supabaseClient) return null;
-
-            try {
-                // በመጀመሪያ በቋንቋ እና በጥያቄ ጽሁፍ ለመፈለግ
-                let { data, error } = await supabaseClient
-                    .from('questions')
-                    .select('answer')
-                    .eq('language', lang)
-                    .ilike('question', `%${queryText}%`)
-                    .limit(1);
-
-                if (data && data.length > 0) {
-                    return data[0].answer;
-                }
-
-                // በቋንቋው ካልተገኘ በየትኛውም ቋንቋ ፈልጎ ለማምጣት (Fallback)
-                let { data: globalData } = await supabaseClient
-                    .from('questions')
-                    .select('answer')
-                    .ilike('question', `%${queryText}%`)
-                    .limit(1);
-
-                if (globalData && globalData.length > 0) {
-                    return globalData[0].answer;
-                }
-
-                return null;
-            } catch (err) {
-                console.error("Supabase Error:", err);
-                return null;
-            }
-        }
-
-        async function processUserQuestion() {
-            const t = translations[currentLang] || translations['am'];
-            const queryText = document.getElementById('userQuestion').value.trim();
-            const answerSection = document.getElementById('answerSection');
-            const answersList = document.getElementById('answersList');
-
-            if (!queryText) {
-                alert(t.emptyAlert);
-                return;
-            }
-
-            answerSection.classList.remove('hidden');
-            answersList.innerHTML = `<div class="answer-card"><p style="text-align:center; color:var(--green); font-weight:bold;"><i class="fa-solid fa-spinner fa-spin"></i> ${t.searching}</p></div>`;
-
-            let finalAnswerText = await fetchAnswerFromSupabase(queryText, currentLang);
-
-            if (!finalAnswerText) {
-                finalAnswerText = t.notFound;
-            }
-
-            const parsedHtml = marked.parse(finalAnswerText);
-
-            answersList.innerHTML = `
-                <div class="answer-card">
-                    <div class="answer-header">
-                        <h4><i class="fa-solid fa-book-open"></i> ${t.answerTitle}</h4>
-                        <div class="answer-tools">
-                            <button onclick="copyAnswer(this)"><i class="fa-solid fa-copy"></i> ኮፒ</button>
-                            <button onclick="window.print()"><i class="fa-solid fa-print"></i> አትም</button>
-                        </div>
-                    </div>
-                    <div class="answer-body">${parsedHtml}</div>
-                </div>
-            `;
-        }
-
-        document.getElementById('submitBtn').addEventListener('click', processUserQuestion);
-        document.getElementById('userQuestion').addEventListener('keypress', (e) => {
-            if (e.key === 'Enter' && !e.shiftKey) {
-                e.preventDefault();
-                processUserQuestion();
-            }
-        });
-
-        function copyAnswer(btn) {
-            const card = btn.closest('.answer-card');
-            const body = card.querySelector('.answer-body').innerText;
-            navigator.clipboard.writeText(body).then(() => {
-                const originalText = btn.innerHTML;
-                btn.innerHTML = '<i class="fa-solid fa-check"></i> ተቀድቷል';
-                setTimeout(() => { btn.innerHTML = originalText; }, 2000);
-            });
-        }
-    </script>
-</body>
-</html>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="theme-color" content="#006B3C">
+
+<title id="docTitle">ኦርቶዶክሳዊ መልስ</title>
+
+<link rel="stylesheet"
+href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+
+<style>
+:root{
+    --green:#006B3C;
+    --green-dark:#004d2b;
+    --gold:#D4AF37;
+    --gold-light:#f9f3d9;
+    --red:#D21034;
+    --blue:#003399;
+    --white:#fff;
+    --black:#181818;
+
+    --bg:#f7f9fc;
+    --card:#fff;
+    --text:#1a1a1a;
+    --muted:#666;
+
+    --shadow:0 4px 14px rgba(0,0,0,.10);
+}
+
+*{
+    margin:0;
+    padding:0;
+    box-sizing:border-box;
+}
+
+html{
+    scroll-behavior:smooth;
+}
+
+body{
+    min-height:100vh;
+    background:var(--bg);
+    color:var(--text);
+    font-family:
+      "Noto Sans Ethiopic",
+      "Segoe UI",
+      Tahoma,
+      Arial,
+      sans-serif;
+    transition:background .25s,color .25s;
+}
+
+body.dark{
+    --bg:#101512;
+    --card:#1b211e;
+    --text:#eeeeee;
+    --muted:#bdbdbd;
+    --gold-light:#302c18;
+}
+
+body.blue{
+    --green:#174ea6;
+    --green-dark:#10377a;
+    --gold:#e0b52c;
+}
+
+body.purple{
+    --green:#5b2c83;
+    --green-dark:#421f61;
+    --gold:#d9b44a;
+}
+
+body.soft{
+    --bg:#f5f1e8;
+    --card:#fffdf7;
+}
+
+button,
+textarea{
+    font:inherit;
+}
+
+button{
+    cursor:pointer;
+}
+
+/* ================= NAVBAR ================= */
+
+.navbar{
+    position:sticky;
+    top:0;
+    z-index:100;
+    background:
+      linear-gradient(135deg,var(--green),var(--blue));
+    color:#fff;
+    padding:10px 16px;
+    border-bottom:4px solid var(--gold);
+    box-shadow:var(--shadow);
+}
+
+.nav-left{
+    display:flex;
+    align-items:center;
+    gap:12px;
+}
+
+.menu-btn{
+    width:48px;
+    height:44px;
+    border:0;
+    background:transparent;
+    color:var(--gold);
+    font-size:28px;
+    border-radius:8px;
+}
+
+.menu-btn:hover{
+    background:rgba(255,255,255,.12);
+}
+
+.brand-container{
+    display:flex;
+    align-items:center;
+    gap:10px;
+    min-width:0;
+}
+
+.logo-box{
+    width:50px;
+    height:50px;
+    border-radius:50%;
+    border:2px solid var(--gold);
+    background:var(--gold-light);
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    overflow:hidden;
+    flex-shrink:0;
+}
+
+.logo-img{
+    width:100%;
+    height:100%;
+    object-fit:cover;
+}
+
+.main-title{
+    font-size:21px;
+    color:var(--gold);
+    text-shadow:1px 1px 3px #0008;
+}
+
+/* ================= SIDEBAR ================= */
+
+.sidebar{
+    position:fixed;
+    left:0;
+    top:0;
+    width:min(320px,88vw);
+    height:100vh;
+    background:var(--card);
+    z-index:300;
+
+    transform:translateX(-105%);
+    transition:transform .25s ease;
+
+    padding:18px;
+    overflow-y:auto;
+
+    box-shadow:6px 0 20px #0005;
+}
+
+.sidebar.open{
+    transform:translateX(0);
+}
+
+.sidebar-header{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+
+    border-bottom:2px solid var(--gold);
+    padding-bottom:12px;
+    margin-bottom:14px;
+}
+
+.close-btn{
+    border:0;
+    background:transparent;
+    color:var(--red);
+    font-size:26px;
+    padding:4px 8px;
+}
+
+.sidebar-links{
+    list-style:none;
+}
+
+.sidebar-links li{
+    margin:7px 0;
+}
+
+.sidebar-action{
+    width:100%;
+    border:0;
+    background:transparent;
+    color:var(--text);
+    text-align:left;
+
+    display:flex;
+    align-items:center;
+    gap:12px;
+
+    padding:13px 11px;
+    border-radius:8px;
+}
+
+.sidebar-action:hover{
+    background:var(--gold-light);
+    color:var(--green);
+}
+
+.sidebar-action i{
+    width:23px;
+    text-align:center;
+    color:var(--green);
+}
+
+.contact-info{
+    display:block;
+    font-size:12px;
+    color:var(--muted);
+    margin-top:2px;
+}
+
+.overlay{
+    position:fixed;
+    inset:0;
+    background:#0008;
+    z-index:250;
+
+    opacity:0;
+    visibility:hidden;
+    transition:.2s;
+}
+
+.overlay.open{
+    opacity:1;
+    visibility:visible;
+}
+
+/* ================= LANGUAGE ================= */
+
+.lang-scroll-container{
+    background:var(--card);
+    border-bottom:2px solid var(--gold);
+
+    overflow-x:auto;
+    white-space:nowrap;
+
+    padding:11px 0;
+}
+
+.lang-bar{
+    display:inline-flex;
+    gap:9px;
+    padding:0 15px;
+}
+
+.lang-btn{
+    border:1.5px solid var(--gold);
+    background:transparent;
+    color:var(--text);
+
+    padding:7px 15px;
+    border-radius:22px;
+
+    font-weight:700;
+}
+
+.lang-btn:hover,
+.lang-btn.active{
+    background:var(--gold);
+    color:#111;
+}
+
+/* ================= MAIN ================= */
+
+.main-container{
+    width:100%;
+    max-width:900px;
+    margin:auto;
+    padding:0 15px 20px;
+}
+
+.quote-section{
+    text-align:center;
+
+    margin:20px 0;
+    padding:15px;
+
+    border-left:5px solid var(--red);
+    border-right:5px solid var(--green);
+
+    background:var(--card);
+    border-radius:9px;
+
+    box-shadow:var(--shadow);
+}
+
+.quote-text{
+    color:var(--green);
+    font-size:22px;
+    margin-bottom:7px;
+}
+
+.sub-quote-text{
+    color:var(--red);
+    font-size:15px;
+}
+
+/* ================= QUESTION ================= */
+
+.input-card{
+    background:var(--card);
+    padding:20px;
+
+    border-radius:12px;
+    border-top:4px solid var(--gold);
+
+    box-shadow:var(--shadow);
+}
+
+.input-label{
+    display:block;
+    color:var(--green);
+    font-size:18px;
+    font-weight:800;
+    margin-bottom:9px;
+}
+
+textarea{
+    width:100%;
+    min-height:110px;
+
+    padding:13px;
+
+    border:1px solid #c9c9c9;
+    border-radius:7px;
+
+    resize:vertical;
+
+    font-size:16px;
+
+    background:var(--bg);
+    color:var(--text);
+
+    outline:none;
+}
+
+textarea:focus{
+    border-color:var(--green);
+    box-shadow:0 0 0 3px #006b3c22;
+}
+
+.ask-btn{
+    width:100%;
+    margin-top:12px;
+
+    border:0;
+    border-radius:7px;
+
+    background:var(--green);
+    color:#fff;
+
+    padding:13px;
+
+    font-size:16px;
+    font-weight:800;
+}
+
+.ask-btn:hover{
+    background:var(--green-dark);
+}
+
+.ask-btn:disabled{
+    opacity:.65;
+    cursor:wait;
+}
+
+/* ================= ANSWER ================= */
+
+.answer-section{
+    margin-top:25px;
+}
+
+.hidden{
+    display:none!important;
+}
+
+.answer-card{
+    background:var(--card);
+
+    border:2px solid var(--gold);
+    border-radius:11px;
+
+    padding:20px;
+
+    box-shadow:var(--shadow);
+
+    margin-bottom:15px;
+
+    /* IMPORTANT:
+       No fixed height
+       No max-height
+       No overflow scroll
+    */
+    height:auto;
+    max-height:none;
+    overflow:visible;
+}
+
+.answer-header{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+
+    gap:10px;
+    flex-wrap:wrap;
+
+    border-bottom:1px solid #ccc;
+
+    padding-bottom:12px;
+    margin-bottom:16px;
+}
+
+.answer-header h4{
+    color:var(--green);
+    font-size:18px;
+}
+
+.answer-tools{
+    display:flex;
+    gap:7px;
+    flex-wrap:wrap;
+}
+
+.tool-btn{
+    border:1px solid var(--gold);
