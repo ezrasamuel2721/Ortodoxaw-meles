@@ -394,6 +394,7 @@ textarea:focus{
 .recent-item{
   border-bottom:1px solid #e8ece9;
   padding:12px 0;
+  cursor:pointer;
 }
 
 .recent-question{
@@ -969,8 +970,8 @@ type="button">
 <script>
 
 /* =====================================================
-   SUPABASE
-   ===================================================== */
+    SUPABASE
+    ===================================================== */
 
 const SUPABASE_URL =
 "https://geznekrpdubpgsegseer.supabase.co";
@@ -986,8 +987,8 @@ window.supabase.createClient(
 
 
 /* =====================================================
-   ELEMENTS
-   ===================================================== */
+    ELEMENTS
+    ===================================================== */
 
 const menuButton =
 document.getElementById("menuButton");
@@ -1030,8 +1031,8 @@ document.getElementById("languageSelect");
 
 
 /* =====================================================
-   11 LANGUAGES
-   ===================================================== */
+    11 LANGUAGES
+    ===================================================== */
 
 const LANGUAGES = {
 
@@ -1105,8 +1106,8 @@ placeholder:"Напишите свой вопрос здесь..."
 
 
 /* =====================================================
-   UI TRANSLATIONS
-   ===================================================== */
+    UI TRANSLATIONS
+    ===================================================== */
 
 const UI = {
 
@@ -1477,8 +1478,8 @@ languageLabel:"Язык ответа"
 
 
 /* =====================================================
-   CURRENT LANGUAGE
-   ===================================================== */
+    CURRENT LANGUAGE
+    ===================================================== */
 
 let currentLang =
 localStorage.getItem("orthodox_language") || "am";
@@ -1491,8 +1492,8 @@ languageSelect.value=currentLang;
 
 
 /* =====================================================
-   MENU
-   ===================================================== */
+    MENU
+    ===================================================== */
 
 menuButton.onclick=function(e){
 
@@ -1536,8 +1537,8 @@ document
 
 
 /* =====================================================
-   LANGUAGE PANEL
-   ===================================================== */
+    LANGUAGE PANEL
+    ===================================================== */
 
 document
 .getElementById("languageMenuButton")
@@ -1693,8 +1694,8 @@ function setLanguage(lang){
 
 
 /* =====================================================
-   DARK MODE
-   ===================================================== */
+    DARK MODE
+    ===================================================== */
 
 document
 .getElementById("darkModeButton")
@@ -1719,8 +1720,8 @@ if(
 
 
 /* =====================================================
-   MODALS
-   ===================================================== */
+    MODALS
+    ===================================================== */
 
 function openModal(id){
 
@@ -1774,8 +1775,8 @@ document
 
 
 /* =====================================================
-   STATUS
-   ===================================================== */
+    STATUS
+    ===================================================== */
 
 function showStatus(text,type){
 
@@ -1788,8 +1789,8 @@ function showStatus(text,type){
 
 
 /* =====================================================
-   DATABASE HELPERS
-   ===================================================== */
+    DATABASE HELPERS
+    ===================================================== */
 
 function getValue(row,names){
 
@@ -1890,8 +1891,8 @@ function getSourceText(row){
 
 
 /* =====================================================
-   SAVE QUESTION
-   ===================================================== */
+    SAVE QUESTION
+    ===================================================== */
 
 async function saveQuestion(question){
 
@@ -1902,601 +1903,198 @@ async function saveQuestion(question){
     question:question
   });
 
-  if(result.error){
-    throw result.error;
-  }
+  return result;
 
 }
 
 
 /* =====================================================
-   LOAD ORTHODOX ANSWERS
-   ===================================================== */
+    SEARCH AND GEMINI API INTEGRATION
+    ===================================================== */
 
-async function loadAnswers(){
+askButton.onclick = async function(){
 
-  const result =
-  await db
-  .from("orthodox_answers")
-  .select("*")
-  .limit(1000);
-
-  if(result.error){
-    throw result.error;
-  }
-
-  return result.data || [];
-
-}
-
-
-/* =====================================================
-   NORMALIZE
-   ===================================================== */
-
-function normalizeText(text){
-
-  return String(text || "")
-  .toLowerCase()
-  .normalize("NFKC")
-  .replace(/[.,!?;:()[\]{}"'`]/g," ")
-  .replace(/\s+/g," ")
-  .trim();
-
-}
-
-
-/* =====================================================
-   FIND BEST ANSWER
-   ===================================================== */
-
-function findBestAnswer(question,rows){
-
-  const q =
-  normalizeText(question);
-
-  const words =
-  q
-  .split(" ")
-  .filter(function(word){
-
-    return word.length>=2;
-
-  });
-
-  let best=null;
-  let bestScore=0;
-
-  rows.forEach(function(row){
-
-    const rowLang =
-    getRowLanguage(row);
-
-    /*
-      የቋንቋ መለያ ካለ በተመረጠው
-      ቋንቋ ብቻ እንዲፈልግ።
-    */
-
-    if(
-      rowLang &&
-      rowLang!==currentLang
-    ){
-      return;
-    }
-
-    const questionText =
-    normalizeText(
-      getQuestionText(row)
-    );
-
-    const answerText =
-    normalizeText(
-      getAnswerText(row)
-    );
-
-    const keywords =
-    normalizeText(
-      getValue(
-        row,
-        [
-          "keyword",
-          "keywords",
-          "tags"
-        ]
-      )
-    );
-
-    const searchable =
-    [
-      questionText,
-      answerText,
-      keywords
-    ]
-    .join(" ");
-
-    if(!searchable){
-      return;
-    }
-
-    let score=0;
-
-    /*
-      exact question
-    */
-
-    if(
-      questionText===q
-    ){
-      score+=100;
-    }
-
-    /*
-      full phrase
-    */
-
-    if(
-      questionText &&
-      q.includes(questionText)
-    ){
-      score+=40;
-    }
-
-    if(
-      questionText &&
-      questionText.includes(q)
-    ){
-      score+=40;
-    }
-
-    /*
-      words
-    */
-
-    words.forEach(function(word){
-
-      if(
-        searchable.includes(word)
-      ){
-        score+=2;
-      }
-
-      if(
-        questionText.includes(word)
-      ){
-        score+=4;
-      }
-
-      if(
-        keywords.includes(word)
-      ){
-        score+=5;
-      }
-
-    });
-
-    if(score>bestScore){
-
-      bestScore=score;
-
-      best={
-        row:row,
-        score:score
-      };
-
-    }
-
-  });
-
-  return best;
-
-}
-
-
-/* =====================================================
-   ASK
-   ===================================================== */
-
-askButton.onclick=async function(){
-
-  const question =
-  questionInput.value.trim();
-
-  const t=UI[currentLang];
+  const question = questionInput.value.trim();
+  const t = UI[currentLang];
 
   if(!question){
-
-    showStatus(
-      t.empty,
-      "error"
-    );
-
-    questionInput.focus();
-
+    showStatus(t.empty, "error");
     return;
   }
 
-  askButton.disabled=true;
-
+  askButton.disabled = true;
+  showStatus(t.searching, "loading");
   answerCard.classList.remove("show");
 
-  showStatus(
-    t.searching,
-    "loading"
-  );
-
-  try{
-
-    /*
-      1. ጥያቄውን ወደ questions አስቀምጥ
-    */
-
+  try {
+    // 1. Save question to Supabase
     await saveQuestion(question);
 
+    // 2. Check Supabase for matching answer first
+    const { data, error } = await db
+      .from("questions")
+      .select("*")
+      .ilike("question", `%${question}%`)
+      .limit(1);
 
-    /*
-      2. መልሶችን Supabase ከሚገኘው
-         orthodox_answers አምጣ
-    */
-
-    const rows =
-    await loadAnswers();
-
-
-    /*
-      3. በቋንቋ + ቃላት ተዛማጅ መልስ ፈልግ
-    */
-
-    const best =
-    findBestAnswer(
-      question,
-      rows
-    );
-
-
-    if(best){
-
-      const answer =
-      getAnswerText(best.row);
-
-      const source =
-      getSourceText(best.row);
-
-      answerBody.textContent =
-      answer ||
-      t.notFound;
-
-      answerLanguage.textContent =
-      LANGUAGES[currentLang].short;
-
-      if(source){
-
-        sourceBox.style.display="block";
-
-        sourceText.textContent=
-        source;
-
-      }else{
-
-        sourceBox.style.display="none";
-
-      }
-
-    }else{
-
-      answerBody.textContent=
-      t.notFound;
-
-      sourceBox.style.display="none";
-
+    if (error) {
+      console.error("Supabase search error:", error);
     }
 
-    answerCard.classList.add("show");
+    let answerText = "";
+    let sourceVal = "";
 
-    showStatus(
-      t.saved,
-      "success"
-    );
+    if (data && data.length > 0) {
+      const row = data[0];
+      answerText = getAnswerText(row);
+      sourceVal = getSourceText(row);
+    }
 
-    await loadRecentQuestions();
+    // 3. If no matching answer found in Supabase, call Gemini via /api/ask
+    if (!answerText) {
+      const response = await fetch("/api/ask", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({
+          question: question,
+          language: currentLang
+        })
+      });
 
-    answerCard.scrollIntoView({
-      behavior:"smooth",
-      block:"start"
-    });
+      if (!response.ok) {
+        const errData = await response.json().catch(() => ({}));
+        throw new Error(errData.error || t.error);
+      }
 
-  }catch(error){
+      const resData = await response.json();
+      answerText = resData.answer || resData.response || "";
+      sourceVal = resData.source || "Gemini AI (Orthodox Christian Context)";
+    }
 
-    console.error(
-      "Orthodox Answer Error:",
-      error
-    );
+    if (answerText) {
+      answerBody.textContent = answerText;
+      answerLanguage.textContent = LANGUAGES[currentLang].short;
 
-    showStatus(
-      UI[currentLang].error+
-      " "+error.message,
-      "error"
-    );
+      if (sourceVal) {
+        sourceText.textContent = sourceVal;
+        sourceBox.style.display = "block";
+      } else {
+        sourceBox.style.display = "none";
+      }
 
-  }finally{
+      answerCard.classList.add("show");
+      showStatus(t.saved, "success");
+      loadRecentQuestions();
+      answerCard.scrollIntoView({ behavior: "smooth" });
+    } else {
+      showStatus(t.notFound, "error");
+    }
 
-    askButton.disabled=false;
-
+  } catch (err) {
+    console.error("API / Gemini execution error:", err);
+    showStatus(err.message || t.error, "error");
+  } finally {
+    askButton.disabled = false;
   }
 
 };
 
 
-/* =====================================================
-   CLEAR
-   ===================================================== */
-
-clearButton.onclick=function(){
-
-  questionInput.value="";
-
-  answerBody.textContent="";
-
+clearButton.onclick = function(){
+  questionInput.value = "";
+  statusBox.className = "status";
   answerCard.classList.remove("show");
-
-  statusBox.className="status";
-
-  questionInput.focus();
-
 };
 
 
 /* =====================================================
-   RECENT QUESTIONS
-   ===================================================== */
+    RECENT QUESTIONS
+    ===================================================== */
 
 async function loadRecentQuestions(){
+  const container = document.getElementById("recentQuestions");
+  
+  try {
+    const { data, error } = await db
+      .from("questions")
+      .select("*")
+      .order("id", { ascending: false })
+      .limit(5);
 
-  const box =
-  document.getElementById(
-    "recentQuestions"
-  );
+    if(error) throw error;
 
-  try{
+    if(data && data.length > 0){
+      container.innerHTML = "";
+      data.forEach(row => {
+        const qText = getQuestionText(row);
+        if(!qText) return;
 
-    const result =
-    await db
-    .from("questions")
-    .select(
-      "id,created_at,question"
-    )
-    .order(
-      "created_at",
-      {
-        ascending:false
-      }
-    )
-    .limit(10);
+        const item = document.createElement("div");
+        item.className = "recent-item";
+        
+        item.innerHTML = `
+          <div class="recent-question">${qText}</div>
+          <div class="recent-date">${row.created_at ? new Date(row.created_at).toLocaleDateString() : ""}</div>
+        `;
+        
+        item.onclick = function(){
+          questionInput.value = qText;
+          document.getElementById("ask").scrollIntoView({ behavior: "smooth" });
+        };
 
-    if(result.error){
-      throw result.error;
+        container.appendChild(item);
+      });
+    } else {
+      container.innerHTML = "ምንም ጥያቄዎች አልተገኙም።";
     }
-
-    const data =
-    result.data || [];
-
-    if(!data.length){
-
-      box.textContent=
-      currentLang==="en"
-      ?"No questions yet."
-      :"ጥያቄ የለም።";
-
-      return;
-    }
-
-    box.innerHTML="";
-
-    data.forEach(function(row){
-
-      const item =
-      document.createElement(
-        "div"
-      );
-
-      item.className=
-      "recent-item";
-
-      const q =
-      document.createElement(
-        "div"
-      );
-
-      q.className=
-      "recent-question";
-
-      q.textContent =
-      row.question || "";
-
-      const date =
-      document.createElement(
-        "div"
-      );
-
-      date.className=
-      "recent-date";
-
-      date.textContent =
-      row.created_at
-      ?new Date(
-        row.created_at
-      ).toLocaleString()
-      :"";
-
-      item.appendChild(q);
-
-      item.appendChild(date);
-
-      box.appendChild(item);
-
-    });
-
-  }catch(error){
-
-    console.error(error);
-
-    box.textContent=
-    "ጥያቄዎችን ማምጣት አልተቻለም።";
-
+  } catch(e) {
+    console.error(e);
+    container.innerHTML = "መረጃውን መጫን አልተቻለም።";
   }
-
 }
 
 
 /* =====================================================
-   COPY
-   ===================================================== */
+    ACTION BUTTONS (COPY, SHARE, SPEAK)
+    ===================================================== */
 
-document
-.getElementById("copyButton")
-.onclick=async function(){
-
-  const text=
-  answerBody.textContent;
-
-  if(!text){
-    return;
-  }
-
-  try{
-
-    await navigator.clipboard.writeText(
-      text
-    );
-
-    showStatus(
-      currentLang==="en"
-      ?"Answer copied."
-      :"መልሱ ተቀድቷል።",
-      "success"
-    );
-
-  }catch(error){
-
-    showStatus(
-      currentLang==="en"
-      ?"Could not copy."
-      :"መቅዳት አልተቻለም።",
-      "error"
-    );
-
-  }
-
+document.getElementById("copyButton").onclick = function(){
+  const text = answerBody.textContent;
+  navigator.clipboard.writeText(text).then(() => {
+    alert("ተገልብጧል! (Copied)");
+  });
 };
 
-
-/* =====================================================
-   SHARE
-   ===================================================== */
-
-document
-.getElementById("shareButton")
-.onclick=async function(){
-
-  const text=
-  answerBody.textContent;
-
-  if(!text){
-    return;
-  }
-
+document.getElementById("shareButton").onclick = function(){
   if(navigator.share){
-
-    try{
-
-      await navigator.share({
-        title:UI[currentLang].brand,
-        text:text,
-        url:location.href
-      });
-
-    }catch(error){}
-
-  }else{
-
-    try{
-
-      await navigator.clipboard.writeText(
-        text+"\n\n"+location.href
-      );
-
-      showStatus(
-        currentLang==="en"
-        ?"Answer copied for sharing."
-        :"መልሱ ለመጋራት ተቀድቷል።",
-        "success"
-      );
-
-    }catch(error){}
-
+    navigator.share({
+      title: "ኦርቶዶክሳዊ መልስ",
+      text: answerBody.textContent,
+      url: window.location.href
+    }).catch(console.error);
+  } else {
+    alert("Share is not supported on this browser.");
   }
+};
 
+document.getElementById("speakButton").onclick = function(){
+  const text = answerBody.textContent;
+  if('speechSynthesis' in window){
+    const utterance = new SpeechSynthesisUtterance(text);
+    utterance.lang = currentLang;
+    window.speechSynthesis.speak(utterance);
+  } else {
+    alert("Text-to-speech is not supported on this browser.");
+  }
 };
 
 
-/* =====================================================
-   SPEECH
-   ===================================================== */
-
-document
-.getElementById("speakButton")
-.onclick=function(){
-
-  const text =
-  answerBody.textContent;
-
-  if(!text){
-    return;
-  }
-
-  if(!window.speechSynthesis){
-
-    showStatus(
-      "የድምፅ ንባብ አይደገፍም።",
-      "error"
-    );
-
-    return;
-  }
-
-  speechSynthesis.cancel();
-
-  const speech =
-  new SpeechSynthesisUtterance(
-    text
-  );
-
-  speech.lang =
-  currentLang==="am"
-  ?"am-ET"
-  :currentLang==="ti"
-  ?"ti-ET"
-  :currentLang==="om"
-  ?"om-ET"
-  :currentLang;
-
-  speech.rate=.9;
-
-  speechSynthesis.speak(
-    speech
-  );
-
-};
-
-
-/* =====================================================
-   INITIALIZE
-   ===================================================== */
-
+// Initial calls on load
 setLanguage(currentLang);
-
 loadRecentQuestions();
 
 </script>
-
 </body>
 </html>
