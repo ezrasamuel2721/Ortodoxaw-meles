@@ -14,21 +14,24 @@ export default async function handler(req, res) {
       });
     }
 
-    const userQuestion = question.trim();
+    const supabaseUrl = process.env.SUPABASE_URL;
+    const supabaseKey =
+      process.env.SUPABASE_SERVICE_ROLE_KEY ||
+      process.env.SUPABASE_ANON_KEY;
 
-    const GEMINI_API_KEY = process.env.GEMINI_API_KEY;
+    const geminiKey = process.env.GEMINI_API_KEY;
 
-    if (!GEMINI_API_KEY) {
+    if (!supabaseUrl || !supabaseKey) {
+      return res.status(500).json({
+        error: "Supabase environment variables are not configured"
+      });
+    }
+
+    if (!geminiKey) {
       return res.status(500).json({
         error: "GEMINI_API_KEY is not configured"
       });
     }
-
-    /*
-     * =========================================================
-     * 1. LANGUAGES
-     * =========================================================
-     */
 
     const languageNames = {
       am: "Amharic",
@@ -47,400 +50,304 @@ export default async function handler(req, res) {
     const answerLanguage =
       languageNames[language] || "Amharic";
 
-
     /*
-     * =========================================================
-     * 2. SUPABASE CONFIGURATION
-     * =========================================================
-     */
-
-    const SUPABASE_URL =
-      process.env.SUPABASE_URL ||
-      "https://geznekrpdubpgsegseer.supabase.co";
-
-    const SUPABASE_ANON_KEY =
-      process.env.SUPABASE_ANON_KEY ||
-      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
-
-    /*
-     * IMPORTANT:
-     * If your table name is different, change this ONE value.
+     * ---------------------------------------------------------
+     * 1. SEARCH SUPABASE KNOWLEDGE BASE
+     * ---------------------------------------------------------
      *
-     * You can also create a Vercel environment variable:
-     * SUPABASE_TABLE
+     * We search orthodox_source_chunks directly.
+     * This avoids limiting the application to orthodox_answers.
      */
 
-    const SUPABASE_TABLE =
-      process.env.SUPABASE_TABLE || "questions";
+    const searchTerms = question
+      .trim()
+      .replace(/[^\p{L}\p{N}\s]/gu, " ")
+      .split(/\s+/)
+      .filter(word => word.length >= 2)
+      .slice(0, 12);
 
+    const orConditions = [];
 
-    /*
-     * =========================================================
-     * 3. SEARCH SUPABASE
-     * =========================================================
-     *
-     * We first retrieve knowledge from Supabase.
-     * The matching is done in JavaScript so we do not depend
-     * on a specific "content" or "answer" column existing.
-     */
+    for (const term of searchTerms) {
+      const safeTerm = term
+        .replace(/\\/g, "\\\\")
+        .replace(/%/g, "\\%")
+        .replace(/_/g, "\\_");
 
-    let knowledgeItems = [];
+      orConditions.push(`topic.ilike.%${safeTerm}%`);
+      orConditions.push(`keywords.ilike.%${safeTerm}%`);
+      orConditions.push(`content.ilike.%${safeTerm}%`);
+      orConditions.push(`section_title.ilike.%${safeTerm}%`);
+    }
 
-    if (SUPABASE_ANON_KEY) {
-      try {
-        const url =
-          `${SUPABASE_URL}/rest/v1/${encodeURIComponent(
-            SUPABASE_TABLE
-          )}?select=*&limit=200`;
+    let knowledge = [];
 
-        const supabaseResponse = await fetch(url, {
+    if (orConditions.length > 0) {
+      const supabaseSearchUrl =
+        `${supabaseUrl}/rest/v1/orthodox_source_chunks` +
+        `?select=id,source_id,section_title,content,topic,keywords,language,verified,source_label` +
+        `&or=(${orConditions.join(",")})` +
+        `&limit=50`;
+
+      const supabaseResponse = await fetch(
+        supabaseSearchUrl,
+        {
           method: "GET",
           headers: {
-            apikey: SUPABASE_ANON_KEY,
-            Authorization: `Bearer ${SUPABASE_ANON_KEY}`,
+            apikey: supabaseKey,
+            Authorization: `Bearer ${supabaseKey}`,
             "Content-Type": "application/json"
           }
-        });
-
-        if (supabaseResponse.ok) {
-          const rows = await supabaseResponse.json();
-
-          if (Array.isArray(rows)) {
-
-            /*
-             * Turn the user's question into searchable words.
-             */
-            const searchWords = userQuestion
-              .toLowerCase()
-              .replace(/[^\p{L}\p{N}\s]/gu, " ")
-              .split(/\s+/)
-              .filter(word => word.length >= 2);
-
-            /*
-             * Score every row according to how many words
-             * from the question appear in its text.
-             */
-            const scoredRows = rows.map(row => {
-
-              const rowText = Object.values(row)
-                .filter(value =>
-                  typeof value === "string"
-                )
-                .join(" ")
-                .toLowerCase();
-
-              let score = 0;
-
-              for (const word of searchWords) {
-                if (rowText.includes(word)) {
-                  score += 1;
-                }
-              }
-
-              /*
-               * Extra weight if the exact question text
-               * appears inside the row.
-               */
-              if (
-                rowText.includes(
-                  userQuestion.toLowerCase()
-                )
-              ) {
-                score += 5;
-              }
-
-              return {
-                row,
-                score
-              };
-            });
-
-            /*
-             * Keep only useful matches and sort them.
-             */
-            knowledgeItems = scoredRows
-              .filter(item => item.score > 0)
-              .sort(
-                (a, b) => b.score - a.score
-              )
-              .slice(0, 12)
-              .map(item => item.row);
-          }
-        } else {
-          console.error(
-            "Supabase HTTP error:",
-            supabaseResponse.status,
-            await supabaseResponse.text()
-          );
         }
+      );
 
-      } catch (supabaseError) {
-        /*
-         * Supabase failure must NOT stop Gemini.
-         */
+      if (supabaseResponse.ok) {
+        knowledge = await supabaseResponse.json();
+      } else {
+        const errorText = await supabaseResponse.text();
+
         console.error(
           "Supabase search error:",
-          supabaseError
+          errorText
         );
       }
     }
 
-
     /*
-     * =========================================================
-     * 4. PREPARE SUPABASE KNOWLEDGE
-     * =========================================================
+     * ---------------------------------------------------------
+     * 2. RANK RESULTS
+     * ---------------------------------------------------------
+     *
+     * Give higher priority to exact topic/title/keyword matches.
      */
 
-    let knowledgeContext = "";
+    const normalizedQuestion =
+      question.trim().toLowerCase();
 
-    if (knowledgeItems.length > 0) {
+    knowledge = knowledge
+      .map(item => {
+        let score = 0;
 
-      knowledgeContext = knowledgeItems
-        .map((item, index) => {
+        const topic =
+          String(item.topic || "").toLowerCase();
 
-          const cleanItem = {};
+        const title =
+          String(item.section_title || "").toLowerCase();
 
-          for (const [key, value] of Object.entries(item)) {
-            if (
-              value !== null &&
-              value !== undefined
-            ) {
-              cleanItem[key] = value;
-            }
-          }
+        const keywords =
+          String(item.keywords || "").toLowerCase();
 
-          return `
-========== KNOWLEDGE SOURCE ${index + 1} ==========
+        const content =
+          String(item.content || "").toLowerCase();
 
-${JSON.stringify(
-  cleanItem,
-  null,
-  2
-)}
+        if (
+          topic &&
+          normalizedQuestion.includes(topic)
+        ) {
+          score += 20;
+        }
 
-========== END SOURCE ${index + 1} ==========
+        if (
+          title &&
+          normalizedQuestion.includes(title)
+        ) {
+          score += 15;
+        }
+
+        for (const term of searchTerms) {
+          const t = term.toLowerCase();
+
+          if (topic.includes(t)) score += 8;
+          if (title.includes(t)) score += 6;
+          if (keywords.includes(t)) score += 5;
+          if (content.includes(t)) score += 1;
+        }
+
+        if (item.verified === true) {
+          score += 3;
+        }
+
+        return {
+          ...item,
+          _score: score
+        };
+      })
+      .sort((a, b) => b._score - a._score)
+      .slice(0, 35);
+
+    /*
+     * ---------------------------------------------------------
+     * 3. BUILD KNOWLEDGE CONTEXT
+     * ---------------------------------------------------------
+     */
+
+    const knowledgeContext = knowledge
+      .map((item, index) => {
+        return `
+SOURCE ${index + 1}
+Topic: ${item.topic || ""}
+Section: ${item.section_title || ""}
+Source: ${item.source_label || ""}
+Verified: ${item.verified ? "Yes" : "No"}
+
+Content:
+${item.content || ""}
 `;
-        })
-        .join("\n");
-
-    } else {
-
-      knowledgeContext =
-        "No directly matching Supabase knowledge was found.";
-    }
-
+      })
+      .join("\n-------------------------\n");
 
     /*
-     * =========================================================
-     * 5. STRONG ORTHODOX ANSWER INSTRUCTIONS
-     * =========================================================
+     * ---------------------------------------------------------
+     * 4. GEMINI PROMPT
+     * ---------------------------------------------------------
      */
 
-    const systemInstruction = `
-You are "ኦርቶዶክሳዊ መልስ"
-(Orthodox Answer).
+    const prompt = `
+You are "Orthodox Answer" (ኦርቶዶክሳዊ መልስ),
+an Ethiopian Orthodox Tewahedo Christian educational
+question-answer assistant.
 
-You are a spiritual question-answer assistant
-for Ethiopian Orthodox Tewahedo Christian teaching.
+The answer must be based primarily on the Supabase
+Orthodox knowledge supplied below.
 
-Your job is to give COMPLETE, DETAILED,
-STRUCTURED and EDUCATIONAL answers.
-
-LANGUAGE:
-Always answer in ${answerLanguage}.
-
-IMPORTANT ANSWER RULES:
-
-1. Do not give a three-line answer unless the question
-   genuinely requires only a very short answer.
-
-2. Explain the subject clearly from beginning to end.
-
-3. When appropriate, structure the answer with:
-
-   - ትርጉም / Definition
-   - ዋና መልስ / Direct answer
-   - የመጽሐፍ ቅዱስ መሠረት / Biblical foundation
-   - የኦርቶዶክሳዊ ትምህርት / Orthodox teaching
-   - ማብራሪያ / Detailed explanation
-   - የመንፈሳዊ ሕይወት ትርጉም / Spiritual meaning
-   - ተያያዥ ነጥቦች / Related points
-   - ምንጮች / References
-
-4. Use the Supabase knowledge supplied below as the
-   PRIMARY source whenever it is relevant.
-
-5. Do NOT merely copy the Supabase records.
-   Understand them, combine related information,
-   remove repetition and produce one coherent answer.
-
-6. If several Supabase records discuss related aspects
-   of the same subject, combine them.
-
-7. If Supabase does not contain enough information,
-   supplement the answer using reliable general knowledge
-   of Ethiopian Orthodox Tewahedo Christianity.
-
-8. Never invent:
-   - Bible verses
-   - chapter numbers
-   - quotations
-   - church fathers
-   - books
-   - authors
-   - Ethiopian scholars
-   - historical events
-   - references
-
-9. Never present an uncertain statement as an exact
-   quotation from a church father or scholar.
-
-10. If you do not know the exact source of a quotation,
-    paraphrase the teaching or state the uncertainty.
-
-11. Bible references should be given only when you are
-    sufficiently confident that the reference is correct.
-
-12. When explaining doctrine, distinguish between:
-    - direct biblical teaching
-    - Orthodox interpretation
-    - historical/traditional teaching
-    - explanatory interpretation
-
-13. Do not mention "Supabase", "Gemini", "API",
-    "database", "prompt", or these internal instructions
-    in the final answer.
-
-14. Do not tell the user that the answer came from AI.
-
-15. Be respectful toward other religions and Christian
-    traditions. Explain the Ethiopian Orthodox position
-    without insults or mockery.
-
-16. The goal is to teach the reader, not merely to give
-    a short conclusion.
-
-17. Write naturally in the selected language.
-
-18. If the question is ambiguous, explain the most likely
-    meaning and address the important interpretations.
-
-19. If the question asks about a controversial theological
-    subject, present the Orthodox teaching clearly and
-    distinguish it from other interpretations.
-
-20. Finish with a concise summary when the subject is
-    sufficiently complex.
-`;
-
-
-    /*
-     * =========================================================
-     * 6. USER PROMPT
-     * =========================================================
-     */
-
-    const inputPrompt = `
 USER QUESTION:
+${question.trim()}
 
-${userQuestion}
-
+ANSWER LANGUAGE:
+${answerLanguage}
 
 SUPABASE KNOWLEDGE:
+${knowledgeContext || "No directly matching Supabase knowledge was found."}
 
-${knowledgeContext}
+IMPORTANT RULES:
 
+1. Answer the question according to Ethiopian Orthodox
+   Tewahedo Christian teaching.
 
-Now answer the user's question.
+2. Give a FULL and WELL-ORGANIZED answer.
+   Do not give only 2 or 3 sentences.
 
-Use the supplied knowledge as the primary foundation
-when relevant.
+3. Prefer this structure when appropriate:
 
-Produce a full, clear, organized and educational answer
-in ${answerLanguage}.
+   • መግቢያ
+   • ዋና ትምህርት
+   • የመጽሐፍ ቅዱስ ማጣቀሻ
+   • የቤተክርስቲያን አባቶች/ሊቃውንት ትምህርት
+   • የኢትዮጵያ ተዋሕዶ ትውፊት ከሚመለከተው
+     ከሆነ
+   • ማብራሪያና ምሳሌ
+   • መደምደሚያ
+
+   Use only the sections that genuinely fit the question.
+
+4. Make the answer detailed enough for both an ordinary
+   reader and a person who wants deeper theological
+   understanding.
+
+5. Use the Supabase knowledge as the primary source.
+   Do not ignore relevant supplied material.
+
+6. If several Supabase sources are relevant, synthesize
+   them instead of mentioning only one.
+
+7. Do NOT invent Bible verses, chapter numbers,
+   quotations, Church Fathers, Ethiopian scholars,
+   book titles, page numbers, or quotations.
+
+8. A source summary must NOT be presented as a direct
+   quotation.
+
+9. If the supplied knowledge identifies a Church Father
+   or Ethiopian scholar, explain the teaching accurately
+   as a summary unless an exact quotation is provided.
+
+10. When citing Scripture, give the Bible book and
+    chapter/verse only when you are confident it is
+    correct.
+
+11. Do not fabricate references merely to make the answer
+    look scholarly.
+
+12. If the Supabase knowledge does not contain enough
+    information for a precise claim, clearly say that
+    the available knowledge base does not provide enough
+    verified information instead of inventing it.
+
+13. Do not mix unrelated subjects into the answer.
+
+14. If the question is controversial between Orthodox
+    Tewahedo and another Christian/religious tradition,
+    explain the Ethiopian Orthodox Tewahedo position
+    respectfully and clearly.
+
+15. Do not attack Muslims, Protestants, Catholics,
+    Jehovah's Witnesses, atheists, or any other group.
+    Explain differences in doctrine respectfully.
+
+16. Do not claim that every statement in the supplied
+    knowledge is an official dogma. Distinguish between
+    Scripture, established Church teaching, canonical/
+    liturgical sources, patristic teaching, historical
+    tradition, and explanatory material when possible.
+
+17. Do not mention "Supabase", "database", "AI prompt",
+    "system prompt", or internal technical details
+    in the final answer.
+
+18. Do not say "I searched the database".
+
+19. The final answer must be written entirely in the
+    requested language unless a proper name, book title,
+    or necessary reference requires another language.
+
+20. Do not unnecessarily repeat the same explanation.
+
+21. Prefer depth and clarity over extreme brevity.
+
+Now produce the best complete answer possible.
 `;
 
-
     /*
-     * =========================================================
-     * 7. GEMINI MODELS
-     * =========================================================
-     *
-     * Primary:
-     * gemini-3.8-flash
-     *
-     * Fallback:
-     * gemini-3.7-flash
-     *
-     * Both are current stable Gemini 3 Flash models.
+     * ---------------------------------------------------------
+     * 5. GEMINI MODELS
+     * ---------------------------------------------------------
      */
 
     const models = [
       "gemini-3.8-flash",
       "gemini-3.7-flash",
-      "gemini-3.6-flash"
+      "gemini-3.6-flash",
+      "gemini-3.5-flash"
     ];
-
-
-    /*
-     * =========================================================
-     * 8. ASK GEMINI
-     * =========================================================
-     */
 
     let lastError = null;
 
     for (const model of models) {
-
       try {
-
-        const geminiResponse = await fetch(
+        const response = await fetch(
           "https://generativelanguage.googleapis.com/v1beta/interactions",
           {
             method: "POST",
-
             headers: {
               "Content-Type": "application/json",
-              "x-goog-api-key": GEMINI_API_KEY
+              "x-goog-api-key": geminiKey
             },
-
             body: JSON.stringify({
               model,
-
-              system_instruction:
-                systemInstruction,
-
-              input:
-                inputPrompt,
-
-              generation_config: {
-                temperature: 0.55,
-                max_output_tokens: 12000,
-                thinking_level: "medium"
-              }
+              input: prompt
             })
           }
         );
 
-
-        const data =
-          await geminiResponse.json();
-
-
-        /*
-         * Temporary overload.
-         * Try the next model.
-         */
+        const data = await response.json();
 
         if (
-          geminiResponse.status === 429 ||
-          geminiResponse.status === 500 ||
-          geminiResponse.status === 502 ||
-          geminiResponse.status === 503 ||
-          geminiResponse.status === 504
+          response.status === 429 ||
+          response.status === 500 ||
+          response.status === 502 ||
+          response.status === 503 ||
+          response.status === 504
         ) {
-
           console.error(
             `Gemini ${model} temporarily unavailable:`,
             data
@@ -448,193 +355,128 @@ in ${answerLanguage}.
 
           lastError =
             data?.error?.message ||
-            `Model ${model} temporarily unavailable`;
+            `Model ${model} unavailable`;
 
           continue;
         }
 
-
-        /*
-         * Permanent API error.
-         */
-
-        if (!geminiResponse.ok) {
-
+        if (!response.ok) {
           console.error(
             `Gemini API error (${model}):`,
             data
           );
 
-          return res.status(
-            geminiResponse.status
-          ).json({
+          return res.status(response.status).json({
             error:
               data?.error?.message ||
               "Gemini API request failed"
           });
         }
 
-
-        /*
-         * =====================================================
-         * 9. GET ANSWER
-         * =====================================================
-         */
-
         let answer = "";
 
-
         /*
-         * Normal Interactions API response.
+         * Standard output
          */
-
         if (
-          typeof data.output_text ===
-          "string"
+          typeof data.output_text === "string"
         ) {
-
-          answer =
-            data.output_text.trim();
+          answer = data.output_text.trim();
         }
 
-
         /*
-         * Backup parser.
+         * Backup: outputs
          */
-
         if (
           !answer &&
           Array.isArray(data.outputs)
         ) {
+          answer = data.outputs
+            .map(item => {
+              if (typeof item === "string") {
+                return item;
+              }
 
-          answer =
-            data.outputs
-              .map(item => {
+              if (
+                typeof item?.text === "string"
+              ) {
+                return item.text;
+              }
 
-                if (
-                  typeof item ===
-                  "string"
-                ) {
-                  return item;
-                }
-
-                if (
-                  typeof item?.text ===
-                  "string"
-                ) {
-                  return item.text;
-                }
-
-                if (
-                  Array.isArray(
-                    item?.content
+              if (
+                Array.isArray(item?.content)
+              ) {
+                return item.content
+                  .map(content =>
+                    content?.text || ""
                   )
-                ) {
+                  .join("");
+              }
 
-                  return item.content
-                    .map(
-                      content =>
-                        content?.text || ""
-                    )
-                    .join("");
-                }
-
-                return "";
-              })
-              .join("")
-              .trim();
+              return "";
+            })
+            .join("")
+            .trim();
         }
 
-
         /*
-         * Another possible response structure.
+         * Backup: steps
          */
-
         if (
           !answer &&
           Array.isArray(data.steps)
         ) {
+          answer = data.steps
+            .map(step => {
+              if (
+                typeof step?.text === "string"
+              ) {
+                return step.text;
+              }
 
-          answer =
-            data.steps
-              .map(step => {
-
-                if (
-                  typeof step?.text ===
-                  "string"
-                ) {
-                  return step.text;
-                }
-
-                if (
-                  Array.isArray(
-                    step?.content
+              if (
+                Array.isArray(step?.content)
+              ) {
+                return step.content
+                  .map(content =>
+                    content?.text || ""
                   )
-                ) {
+                  .join("");
+              }
 
-                  return step.content
-                    .map(
-                      content =>
-                        content?.text || ""
-                    )
-                    .join("");
-                }
-
-                return "";
-              })
-              .join("")
-              .trim();
+              return "";
+            })
+            .join("")
+            .trim();
         }
 
-
-        /*
-         * No answer.
-         */
-
         if (!answer) {
-
-          console.error(
-            `Gemini returned no answer (${model}):`,
-            data
-          );
-
           lastError =
             "Gemini returned no answer";
 
           continue;
         }
 
-
         /*
-         * =====================================================
-         * 10. SUCCESS
-         * =====================================================
+         * -----------------------------------------------------
+         * 6. RETURN ANSWER
+         * -----------------------------------------------------
          */
 
         return res.status(200).json({
-
           answer,
-
           source:
-            knowledgeItems.length > 0
-              ? "Supabase Knowledge + Gemini"
-              : "Gemini – Orthodox Christian Context",
-
+            knowledge.length > 0
+              ? "Orthodox Knowledge Base + Gemini AI"
+              : "Gemini AI – Orthodox Christian Context",
           language,
-
-          model,
-
-          knowledgeFound:
-            knowledgeItems.length > 0,
-
-          knowledgeCount:
-            knowledgeItems.length
+          knowledge_count: knowledge.length,
+          model
         });
 
       } catch (modelError) {
-
         console.error(
-          `Error while using ${model}:`,
+          `Error using ${model}:`,
           modelError
         );
 
@@ -646,33 +488,21 @@ in ${answerLanguage}.
       }
     }
 
-
-    /*
-     * =========================================================
-     * 11. ALL MODELS FAILED
-     * =========================================================
-     */
-
     return res.status(503).json({
-
       error:
-        "የመልስ አገልግሎቱ ለጊዜው አይገኝም። እባክዎ እንደገና ይሞክሩ።",
-
+        "Gemini AI is temporarily unavailable. Please try again shortly.",
       details:
         lastError ||
         "All Gemini models were unavailable."
     });
 
-
   } catch (error) {
-
     console.error(
       "Server error:",
       error
     );
 
     return res.status(500).json({
-
       error:
         error?.message ||
         "Internal server error"
