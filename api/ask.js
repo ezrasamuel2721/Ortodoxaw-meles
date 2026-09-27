@@ -1,3 +1,5 @@
+import { GoogleGenAI } from "@google/genai";
+
 const SUPABASE_URL =
   process.env.SUPABASE_URL ||
   "https://geznekrpdubpgsegseer.supabase.co";
@@ -6,9 +8,7 @@ const SUPABASE_ANON_KEY =
   process.env.SUPABASE_ANON_KEY ||
   "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6MTc5MDAyNTI1NiwiaWF0IjoxNzkwMDI1MjU2LCJleHAiOjIxMDA2MDEyNTZ9.spxmqIhfeHPjD4SXI8mT9CY611-_0Mw3w7RoRloYPkQ";
 
-const MODELS = [
-  process.env.GEMINI_MODEL || "gemini-1.5-flash"
-];
+const MODEL_NAME = process.env.GEMINI_MODEL || "gemini-1.5-flash";
 
 const LANGUAGE_NAMES = {
   am: "Amharic (አማርኛ)",
@@ -340,10 +340,31 @@ export default async function handler(req, res) {
     const langName = LANGUAGE_NAMES[language] || LANGUAGE_NAMES["am"];
     const sysInstruction = systemInstruction(langName, education_level, topic);
 
-    // እዚህጋር የ Gemini ሞዴል ጥሪ ይደረጋል (እባክዎ የ AI SDK ውቅረትዎ በትክክል መገናኘቱን ያረጋግጡ)
+    // የ Gemini API ጥሪ (Google Gen AI SDK)
+    const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
     
+    const prompt = `
+SUPPLIED TEACHING MATERIAL:
+${sourceText}
+
+USER QUESTION:
+${question}
+    `.trim();
+
+    const response = await ai.models.generateContent({
+      model: MODEL_NAME,
+      contents: prompt,
+      config: {
+        systemInstruction: sysInstruction,
+        temperature: 0.3
+      }
+    });
+
+    const answerText = response.text();
+
     return res.status(200).json({
       success: true,
+      answer: answerText,
       sources,
       topic: topic ? topic.id : null
     });
