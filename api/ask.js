@@ -590,7 +590,7 @@ function levelConfig(level) {
       "normally 1000–1800 words when the subject genuinely requires depth",
     focus:
       "Give a complete teaching suitable for a serious learner: meaning, biblical foundation, Orthodox interpretation, relevant tradition, spiritual significance, practical application and important distinctions."
-  };
+    };
 }
 
 /* -------------------------------------------------------
@@ -664,4 +664,62 @@ SOURCE DISCIPLINE:
 ORTHODOX PERSPECTIVE:
 Present the teaching from the perspective of the Ethiopian Orthodox Tewahedo Church tradition and its canonical teachings.
 `.trim();
+}
+
+/* -------------------------------------------------------
+   MAIN API HANDLER (ለ Vercel)
+------------------------------------------------------- */
+
+export default async function handler(req, res) {
+  if (req.method !== "POST") {
+    return res.status(405).json({ error: "Method not allowed" });
+  }
+
+  try {
+    const { question, language = "am", education_level = 2 } = req.body || {};
+
+    if (!question) {
+      return res.status(400).json({ error: "Question is required" });
+    }
+
+    // 1. ርዕሱን መለየት
+    const topic = detectPrimaryTopic(question);
+
+    // 2. መረጃዎችን ከ Supabase ማምጣት
+    const rows = await getLessons();
+
+    if (!rows || !rows.length) {
+      throw new Error("No lessons found in database.");
+    }
+
+    // 3. መረጃዎችን ማቀናጀትና ደረጃ መስጠት
+    const ranked = rows
+      .map(row => ({
+        row,
+        score: scoreRow(row, question, language, topic)
+      }))
+      .filter(item => item.score > 0)
+      .sort((a, b) => b.score - a.score);
+
+    const sources = buildSources(ranked, 5);
+    const sourceText = buildSourceText(sources);
+
+    // 4. የቋንቋ ስም መምረጥ
+    const langName = LANGUAGE_NAMES[language] || LANGUAGE_NAMES["am"];
+
+    // 5. የ System Instruction ማዘጋጀት
+    const sysInstruction = systemInstruction(langName, education_level, topic);
+
+    return res.status(200).json({
+      success: true,
+      sources,
+      topic: topic ? topic.id : null
+    });
+
+  } catch (error) {
+    console.error("API Error:", error);
+    return res.status(500).json({ 
+      error: error.message || "Internal Server Error" 
+    });
+  }
 }
