@@ -1,1 +1,1085 @@
+<!DOCTYPE html>
+<html lang="am">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="theme-color" content="#006B3C">
 
+<title>ኦርቶዶክሳዊ መልስ</title>
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Ethiopic:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+
+<style>
+*{
+  box-sizing:border-box;
+  margin:0;
+  padding:0;
+}
+
+html{
+  scroll-behavior:smooth;
+}
+
+body{
+  font-family:"Noto Sans Ethiopic",Arial,sans-serif;
+  background:#f6f8f5;
+  color:#18352a;
+  line-height:1.8;
+}
+
+button,
+textarea,
+select{
+  font:inherit;
+}
+
+button{
+  cursor:pointer;
+}
+
+.header{
+  position:sticky;
+  top:0;
+  z-index:1000;
+  background:#006B3C;
+  color:#fff;
+  box-shadow:0 3px 15px rgba(0,0,0,.15);
+}
+
+.header-inner{
+  max-width:1150px;
+  margin:auto;
+  min-height:72px;
+  padding:10px 18px;
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:15px;
+}
+
+.brand{
+  display:flex;
+  align-items:center;
+  gap:12px;
+  min-width:0;
+}
+
+.logo{
+  width:48px;
+  height:48px;
+  border-radius:50%;
+  object-fit:cover;
+  background:#fff;
+  border:2px solid #d8b45a;
+}
+
+.brand-text{
+  min-width:0;
+}
+
+.brand-title{
+  font-size:20px;
+  font-weight:800;
+  white-space:nowrap;
+}
+
+.brand-subtitle{
+  font-size:11px;
+  opacity:.9;
+  white-space:nowrap;
+}
+
+.header-actions{
+  display:flex;
+  align-items:center;
+  gap:8px;
+}
+
+.lang-top{
+  border:1px solid rgba(255,255,255,.45);
+  background:rgba(255,255,255,.1);
+  color:#fff;
+  padding:8px 12px;
+  border-radius:9px;
+}
+
+.menu-btn{
+  width:42px;
+  height:42px;
+  border:0;
+  border-radius:9px;
+  background:#fff;
+  color:#006B3C;
+  font-size:22px;
+}
+
+.menu{
+  display:none;
+  background:#fff;
+  border-top:1px solid #ddd;
+}
+
+.menu.open{
+  display:block;
+}
+
+.menu-inner{
+  max-width:1150px;
+  margin:auto;
+  padding:12px 18px;
+  display:grid;
+  grid-template-columns:repeat(auto-fit,minmax(130px,1fr));
+  gap:8px;
+}
+
+.menu-item{
+  border:1px solid #e1e7e3;
+  background:#f8faf8;
+  color:#174d36;
+  padding:10px;
+  border-radius:9px;
+}
+
+.hero{
+  background:
+    radial-gradient(circle at top right,rgba(216,180,90,.22),transparent 35%),
+    linear-gradient(135deg,#006B3C,#075d3a);
+  color:#fff;
+  text-align:center;
+  padding:58px 18px 48px;
+}
+
+.hero-inner{
+  max-width:850px;
+  margin:auto;
+}
+
+.hero h1{
+  font-size:clamp(28px,6vw,48px);
+  line-height:1.35;
+  margin-bottom:15px;
+  font-weight:800;
+}
+
+.hero p{
+  font-size:clamp(15px,3vw,19px);
+  opacity:.96;
+}
+
+.container{
+  width:min(1050px,calc(100% - 28px));
+  margin:28px auto 60px;
+}
+
+.card{
+  background:#fff;
+  border-radius:18px;
+  padding:22px;
+  box-shadow:0 6px 24px rgba(0,0,0,.07);
+  border:1px solid #e7ece8;
+  margin-bottom:20px;
+}
+
+.card-title{
+  color:#006B3C;
+  font-size:20px;
+  font-weight:800;
+  margin-bottom:12px;
+}
+
+textarea{
+  width:100%;
+  min-height:155px;
+  resize:vertical;
+  padding:17px;
+  border:2px solid #dce5df;
+  border-radius:14px;
+  outline:none;
+  color:#17382a;
+  background:#fbfdfb;
+  line-height:1.8;
+}
+
+textarea:focus{
+  border-color:#006B3C;
+  box-shadow:0 0 0 3px rgba(0,107,60,.1);
+}
+
+.input-footer{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  gap:10px;
+  margin-top:8px;
+  color:#68766f;
+  font-size:12px;
+}
+
+.actions{
+  display:flex;
+  flex-wrap:wrap;
+  gap:10px;
+  margin-top:15px;
+}
+
+.primary-btn,
+.secondary-btn{
+  border:0;
+  border-radius:11px;
+  padding:12px 19px;
+  font-weight:700;
+}
+
+.primary-btn{
+  background:#006B3C;
+  color:#fff;
+  flex:1;
+  min-width:170px;
+}
+
+.primary-btn:hover{
+  background:#075a35;
+}
+
+.primary-btn:disabled{
+  opacity:.6;
+  cursor:not-allowed;
+}
+
+.secondary-btn{
+  background:#edf3ef;
+  color:#174d36;
+}
+
+.language-box{
+  display:flex;
+  align-items:center;
+  gap:12px;
+  flex-wrap:wrap;
+}
+
+.language-box label{
+  font-weight:700;
+}
+
+select{
+  flex:1;
+  min-width:200px;
+  padding:11px;
+  border:1px solid #d6e0da;
+  border-radius:10px;
+  background:#fff;
+}
+
+.status{
+  display:none;
+  padding:13px 16px;
+  border-radius:12px;
+  background:#eef7f1;
+  color:#17613e;
+  margin-bottom:18px;
+  text-align:center;
+}
+
+.status.show{
+  display:block;
+}
+
+.status.error{
+  background:#fff0f0;
+  color:#a33b3b;
+}
+
+.answer-card{
+  display:none;
+}
+
+.answer-card.show{
+  display:block;
+}
+
+.answer-header{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:10px;
+  flex-wrap:wrap;
+  margin-bottom:15px;
+}
+
+.answer-title{
+  color:#006B3C;
+  font-size:23px;
+  font-weight:800;
+}
+
+.answer-actions{
+  display:flex;
+  flex-wrap:wrap;
+  gap:7px;
+}
+
+.small-btn{
+  border:1px solid #d8e2dc;
+  background:#f7faf8;
+  color:#175239;
+  border-radius:8px;
+  padding:7px 10px;
+  font-size:12px;
+}
+
+.answer-content{
+  color:#263d32;
+  font-size:16px;
+  line-height:2;
+  overflow-wrap:anywhere;
+}
+
+.answer-content h1,
+.answer-content h2,
+.answer-content h3{
+  color:#006B3C;
+  margin:24px 0 10px;
+  line-height:1.5;
+}
+
+.answer-content h1{
+  font-size:25px;
+}
+
+.answer-content h2{
+  font-size:22px;
+}
+
+.answer-content h3{
+  font-size:19px;
+}
+
+.answer-content p{
+  margin:0 0 15px;
+}
+
+.answer-content ul,
+.answer-content ol{
+  padding-left:28px;
+  margin:10px 0 18px;
+}
+
+.answer-content li{
+  margin-bottom:7px;
+}
+
+.answer-content blockquote{
+  border-left:4px solid #d8b45a;
+  padding:10px 16px;
+  margin:16px 0;
+  background:#fffaf0;
+}
+
+.answer-content strong{
+  color:#154d35;
+}
+
+.answer-content hr{
+  border:0;
+  border-top:1px solid #e2e8e4;
+  margin:25px 0;
+}
+
+.recent-list{
+  display:flex;
+  flex-direction:column;
+  gap:8px;
+}
+
+.recent-item{
+  text-align:left;
+  border:1px solid #e1e8e3;
+  background:#fafcfb;
+  border-radius:10px;
+  padding:11px 13px;
+  color:#315244;
+}
+
+.info-grid{
+  display:grid;
+  grid-template-columns:repeat(auto-fit,minmax(210px,1fr));
+  gap:12px;
+}
+
+.info-box{
+  padding:16px;
+  border-radius:12px;
+  background:#f5f9f6;
+  border:1px solid #e1ebe5;
+}
+
+.info-box strong{
+  display:block;
+  color:#006B3C;
+  margin-bottom:4px;
+}
+
+.footer{
+  background:#123b2a;
+  color:#fff;
+  text-align:center;
+  padding:30px 18px;
+}
+
+.footer p{
+  opacity:.9;
+  margin:4px 0;
+}
+
+.hidden{
+  display:none!important;
+}
+
+@media(max-width:600px){
+  .header-inner{
+    min-height:64px;
+    padding:8px 12px;
+  }
+
+  .logo{
+    width:42px;
+    height:42px;
+  }
+
+  .brand-title{
+    font-size:16px;
+  }
+
+  .brand-subtitle{
+    display:none;
+  }
+
+  .hero{
+    padding:42px 15px 38px;
+  }
+
+  .container{
+    width:min(100% - 18px,1050px);
+    margin-top:18px;
+  }
+
+  .card{
+    padding:16px;
+    border-radius:14px;
+  }
+
+  .answer-content{
+    font-size:15px;
+  }
+
+  .primary-btn,
+  .secondary-btn{
+    width:100%;
+  }
+}
+</style>
+</head>
+
+<body>
+
+<header class="header">
+  <div class="header-inner">
+
+    <div class="brand">
+      <img
+        class="logo"
+        src="orthodox_answer_logo.jpg"
+        alt="ኦርቶዶክሳዊ መልስ"
+        onerror="this.style.display='none'"
+      >
+
+      <div class="brand-text">
+        <div class="brand-title">ኦርቶዶክሳዊ መልስ</div>
+        <div class="brand-subtitle">መጠየቅ ያደርጋል ሊቅ</div>
+      </div>
+    </div>
+
+    <div class="header-actions">
+      <button class="lang-top" id="topLanguage">EN</button>
+      <button class="menu-btn" id="menuButton" aria-label="Menu">☰</button>
+    </div>
+
+  </div>
+
+  <nav class="menu" id="mainMenu">
+    <div class="menu-inner">
+      <button class="menu-item" onclick="scrollToSection('askSection')">ጥያቄ ይጠይቁ</button>
+      <button class="menu-item" onclick="scrollToSection('languageSection')">ቋንቋ</button>
+      <button class="menu-item" onclick="scrollToSection('aboutSection')">ስለ አፕሉ</button>
+      <button class="menu-item" onclick="shareApp()">አጋራ</button>
+    </div>
+  </nav>
+</header>
+
+<section class="hero">
+  <div class="hero-inner">
+    <h1>መንፈሳዊ ጥያቄዎን ይጠይቁ፤</h1>
+    <p>
+      በኦርቶዶክሳዊ ትምህርት መሠረት የተደራጀና የተብራራ መልስ ያግኙ።
+    </p>
+  </div>
+</section>
+
+<main class="container">
+
+  <section class="card" id="askSection">
+
+    <div class="card-title">መንፈሳዊ ጥያቄዎን ይጻፉ</div>
+
+    <textarea
+      id="questionInput"
+      maxlength="3000"
+      placeholder="ለምሳሌ፦ ጥምቀት ምንድን ነው? ሕፃናት ለምን ይጠመቃሉ?"
+    ></textarea>
+
+    <div class="input-footer">
+      <span>ጥያቄዎን በግልጽ ይጻፉ።</span>
+      <span id="charCount">0 / 3000</span>
+    </div>
+
+    <div class="actions">
+      <button class="primary-btn" id="askButton">
+        መልስ ያግኙ
+      </button>
+
+      <button class="secondary-btn" id="clearButton">
+        አጽዳ
+      </button>
+    </div>
+
+  </section>
+
+  <section class="card" id="languageSection">
+
+    <div class="card-title">የመልስ ቋንቋ</div>
+
+    <div class="language-box">
+      <label for="languageSelect">ቋንቋ ይምረጡ፦</label>
+
+      <select id="languageSelect">
+
+        <option value="am">አማርኛ</option>
+        <option value="en">English</option>
+        <option value="ti">ትግርኛ</option>
+        <option value="om">Afaan Oromoo</option>
+        <option value="ar">العربية</option>
+        <option value="fr">Français</option>
+        <option value="de">Deutsch</option>
+        <option value="it">Italiano</option>
+        <option value="es">Español</option>
+        <option value="pt">Português</option>
+        <option value="ru">Русский</option>
+
+      </select>
+    </div>
+
+  </section>
+
+  <div class="status" id="status"></div>
+
+  <section class="card answer-card" id="answerCard">
+
+    <div class="answer-header">
+
+      <div class="answer-title">መልስ</div>
+
+      <div class="answer-actions">
+
+        <button class="small-btn" id="copyButton">
+          ቅዳ
+        </button>
+
+        <button class="small-btn" id="shareButton">
+          አጋራ
+        </button>
+
+        <button class="small-btn" id="speakButton">
+          🔊 አንብብ
+        </button>
+
+      </div>
+
+    </div>
+
+    <div class="answer-content" id="answerContent"></div>
+
+  </section>
+
+  <section class="card" id="recentSection">
+
+    <div class="card-title">የቅርብ ጊዜ ጥያቄዎች</div>
+
+    <div class="recent-list" id="recentList">
+      <div class="info-box">
+        ገና የተቀመጠ ጥያቄ የለም።
+      </div>
+    </div>
+
+  </section>
+
+  <section class="card" id="aboutSection">
+
+    <div class="card-title">ስለ ኦርቶዶክሳዊ መልስ</div>
+
+    <p>
+      ኦርቶዶክሳዊ መልስ መንፈሳዊ ጥያቄዎችን በኦርቶዶክሳዊ
+      ትምህርት መሠረት በተደራጀና በተብራራ መልኩ ለመመለስ
+      የተዘጋጀ መድረክ ነው።
+    </p>
+
+    <div class="info-grid" style="margin-top:16px">
+
+      <div class="info-box">
+        <strong>መጽሐፍ ቅዱስ</strong>
+        የብሉይና የሐዲስ ኪዳን ትምህርቶችን በመመርኮዝ።
+      </div>
+
+      <div class="info-box">
+        <strong>የአበው ትምህርት</strong>
+        የቀደሙትን የቤተክርስቲያን አባቶች ትምህርት በመጠቀም።
+      </div>
+
+      <div class="info-box">
+        <strong>የኢትዮጵያ ሊቃውንት</strong>
+        የኢትዮጵያ ኦርቶዶክሳዊ ሊቃውንት ትምህርትን በማካተት።
+      </div>
+
+    </div>
+
+  </section>
+
+</main>
+
+<footer class="footer">
+  <p>ኦርቶዶክሳዊ መልስ</p>
+  <p>Created by Ezra Samuel Abebe</p>
+</footer>
+
+<script>
+const questionInput = document.getElementById("questionInput");
+const askButton = document.getElementById("askButton");
+const clearButton = document.getElementById("clearButton");
+const languageSelect = document.getElementById("languageSelect");
+const answerCard = document.getElementById("answerCard");
+const answerContent = document.getElementById("answerContent");
+const statusBox = document.getElementById("status");
+const charCount = document.getElementById("charCount");
+const copyButton = document.getElementById("copyButton");
+const shareButton = document.getElementById("shareButton");
+const speakButton = document.getElementById("speakButton");
+const recentList = document.getElementById("recentList");
+const menuButton = document.getElementById("menuButton");
+const mainMenu = document.getElementById("mainMenu");
+const topLanguage = document.getElementById("topLanguage");
+
+let lastAnswerText = "";
+
+const languageNames = {
+  am:"አማርኛ",
+  en:"English",
+  ti:"ትግርኛ",
+  om:"Afaan Oromoo",
+  ar:"العربية",
+  fr:"Français",
+  de:"Deutsch",
+  it:"Italiano",
+  es:"Español",
+  pt:"Português",
+  ru:"Русский"
+};
+
+function scrollToSection(id){
+  const element = document.getElementById(id);
+  if(element){
+    element.scrollIntoView({behavior:"smooth"});
+  }
+  mainMenu.classList.remove("open");
+}
+
+menuButton.addEventListener("click",()=>{
+  mainMenu.classList.toggle("open");
+});
+
+questionInput.addEventListener("input",()=>{
+  charCount.textContent =
+    questionInput.value.length + " / 3000";
+});
+
+languageSelect.addEventListener("change",()=>{
+  const value = languageSelect.value;
+  topLanguage.textContent =
+    value === "am" ? "AM" : value.toUpperCase();
+});
+
+clearButton.addEventListener("click",()=>{
+  questionInput.value = "";
+  charCount.textContent = "0 / 3000";
+  answerContent.innerHTML = "";
+  answerCard.classList.remove("show");
+  statusBox.className = "status";
+  statusBox.textContent = "";
+});
+
+function showStatus(message,error=false){
+  statusBox.textContent = message;
+  statusBox.className = "status show" + (error ? " error" : "");
+}
+
+function escapeHtml(text){
+  const div = document.createElement("div");
+  div.textContent = text;
+  return div.innerHTML;
+}
+
+function simpleMarkdown(text){
+
+  if(!text) return "";
+
+  let html = escapeHtml(text);
+
+  html = html.replace(
+    /^### (.+)$/gm,
+    "<h3>$1</h3>"
+  );
+
+  html = html.replace(
+    /^## (.+)$/gm,
+    "<h2>$1</h2>"
+  );
+
+  html = html.replace(
+    /^# (.+)$/gm,
+    "<h1>$1</h1>"
+  );
+
+  html = html.replace(
+    /\*\*(.+?)\*\*/g,
+    "<strong>$1</strong>"
+  );
+
+  html = html.replace(
+    /^\> (.+)$/gm,
+    "<blockquote>$1</blockquote>"
+  );
+
+  html = html.replace(
+    /^[-•] (.+)$/gm,
+    "<li>$1</li>"
+  );
+
+  html = html.replace(
+    /(<li>.*<\/li>)/gs,
+    "<ul>$1</ul>"
+  );
+
+  html = html.replace(
+    /\n{2,}/g,
+    "</p><p>"
+  );
+
+  html = html.replace(
+    /\n/g,
+    "<br>"
+  );
+
+  return "<p>" + html + "</p>";
+}
+
+async function askQuestion(){
+
+  const question = questionInput.value.trim();
+  const language = languageSelect.value;
+
+  if(!question){
+    showStatus("እባክዎ መጀመሪያ ጥያቄዎን ይጻፉ።",true);
+    questionInput.focus();
+    return;
+  }
+
+  if(question.length < 2){
+    showStatus("ጥያቄዎ ትንሽ ነው። በግልጽ ይጻፉ።",true);
+    return;
+  }
+
+  askButton.disabled = true;
+  answerCard.classList.remove("show");
+  showStatus("መልሱ እየተዘጋጀ ነው...");
+
+  try{
+
+    const response = await fetch("/api/ask",{
+      method:"POST",
+      headers:{
+        "Content-Type":"application/json"
+      },
+      body:JSON.stringify({
+        question,
+        language
+      })
+    });
+
+    let data;
+
+    try{
+      data = await response.json();
+    }catch{
+      throw new Error("የአገልጋዩ ምላሽ ትክክለኛ JSON አይደለም።");
+    }
+
+    if(!response.ok){
+      throw new Error(
+        data?.error ||
+        "መልሱን ማግኘት አልተቻለም።"
+      );
+    }
+
+    const answer =
+      data.answer ||
+      data.text ||
+      data.response ||
+      data.result;
+
+    if(!answer){
+      throw new Error("መልስ ከአገልጋዩ አልተመለሰም።");
+    }
+
+    lastAnswerText = String(answer);
+
+    answerContent.innerHTML =
+      simpleMarkdown(lastAnswerText);
+
+    answerCard.classList.add("show");
+
+    showStatus(
+      languageNames[language] +
+      " ቋንቋ መልሱ ተዘጋጅቷል።"
+    );
+
+    saveRecentQuestion(question);
+
+    setTimeout(()=>{
+      answerCard.scrollIntoView({
+        behavior:"smooth",
+        block:"start"
+      });
+    },100);
+
+  }catch(error){
+
+    console.error(error);
+
+    showStatus(
+      error.message ||
+      "ይቅርታ፣ መልሱን ማግኘት አልተቻለም።",
+      true
+    );
+
+  }finally{
+    askButton.disabled = false;
+  }
+}
+
+askButton.addEventListener("click",askQuestion);
+
+questionInput.addEventListener("keydown",(event)=>{
+  if(
+    event.key === "Enter" &&
+    (event.ctrlKey || event.metaKey)
+  ){
+    event.preventDefault();
+    askQuestion();
+  }
+});
+
+copyButton.addEventListener("click",async()=>{
+
+  if(!lastAnswerText) return;
+
+  try{
+
+    await navigator.clipboard.writeText(lastAnswerText);
+
+    const old = copyButton.textContent;
+    copyButton.textContent = "ተቀድቷል ✓";
+
+    setTimeout(()=>{
+      copyButton.textContent = old;
+    },1500);
+
+  }catch{
+
+    showStatus(
+      "መልሱን መቅዳት አልተቻለም።",
+      true
+    );
+
+  }
+});
+
+shareButton.addEventListener("click",async()=>{
+  await shareApp(lastAnswerText);
+});
+
+speakButton.addEventListener("click",()=>{
+
+  if(!lastAnswerText){
+    return;
+  }
+
+  if(!("speechSynthesis" in window)){
+    showStatus(
+      "የድምፅ ንባብ በዚህ መሣሪያ አይደገፍም።",
+      true
+    );
+    return;
+  }
+
+  speechSynthesis.cancel();
+
+  const utterance =
+    new SpeechSynthesisUtterance(lastAnswerText);
+
+  const langMap = {
+    am:"am-ET",
+    en:"en-US",
+    ti:"ti-ET",
+    om:"om-ET",
+    ar:"ar-SA",
+    fr:"fr-FR",
+    de:"de-DE",
+    it:"it-IT",
+    es:"es-ES",
+    pt:"pt-PT",
+    ru:"ru-RU"
+  };
+
+  utterance.lang =
+    langMap[languageSelect.value] ||
+    "am-ET";
+
+  speechSynthesis.speak(utterance);
+});
+
+async function shareApp(text=""){
+
+  const shareData = {
+    title:"ኦርቶዶክሳዊ መልስ",
+    text:text
+      ? text
+      : "ኦርቶዶክሳዊ መልስ — መንፈሳዊ ጥያቄዎን ይጠይቁ።",
+    url:window.location.href
+  };
+
+  try{
+
+    if(navigator.share){
+      await navigator.share(shareData);
+    }else{
+
+      await navigator.clipboard.writeText(
+        window.location.href
+      );
+
+      showStatus(
+        "የገጹ አድራሻ ተቀድቷል።"
+      );
+    }
+
+  }catch(error){
+
+    if(error.name !== "AbortError"){
+      console.error(error);
+    }
+
+  }
+}
+
+function saveRecentQuestion(question){
+
+  let questions = [];
+
+  try{
+    questions =
+      JSON.parse(
+        localStorage.getItem("orthodox_recent_questions") ||
+        "[]"
+      );
+  }catch{
+    questions = [];
+  }
+
+  questions = [
+    question,
+    ...questions.filter(q=>q !== question)
+  ].slice(0,8);
+
+  localStorage.setItem(
+    "orthodox_recent_questions",
+    JSON.stringify(questions)
+  );
+
+  renderRecentQuestions();
+}
+
+function renderRecentQuestions(){
+
+  let questions = [];
+
+  try{
+    questions =
+      JSON.parse(
+        localStorage.getItem("orthodox_recent_questions") ||
+        "[]"
+      );
+  }catch{
+    questions = [];
+  }
+
+  if(!questions.length){
+
+    recentList.innerHTML =
+      `<div class="info-box">
+        ገና የተቀመጠ ጥያቄ የለም።
+      </div>`;
+
+    return;
+  }
+
+  recentList.innerHTML = "";
+
+  questions.forEach(question=>{
+
+    const button =
+      document.createElement("button");
+
+    button.className = "recent-item";
+    button.textContent = question;
+
+    button.addEventListener("click",()=>{
+      questionInput.value = question;
+      charCount.textContent =
+        question.length + " / 3000";
+
+      scrollToSection("askSection");
+    });
+
+    recentList.appendChild(button);
+  });
+}
+
+renderRecentQuestions();
+
+window.scrollToSection = scrollToSection;
+window.shareApp = shareApp;
+</script>
+
+</body>
+</html>
