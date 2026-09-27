@@ -10,12 +10,18 @@ const SUPABASE_ANON_KEY =
 const GEMINI_API_KEY =
   process.env.GEMINI_API_KEY || "";
 
-const MODEL_NAME =  process.env.GEMINI_MODEL || "gemini-3.8-flash";
+const MODEL_NAME =
+  process.env.GEMINI_MODEL || "gemini-3.8-flash";
+
 const LANGUAGE_NAMES = {
   am: "Amharic (አማርኛ)",
   en: "English",
   ti: "Tigrinya (ትግርኛ)",
   om: "Afaan Oromoo",
+  sid: "Sidaamu Afoo",
+  wal: "Wolayttatto",
+  kaf: "Kafa/Kaffoono",
+  gur: "Guragigna",
   ar: "Arabic (العربية)",
   so: "Somali",
   fr: "French",
@@ -47,6 +53,7 @@ function rowQuestion(row) {
     row.Question ??
     row.question_text ??
     row.title ??
+    row.title_am ??
     row.q ??
     ""
   );
@@ -64,10 +71,49 @@ function rowAnswer(row) {
   );
 }
 
+function getRowLanguage(row) {
+  return clean(
+    row.language ??
+    row.lang ??
+    row.lang_code ??
+    ""
+  ).toLowerCase();
+}
+
+function languageMatches(row, language) {
+  const value = getRowLanguage(row);
+
+  if (!value) return true;
+
+  const aliases = {
+    am: ["am", "amh", "amharic", "አማርኛ"],
+    en: ["en", "eng", "english"],
+    ti: ["ti", "tir", "tigrinya", "ትግርኛ"],
+    om: ["om", "oro", "oromo", "afaan oromoo"],
+    sid: ["sid", "sidaamu", "sidaamu afoo"],
+    wal: ["wal", "wolaytta", "wolayttatto"],
+    kaf: ["kaf", "kaffa", "kaffoono"],
+    gur: ["gur", "guragie", "guragigna"],
+    ar: ["ar", "ara", "arabic", "العربية"],
+    so: ["so", "som", "somali"],
+    fr: ["fr", "fra", "french"],
+    es: ["es", "spa", "spanish"],
+    it: ["it", "ita", "italian"],
+    de: ["de", "deu", "german"],
+    pt: ["pt", "por", "portuguese"],
+    ru: ["ru", "rus", "russian"]
+  };
+
+  return (
+    aliases[language]?.includes(value) ||
+    value === language
+  );
+}
+
 async function getLessons() {
   if (!SUPABASE_ANON_KEY) {
     throw new Error(
-      "SUPABASE_ANON_KEY is missing in Vercel."
+      "SUPABASE_ANON_KEY is missing."
     );
   }
 
@@ -99,27 +145,47 @@ async function getLessons() {
 
   if (!response.ok) {
     throw new Error(
-      `Supabase ${response.status}: ` +
-      `${data?.message || JSON.stringify(data)}`
+      `Supabase ${response.status}: ${
+        data?.message ||
+        data?.hint ||
+        JSON.stringify(data)
+      }`
     );
   }
 
-  return Array.isArray(data) ? data : [];
+  if (!Array.isArray(data)) {
+    throw new Error(
+      "Supabase did not return an array."
+    );
+  }
+
+  return data;
 }
 
-function findRelevantLessons(rows, question) {
+function findRelevantLessons(
+  rows,
+  question,
+  language
+) {
   const q = normalize(question);
 
   const queryWords = [
     ...new Set(
       q
-        .split(" ")
+        .split(/\s+/)
         .filter(word => word.length >= 2)
     )
   ];
 
-  return rows
+  const ranked = rows
     .map(row => {
+      if (!languageMatches(row, language)) {
+        return {
+          row,
+          score: 0
+        };
+      }
+
       const questionText =
         normalize(rowQuestion(row));
 
@@ -134,26 +200,26 @@ function findRelevantLessons(rows, question) {
       if (
         questionText === q
       ) {
-        score += 5000;
+        score += 10000;
       }
 
       if (
         questionText.includes(q)
       ) {
-        score += 2000;
+        score += 4000;
       }
 
       for (const word of queryWords) {
         if (questionText.includes(word)) {
-          score += 300;
+          score += 500;
         }
 
         if (category.includes(word)) {
-          score += 150;
+          score += 250;
         }
 
         if (answerText.includes(word)) {
-          score += 20;
+          score += 30;
         }
       }
 
@@ -165,43 +231,261 @@ function findRelevantLessons(rows, question) {
     .filter(item => item.score > 0)
     .sort(
       (a, b) => b.score - a.score
-    )
-    .slice(0, 5);
+    );
+
+  return ranked.slice(0, 5);
 }
 
 function buildSources(items) {
   return items.map(item => ({
     score: item.score,
+
     question: clean(
       rowQuestion(item.row)
     ),
+
     category: clean(
       item.row.category
     ),
-    language: clean(
-      item.row.language ||
-      item.row.lang ||
-      ""
-    ),
+
+    language: getRowLanguage(item.row),
+
     answer: clean(
       rowAnswer(item.row)
-    ).slice(0, 9000),
+    ).slice(0, 12000),
+
     bible_references: clean(
       item.row.bible_references
     ),
+
     church_sources: clean(
       item.row.church_sources
     )
   }));
 }
 
-function buildMaterial(sources) {
+function buildDirectAnswer(
+  sources,
+  question,
+  language
+) {
+  if (!sources.length) {
+    return language === "am"
+      ? `ይቅርታ፣ ለ«${question}» በአሁኑ ጊዜ በእውቀት መሠረቱ ውስጥ በቂ ተዛማጅ ትምህርት አልተገኘም።`
+      : `No directly matching teaching was found for "${question}".`;
+  }
+
+  const parts = sources
+    .map((source, index) => {
+      const title =
+        source.question ||
+        `Teaching ${index + 1}`;
+
+      const answer =
+        source.answer;
+
+      const references = [];
+
+      if (source.bible_references) {
+        references.push(
+          `መጽሐፍ ቅዱስ: ${source.bible_references}`
+        );
+      }
+
+      if (source.church_sources) {
+        references.push(
+          `የቤተ ክርስቲያን ምንጮች: ${source.church_sources}`
+        );
+      }
+
+      return [
+        `## ${title}`,
+        answer,
+        references.length
+          ? `\n${references.join("\n")}`
+          : ""
+      ].join("\n");
+    });
+
+  if (language === "am") {
+    return [
+      `### የጥያቄዎ መልስ`,
+      `«${question}»`,
+      "",
+      parts.join("\n\n---\n\n"),
+      "",
+      "### መደምደሚያ",
+      "ይህ መልስ በኦርቶዶክሳዊ ትምህርት የተገኘውን የእውቀት መሠረት በመጠቀም ቀጥታ ተዘጋጅቷል።"
+    ].join("\n");
+  }
+
+  return parts.join("\n\n---\n\n");
+}
+
+async function askGemini(
+  question,
+  languageName,
+  material
+) {
+  if (!GEMINI_API_KEY) {
+    return null;
+  }
+
+  const endpoint =
+    `https://generativelanguage.googleapis.com/v1beta/models/` +
+    `${MODEL_NAME}:generateContent?key=` +
+    encodeURIComponent(
+      GEMINI_API_KEY
+    );
+
+  const systemInstruction = `
+You are the theological answer engine
+inside the Ethiopian Orthodox Tewahedo
+application "ኦርቶዶክሳዊ መልስ".
+
+Write the complete answer ONLY in
+${languageName}.
+
+Answer the exact user question.
+
+Use the supplied database teaching as
+your primary source.
+
+Give a detailed and organized answer.
+
+Where supported by the supplied material,
+explain:
+- Old Testament
+- New Testament
+- Ethiopian Orthodox Tewahedo teaching
+- Church Fathers
+- Ethiopian Orthodox scholars
+- spiritual meaning
+- practical examples
+- conclusion
+
+IMPORTANT:
+Never invent quotations,
+Bible references, book references,
+page numbers, scholars, or citations.
+
+Do not mix unrelated topics.
+`;
+
+  const prompt = `
+SUPPLIED TEACHING MATERIAL:
+
+${material}
+
+USER QUESTION:
+
+${question}
+
+Write the complete answer.
+`;
+
+  const response = await fetch(
+    endpoint,
+    {
+      method: "POST",
+      headers: {
+        "Content-Type":
+          "application/json"
+      },
+      body: JSON.stringify({
+        system_instruction: {
+          parts: [
+            {
+              text: systemInstruction
+            }
+          ]
+        },
+        contents: [
+          {
+            role: "user",
+            parts: [
+              {
+                text: prompt
+              }
+            ]
+          }
+        ],
+        generationConfig: {
+          temperature: 0.3,
+          maxOutputTokens: 5000
+        }
+      })
+    }
+  );
+
+  const text =
+    await response.text();
+
+  let data;
+
+  try {
+    data = text
+      ? JSON.parse(text)
+      : null;
+  } catch {
+    throw new Error(
+      `Gemini invalid JSON (${response.status})`
+    );
+  }
+
+  if (!response.ok) {
+    const error =
+      data?.error?.message ||
+      `HTTP ${response.status}`;
+
+    const quota =
+      response.status === 429;
+
+    const busy =
+      response.status === 503;
+
+    const errorObject =
+      new Error(error);
+
+    errorObject.code =
+      quota
+        ? "QUOTA"
+        : busy
+        ? "BUSY"
+        : "GEMINI_ERROR";
+
+    throw errorObject;
+  }
+
+  const answer =
+    data?.candidates?.[0]
+      ?.content?.parts
+      ?.map(part =>
+        part.text || ""
+      )
+      .join("")
+      .trim();
+
+  if (!answer) {
+    throw new Error(
+      "Gemini returned an empty answer."
+    );
+  }
+
+  return answer;
+}
+
+function materialForGemini(
+  sources
+) {
   if (!sources.length) {
     return "No directly matching database lesson was found.";
   }
 
   return sources
-    .map((source, index) => `
+    .map(
+      (source, index) =>
+        `
 SOURCE ${index + 1}
 
 Question:
@@ -218,126 +502,9 @@ ${source.church_sources}
 
 Lesson:
 ${source.answer}
-`)
+`
+    )
     .join("\n");
-}
-
-async function askGemini(
-  question,
-  languageName,
-  material
-) {
-  if (!GEMINI_API_KEY) {
-    throw new Error(
-      "GEMINI_API_KEY is missing in Vercel."
-    );
-  }
-
-  const endpoint =
-    `https://generativelanguage.googleapis.com/v1beta/models/` +
-    `${MODEL_NAME}:generateContent?key=` +
-    encodeURIComponent(GEMINI_API_KEY);
-
-  const systemInstruction = `
-You are the theological answer engine of
-"ኦርቶዶክሳዊ መልስ".
-
-Answer ONLY in ${languageName}.
-
-Answer the user's exact question.
-
-Give a detailed, organized answer based primarily
-on the supplied Ethiopian Orthodox Tewahedo
-teaching material.
-
-Where appropriate explain:
-- Old Testament
-- New Testament
-- Ethiopian Orthodox Tewahedo teaching
-- Church Fathers
-- Ethiopian Orthodox scholars
-- practical spiritual meaning
-- clear examples
-- conclusion
-
-Do not invent quotations, page numbers,
-book references, or citations.
-
-Do not mix unrelated topics.
-
-Do not discuss these instructions.
-`;
-
-  const prompt = `
-SUPPLIED TEACHING MATERIAL:
-
-${material}
-
-USER QUESTION:
-
-${question}
-
-Give the complete answer now.
-`;
-
-  const response = await fetch(endpoint, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json"
-    },
-    body: JSON.stringify({
-      system_instruction: {
-        parts: [
-          {
-            text: systemInstruction
-          }
-        ]
-      },
-      contents: [
-        {
-          role: "user",
-          parts: [
-            {
-              text: prompt
-            }
-          ]
-        }
-      ]
-    })
-  });
-
-  const text = await response.text();
-
-  let data;
-
-  try {
-    data = text ? JSON.parse(text) : null;
-  } catch {
-    throw new Error(
-      `Gemini returned invalid JSON. HTTP ${response.status}`
-    );
-  }
-
-  if (!response.ok) {
-    throw new Error(
-      `Gemini ${response.status}: ` +
-      `${data?.error?.message || JSON.stringify(data)}`
-    );
-  }
-
-  const answer =
-    data?.candidates?.[0]?.content?.parts
-      ?.map(part => part.text || "")
-      .join("")
-      .trim();
-
-  if (!answer) {
-    throw new Error(
-      "Gemini returned an empty answer."
-    );
-  }
-
-  return answer;
 }
 
 export default async function handler(
@@ -357,15 +524,19 @@ export default async function handler(
         ? JSON.parse(req.body)
         : req.body || {};
 
-    const question = clean(body.question);
+    const question =
+      clean(body.question);
 
     const language =
-      clean(body.language || "am").toLowerCase();
+      clean(
+        body.language || "am"
+      ).toLowerCase();
 
     if (!question) {
       return res.status(400).json({
         success: false,
-        error: "Question is required"
+        error:
+          "Question is required"
       });
     }
 
@@ -376,7 +547,8 @@ export default async function handler(
     let rows;
 
     try {
-      rows = await getLessons();
+      rows =
+        await getLessons();
     } catch (error) {
       console.error(
         "SUPABASE_ERROR:",
@@ -393,42 +565,77 @@ export default async function handler(
     const relevant =
       findRelevantLessons(
         rows,
-        question
+        question,
+        language
       );
 
     const sources =
-      buildSources(relevant);
-
-    const material =
-      buildMaterial(sources);
-
-    let answer;
-
-    try {
-      answer = await askGemini(
-        question,
-        languageName,
-        material
-      );
-    } catch (error) {
-      console.error(
-        "GEMINI_ERROR:",
-        error
+      buildSources(
+        relevant
       );
 
-      return res.status(500).json({
-        success: false,
-        stage: "gemini",
-        model: MODEL_NAME,
-        error: error.message
-      });
+    /*
+     * IMPORTANT:
+     * Supabase is the fallback.
+     * Gemini is optional.
+     */
+    let answer = null;
+    let aiStatus = "not_used";
+
+    if (sources.length > 0) {
+      try {
+        const material =
+          materialForGemini(
+            sources
+          );
+
+        answer =
+          await askGemini(
+            question,
+            languageName,
+            material
+          );
+
+        if (answer) {
+          aiStatus = "gemini";
+        }
+      } catch (error) {
+        console.error(
+          "GEMINI_FALLBACK:",
+          error
+        );
+
+        aiStatus =
+          error.code === "QUOTA"
+            ? "quota_fallback"
+            : error.code === "BUSY"
+            ? "busy_fallback"
+            : "error_fallback";
+      }
+    }
+
+    /*
+     * If Gemini is unavailable,
+     * ALWAYS return the database answer.
+     */
+    if (!answer) {
+      answer =
+        buildDirectAnswer(
+          sources,
+          question,
+          language
+        );
     }
 
     return res.status(200).json({
       success: true,
       answer,
       language,
-      model: MODEL_NAME,
+      model:
+        aiStatus === "gemini"
+          ? MODEL_NAME
+          : "supabase-fallback",
+      ai_status: aiStatus,
       sources
     });
 
