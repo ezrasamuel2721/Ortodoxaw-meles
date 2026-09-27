@@ -1,6 +1,5 @@
 // api/ask.js
 
-import { GoogleGenAI } from "@google/genai";
 
 const SUPABASE_URL =
   process.env.SUPABASE_URL ||
