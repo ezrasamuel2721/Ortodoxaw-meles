@@ -11,8 +11,8 @@ const GEMINI_API_KEY =
   process.env.GEMINI_API_KEY || "";
 
 const MODEL_NAME =
-  process.env.GEMINI_MODEL || "gemini-1.5-flash";
-
+  const MODEL_NAME =
+  process.env.GEMINI_MODEL || "gemini-3.8-flash";
 const LANGUAGE_NAMES = {
   am: "Amharic (አማርኛ)",
   en: "English",
