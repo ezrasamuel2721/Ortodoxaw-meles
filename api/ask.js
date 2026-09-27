@@ -52,144 +52,31 @@ export default async function handler(req, res) {
       languageNames[language] || "Amharic";
 
     /*
-     * =========================================================
-     * 1. NORMALIZE QUESTION
-     * =========================================================
+     * ========================================================
+     * 1. PREPARE SEARCH TERMS
+     * ========================================================
      */
 
-    const originalQuestion = question.trim();
-
-    const normalizedQuestion = originalQuestion
-      .toLowerCase()
-      .replace(/[።፣፤፥፦፧፨.,!?;:()[\]{}"']/g, " ")
-      .replace(/\s+/g, " ")
-      .trim();
-
-    /*
-     * =========================================================
-     * 2. SEARCH TERMS
-     * =========================================================
-     *
-     * We keep the user's important words, but also add
-     * theological related terms for major subjects.
-     */
-
-    const rawTerms = normalizedQuestion
-      .split(/\s+/)
-      .filter(word => word.length >= 2)
-      .slice(0, 18);
-
-    const relatedTerms = [];
-
-    const questionHas = (...words) =>
-      words.some(word =>
-        normalizedQuestion.includes(word)
-      );
-
-    /*
-     * ---------------------------------------------------------
-     * COMMUNION / EUCHARIST
-     * ---------------------------------------------------------
-     */
-
-    if (
-      questionHas(
-        "ቁርባን",
-        "ቅዱስ ቁርባን",
-        "ምሥጢረ ቁርባን",
-        "ቁርባንን",
-        "eucharist",
-        "communion"
-      )
-    ) {
-      relatedTerms.push(
-        "ቁርባን",
-        "ምሥጢረ ቁርባን",
-        "ሥጋ",
-        "ደም",
-        "ቅዳሴ",
-        "ጽዋ",
-        "ኅብስት",
-        "መሥዋዕት",
-        "ፋሲካ",
-        "መና",
-        "ማልከሴዴቅ",
-        "ኪዳን",
-        "ምሥጢር",
-        "ንስሐ",
-        "ቅድስና",
-        "ሐዋርያት",
-        "አበው",
-        "ሊቃውንት",
-        "ዮሐንስ አፈወርቅ",
-        "ቄርሎስ"
-      );
-    }
-
-    /*
-     * ---------------------------------------------------------
-     * BAPTISM
-     * ---------------------------------------------------------
-     */
-
-    if (
-      questionHas(
-        "ጥምቀት",
-        "ጥምቀቱ",
-        "መጠመቅ",
-        "baptism"
-      )
-    ) {
-      relatedTerms.push(
-        "ጥምቀት",
-        "ውሃ",
-        "ተወልደ",
-        "ክርስቶስ",
-        "መንፈስ ቅዱስ",
-        "ንስሐ",
-        "ምሥጢር",
-        "ሕፃን"
-      );
-    }
-
-    /*
-     * ---------------------------------------------------------
-     * GENERAL THEOLOGY
-     * ---------------------------------------------------------
-     */
-
-    if (
-      questionHas(
-        "ሃይማኖት",
-        "ትምህርተ ሃይማኖት",
-        "እምነት",
-        "theology"
-      )
-    ) {
-      relatedTerms.push(
-        "ሥላሴ",
-        "ክርስቶስ",
-        "መንፈስ ቅዱስ",
-        "ቤተክርስቲያን",
-        "ምሥጢራት",
-        "ሐዋርያት",
-        "አበው",
-        "ትውፊት"
-      );
-    }
+    const cleanedQuestion = question
+      .trim()
+      .replace(/[^\p{L}\p{N}\s]/gu, " ");
 
     const searchTerms = [
-      ...new Set([
-        ...rawTerms,
-        ...relatedTerms
-      ])
-    ].slice(0, 40);
+      ...new Set(
+        cleanedQuestion
+          .split(/\s+/)
+          .filter(word => word.length >= 2)
+          .slice(0, 8)
+      )
+    ];
 
     /*
-     * =========================================================
-     * 3. SUPABASE SEARCH
-     * =========================================================
+     * ========================================================
+     * 2. SEARCH SUPABASE KNOWLEDGE BASE
+     * ========================================================
      */
+
+    let knowledge = [];
 
     const orConditions = [];
 
@@ -201,50 +88,54 @@ export default async function handler(req, res) {
 
       orConditions.push(`topic.ilike.%${safeTerm}%`);
       orConditions.push(`keywords.ilike.%${safeTerm}%`);
-      orConditions.push(`content.ilike.%${safeTerm}%`);
       orConditions.push(`section_title.ilike.%${safeTerm}%`);
-      orConditions.push(`source_label.ilike.%${safeTerm}%`);
+      orConditions.push(`content.ilike.%${safeTerm}%`);
     }
-
-    let knowledge = [];
 
     if (orConditions.length > 0) {
       const supabaseSearchUrl =
         `${supabaseUrl}/rest/v1/orthodox_source_chunks` +
-        `?select=*` +
+        `?select=id,source_id,section_title,content,topic,keywords,language,verified,source_label` +
         `&or=(${orConditions.join(",")})` +
-        `&limit=120`;
+        `&limit=40`;
 
-      const supabaseResponse = await fetch(
-        supabaseSearchUrl,
-        {
-          method: "GET",
-          headers: {
-            apikey: supabaseKey,
-            Authorization: `Bearer ${supabaseKey}`,
-            "Content-Type": "application/json"
+      try {
+        const supabaseResponse = await fetch(
+          supabaseSearchUrl,
+          {
+            method: "GET",
+            headers: {
+              apikey: supabaseKey,
+              Authorization: `Bearer ${supabaseKey}`,
+              "Content-Type": "application/json"
+            }
           }
+        );
+
+        if (supabaseResponse.ok) {
+          knowledge = await supabaseResponse.json();
+        } else {
+          console.error(
+            "Supabase search error:",
+            await supabaseResponse.text()
+          );
         }
-      );
-
-      if (supabaseResponse.ok) {
-        knowledge = await supabaseResponse.json();
-      } else {
-        const errorText =
-          await supabaseResponse.text();
-
+      } catch (error) {
         console.error(
-          "Supabase search error:",
-          errorText
+          "Supabase request failed:",
+          error
         );
       }
     }
 
     /*
-     * =========================================================
-     * 4. RANK KNOWLEDGE
-     * =========================================================
+     * ========================================================
+     * 3. RANK SEARCH RESULTS
+     * ========================================================
      */
+
+    const normalizedQuestion =
+      cleanedQuestion.toLowerCase();
 
     knowledge = knowledge
       .map(item => {
@@ -262,47 +153,40 @@ export default async function handler(req, res) {
         const content =
           String(item.content || "").toLowerCase();
 
-        const source =
-          String(item.source_label || "").toLowerCase();
-
         /*
-         * Exact question/topic matches
+         * Exact phrase matches
          */
 
         if (
           topic &&
           normalizedQuestion.includes(topic)
         ) {
-          score += 35;
+          score += 30;
         }
 
         if (
           title &&
           normalizedQuestion.includes(title)
         ) {
-          score += 25;
+          score += 20;
         }
 
         /*
-         * Term matches
+         * Individual term matches
          */
 
         for (const term of searchTerms) {
           const t = term.toLowerCase();
 
           if (topic.includes(t)) {
-            score += 12;
-          }
-
-          if (title.includes(t)) {
             score += 10;
           }
 
-          if (keywords.includes(t)) {
+          if (title.includes(t)) {
             score += 8;
           }
 
-          if (source.includes(t)) {
+          if (keywords.includes(t)) {
             score += 6;
           }
 
@@ -312,32 +196,20 @@ export default async function handler(req, res) {
         }
 
         /*
-         * Verified sources receive priority.
+         * Verified material
          */
 
         if (item.verified === true) {
-          score += 10;
+          score += 5;
         }
 
         /*
-         * Sources with citation metadata receive priority.
+         * Requested language
          */
 
         if (
-          item.page_text ||
-          item.chapter_text ||
-          item.verse_text
-        ) {
-          score += 8;
-        }
-
-        /*
-         * Patristic / Scripture source indicators
-         */
-
-        if (
-          /bible|መጽሐፍ|ወንጌል|ቅዱስ|father|homily|catechetical/i
-            .test(source)
+          item.language &&
+          item.language === language
         ) {
           score += 5;
         }
@@ -347,241 +219,82 @@ export default async function handler(req, res) {
           _score: score
         };
       })
-      .sort((a, b) =>
-        b._score - a._score
-      )
-      .slice(0, 80);
+      .sort((a, b) => b._score - a._score)
+      .slice(0, 25);
 
     /*
-     * =========================================================
-     * 5. BUILD SOURCE CONTEXT
-     * =========================================================
-     *
-     * We explicitly expose citation metadata to Gemini.
+     * ========================================================
+     * 4. BUILD KNOWLEDGE CONTEXT
+     * ========================================================
      */
 
     const knowledgeContext = knowledge
       .map((item, index) => {
         return `
-==================================================
 SOURCE ${index + 1}
-==================================================
 
-ID:
-${item.id || ""}
-
-SOURCE ID:
-${item.source_id || ""}
-
-SOURCE LABEL:
-${item.source_label || ""}
-
-TOPIC:
+Topic:
 ${item.topic || ""}
 
-SECTION:
+Section:
 ${item.section_title || ""}
 
-LANGUAGE:
+Source:
+${item.source_label || ""}
+
+Language:
 ${item.language || ""}
 
-VERIFIED:
-${item.verified ? "YES" : "NO"}
+Verified:
+${item.verified ? "Yes" : "No"}
 
-PAGE / BIBLIOGRAPHIC INFORMATION:
-${item.page_text || ""}
-
-CHAPTER INFORMATION:
-${item.chapter_text || ""}
-
-VERSE INFORMATION:
-${item.verse_text || ""}
-
-KEYWORDS:
-${item.keywords || ""}
-
-CONTENT:
+Content:
 ${item.content || ""}
 `;
       })
-      .join("\n");
+      .join("\n-------------------------\n");
 
     /*
-     * =========================================================
-     * 6. IMPORTANT SCRIPTURE MAP
-     * =========================================================
-     *
-     * This is a research guide, not a replacement for source
-     * verification. Gemini must distinguish direct teaching
-     * from Old Testament typology.
-     */
-
-    let subjectScriptureGuide = "";
-
-    if (
-      questionHas(
-        "ቁርባን",
-        "ቅዱስ ቁርባን",
-        "ምሥጢረ ቁርባን",
-        "eucharist",
-        "communion"
-      )
-    ) {
-      subjectScriptureGuide = `
-For the subject of Holy Communion/Eucharist, examine
-the following Biblical passages where relevant.
-
-OLD TESTAMENT / TYPOLOGICAL BACKGROUND:
-
-1. Genesis 14:18
-   Melchizedek brings bread and wine.
-
-2. Exodus 12
-   The Passover lamb and covenant meal.
-
-3. Exodus 16
-   Manna from heaven.
-
-4. Exodus 24:3-8
-   Covenant, sacrifice, blood, and the people.
-
-5. Leviticus 24:5-9
-   The bread of the Presence.
-
-6. Proverbs 9:1-6
-   Wisdom prepares bread and wine and invites people
-   to eat and drink.
-
-7. Isaiah 25:6
-   The Lord's eschatological feast.
-
-8. Isaiah 55:1-3
-   Invitation to eat and drink and receive life.
-
-9. Jeremiah 31:31-34
-   The promise of the New Covenant.
-
-10. Malachi 1:10-11
-    The prophecy concerning a pure offering among
-    the nations.
-
-IMPORTANT:
-Do not call every Old Testament passage a direct
-institution of the Eucharist. Explain whether it is
-a type, figure, prophecy, preparation, or direct New
-Testament fulfillment according to the Church's
-interpretive tradition.
-
-NEW TESTAMENT:
-
-1. Matthew 26:26-29
-   Institution of the Eucharist.
-
-2. Mark 14:22-25
-   Institution of the Eucharist.
-
-3. Luke 22:14-20
-   Institution of the Eucharist and New Covenant.
-
-4. John 6:22-59
-   Bread of Life discourse, including verses
-   concerning eating Christ's flesh and drinking
-   His blood.
-
-5. Acts 2:42
-   Apostolic fellowship, breaking of bread, and
-   prayers.
-
-6. Acts 20:7
-   Gathering on the first day of the week for
-   breaking bread.
-
-7. 1 Corinthians 10:16-17
-   The cup of blessing and the bread as communion
-   in Christ's blood and body.
-
-8. 1 Corinthians 10:18-21
-   Sacrificial communion and the Lord's table.
-
-9. 1 Corinthians 11:23-34
-   Tradition received from the Lord, institution,
-   remembrance, examination, and warning concerning
-   receiving unworthily.
-
-10. Hebrews 9:11-15
-    Christ as High Priest and the New Covenant.
-
-11. Hebrews 10:19-25
-    Access to God through Christ's sacrifice and
-    gathering together in faith.
-
-12. Hebrews 13:10
-    Teaching concerning the altar.
-
-Only use passages that genuinely support the particular
-claim being made.
-`;
-    }
-
-    /*
-     * =========================================================
-     * 7. HIGH-QUALITY THEOLOGICAL PROMPT
-     * =========================================================
+     * ========================================================
+     * 5. ORTHODOX ANSWER PROMPT
+     * ========================================================
      */
 
     const prompt = `
 You are "Orthodox Answer" (ኦርቶዶክሳዊ መልስ),
-an Ethiopian Orthodox Tewahedo Christian theological
-and historical educational assistant.
+an Ethiopian Orthodox Tewahedo Christian educational
+question-answer assistant.
 
-Your task is NOT to give a short generic answer.
+USER QUESTION:
+${question.trim()}
 
-Your task is to produce a serious, detailed,
-well-structured theological answer based primarily
-on the supplied verified knowledge and clearly
-identified sources.
-
-==================================================
-USER QUESTION
-==================================================
-
-${originalQuestion}
-
-==================================================
-ANSWER LANGUAGE
-==================================================
-
+ANSWER LANGUAGE:
 ${answerLanguage}
 
-==================================================
-RESEARCH GUIDE
-==================================================
+RELEVANT VERIFIED TEACHING MATERIAL:
+${knowledgeContext || "No directly matching verified material was found."}
 
-${subjectScriptureGuide}
+YOUR TASK:
 
-==================================================
-SUPPLIED KNOWLEDGE
-==================================================
+Give the most complete, accurate and educational answer
+possible according to Ethiopian Orthodox Tewahedo teaching.
 
-${knowledgeContext || "No directly matching verified source was found."}
+The answer must be written for both:
+1. an ordinary Christian reader, and
+2. a reader who wants deeper theological understanding.
 
-==================================================
-CORE RULES
-==================================================
+IMPORTANT RULES:
 
-1. Answer according to the teaching of the Ethiopian
-   Orthodox Tewahedo Church.
+1. Do not give a short answer when the question requires
+   detailed explanation.
 
-2. Give a substantial answer. Do not answer in only
-   a few sentences.
+2. Explain the subject from its meaning, theological
+   significance, biblical foundation, Church teaching,
+   historical background and practical meaning when
+   the available evidence supports these.
 
-3. Explain the subject progressively:
-   definition → theological meaning → Biblical
-   evidence → historical development → Church Fathers
-   → Ethiopian Tewahedo tradition → practical/spiritual
-   meaning → conclusion.
-
-4. When appropriate, use these headings:
+3. For theological questions, use this structure when
+   appropriate:
 
    መግቢያ
 
@@ -589,303 +302,167 @@ CORE RULES
 
    ዋና የሥነ መለኮት ትምህርት
 
-   የብሉይ ኪዳን ማስረጃዎች
+   የብሉይ ኪዳን ማስረጃ
 
-   የሐዲስ ኪዳን ማስረጃዎች
+   የሐዲስ ኪዳን ማስረጃ
 
    የሐዋርያት ትምህርት
 
    የቅዱሳን አበው ትምህርት
 
-   የኢትዮጵያ ሊቃውንትና ተዋሕዶ ትውፊት
+   የኢትዮጵያ ሊቃውንት ትምህርት
 
-   የታሪክ ማስረጃ
+   የቤተክርስቲያን ሥርዓትና ትውፊት
 
    ማብራሪያና ምሳሌ
 
-   ተቃራኒ አመለካከቶች ካሉ
-
    መደምደሚያ
 
-   Use only headings that actually fit.
+4. Do not force sections that are unrelated to the
+   particular question.
 
-==================================================
-BIBLICAL EVIDENCE RULE
-==================================================
+5. Use all relevant supplied teaching material rather
+   than relying on only one source.
 
-5. When the question concerns a Biblical doctrine,
-   do not mention only one or two verses when several
-   relevant passages are available in the supplied
-   knowledge and research guide.
+6. Scripture references must be accurate.
 
-6. Separate:
+7. Never invent Bible verses, chapter numbers or verse
+   numbers.
 
-   A. direct New Testament teaching
+8. Never invent Church Fathers or Ethiopian scholars.
 
-   B. Old Testament type/figure
+9. Never invent book titles.
 
-   C. prophecy
+10. Never invent page numbers.
 
-   D. historical/liturgical interpretation
+11. Never invent quotations.
 
-7. Never falsely say that an Old Testament passage
-   directly teaches a doctrine if it is being used
-   typologically.
+12. If the supplied material contains an exact quotation,
+    preserve it accurately and identify its source.
 
-8. Give exact book, chapter and verse whenever known.
+13. If the supplied material contains only a summary of
+    a Father's or scholar's teaching, present it as a
+    summary, NOT as a direct quotation.
 
-9. Never invent a verse number.
+14. If a page number is supplied in the source material,
+    include it.
 
-==================================================
-CHURCH FATHERS RULE
-==================================================
+15. If a page number is NOT supplied, do not create one.
 
-10. Do NOT write:
+16. Distinguish clearly, when relevant, between:
 
-   "The Church Fathers generally teach..."
+    - Holy Scripture
+    - Church doctrine
+    - liturgical tradition
+    - patristic teaching
+    - Ethiopian tradition
+    - historical information
+    - explanatory interpretation
 
-   when specific Fathers can be identified.
+17. If the available material is insufficient to establish
+    an exact historical or patristic claim, say so rather
+    than inventing information.
 
-11. Instead, organize Fathers individually.
+18. For major doctrines, explain not only WHAT the Church
+    teaches but also WHY it teaches it.
 
-Example:
+19. For sacramental questions, explain the biblical,
+    theological, liturgical and spiritual dimensions when
+    supported by the available sources.
 
-   ### ቅዱስ ዮሐንስ አፈወርቅ
+20. When Old Testament passages foreshadow a New Testament
+    fulfillment, explain the connection clearly when
+    supported by the material.
 
-   መጽሐፍ/ስብከት:
-   [exact title if supplied]
+21. Do not mix unrelated subjects into the answer.
 
-   ምዕራፍ/Homily:
-   [exact number if supplied]
+22. If comparing Orthodox Tewahedo teaching with another
+    religion or Christian denomination, explain the
+    difference respectfully and accurately.
 
-   የትምህርቱ ይዘት:
-   [accurate summary]
+23. Do not insult Muslims, Protestants, Catholics,
+    Jehovah's Witnesses, atheists, or any other group.
 
-   ቀጥተኛ ጥቅስ:
-   [ONLY if exact quotation exists in supplied source]
+24. Do not claim that every supplied statement is official
+    Church dogma. Identify the nature of the teaching when
+    the evidence permits.
 
-   ማጣቀሻ:
-   [edition/volume/page ONLY if verified]
+25. Do not mention:
+    Supabase
+    database
+    AI
+    prompt
+    system prompt
+    API
+    software
+    internal technical processes
 
-12. Do the same for other Fathers such as:
+26. The final answer must be entirely in the requested
+    language except for necessary proper names, traditional
+    book titles and Scripture references.
 
-   - St. John Chrysostom
-   - St. Cyril of Alexandria
-   - St. Cyril of Jerusalem
-   - St. Justin Martyr
-   - St. Ignatius of Antioch
+27. Avoid unnecessary repetition.
 
-   BUT only claim what is actually supported by
-   the supplied sources.
+28. Prefer accuracy and depth over decorative language.
 
-13. Never invent a quotation.
+29. Do not make the answer artificially short.
 
-14. Never put quotation marks around a paraphrase.
+30. Do not fabricate scholarly citations simply to make
+    the answer appear academic.
 
-==================================================
-PAGE NUMBER RULE
-==================================================
-
-15. PAGE NUMBERS MUST NEVER BE INVENTED.
-
-16. Page numbers vary by edition.
-
-17. If the exact edition and page are supplied,
-   provide:
-
-   Book
-   Volume
-   Homily/Chapter
-   Edition
-   Page
-
-18. If the page is not verified, say:
-
-   "የገጽ ቁጥሩ በተጠቀሰው የእትም መረጃ ውስጥ
-   አልተረጋገጠም።"
-
-   Do NOT guess a page.
-
-==================================================
-ETHIOPIAN TEWAHEDO SOURCES
-==================================================
-
-19. Give Ethiopian Orthodox Tewahedo sources their
-   own section when relevant.
-
-20. Distinguish between:
-
-   - Holy Scripture
-   - Apostolic teaching
-   - Church Fathers
-   - Canonical/liturgical texts
-   - Ethiopian theological literature
-   - Historical tradition
-   - Later explanatory material
-
-21. If an Ethiopian scholar is named in the supplied
-   knowledge, explain his/her teaching specifically.
-
-22. Do not invent Ethiopian book titles, quotations,
-   page numbers, or authors.
-
-==================================================
-SOURCE FIDELITY
-==================================================
-
-23. The supplied knowledge is the primary evidence.
-
-24. If the supplied source gives exact bibliographic
-   information, preserve it.
-
-25. If it gives an exact quotation, you may quote it.
-
-26. If it only gives a summary, label it as a summary.
-
-27. Never turn a summary into a quotation.
-
-28. Never invent missing bibliographic information.
-
-29. If the knowledge base is insufficient for a precise
-   historical or theological claim, clearly state that
-   the available verified source material is insufficient.
-
-==================================================
-ANSWER QUALITY
-==================================================
-
-30. Explain difficult theological concepts in language
-   understandable to an ordinary reader.
-
-31. At the same time, retain theological precision.
-
-32. Do not repeat the same paragraph.
-
-33. Do not mix unrelated topics into the answer.
-
-34. If the question asks "why", explain the reasons.
-
-35. If it asks "how", explain the process.
-
-36. If it asks "what did Father X teach", focus on
-   Father X rather than giving a generic Christian answer.
-
-37. If it asks for historical development, give a
-   chronological explanation where the evidence allows.
-
-38. If it asks for Biblical proof, prioritize Scripture.
-
-39. If it asks for Tewahedo doctrine, clearly identify
-   the Ethiopian Orthodox Tewahedo position.
-
-==================================================
-CONTROVERSIAL QUESTIONS
-==================================================
-
-40. When comparing Orthodox Tewahedo teaching with
-   Protestant, Catholic, Muslim, Jehovah's Witness,
-   "Only Jesus", atheist, or other positions:
-
-   - explain the difference respectfully
-   - do not insult another religion
-   - do not caricature another position
-   - clearly identify the Tewahedo position
-   - distinguish historical fact from theological belief
-
-==================================================
-LANGUAGE
-==================================================
-
-41. Write the final answer entirely in the requested
-   language.
-
-42. Do not randomly switch languages.
-
-43. Preserve necessary proper names and book titles
-   when needed.
-
-==================================================
-CITATION STYLE
-==================================================
-
-44. When evidence is available, use readable references
-   such as:
-
-   (ማቴዎስ 26፥26–28)
-
-   (ዮሐንስ 6፥53–56)
-
-   (1ኛ ቆሮንቶስ 10፥16–17)
-
-   (1ኛ ቆሮንቶስ 11፥23–29)
-
-45. For Church Fathers, use:
-
-   ቅዱስ ዮሐንስ አፈወርቅ,
-   Homily 82 on Matthew,
-   Matthew 26፥26–28
-
-   and add edition/page only when verified.
-
-==================================================
-FINAL INSTRUCTION
-==================================================
-
-Produce the deepest accurate answer possible from
-the available verified material.
-
-Do NOT sacrifice accuracy for length.
-
-Do NOT invent evidence to make the answer look scholarly.
-
-Do NOT mention:
-
-- Supabase
-- database
-- AI
-- prompt
-- system
-- internal API
-- search process
-
-The reader should experience the result as a carefully
-researched Ethiopian Orthodox Tewahedo theological answer.
+Now write the final answer.
 `;
 
     /*
-     * =========================================================
-     * 8. GEMINI MODELS
-     * =========================================================
+     * ========================================================
+     * 6. GEMINI GENERATION
+     * ========================================================
      *
-     * Use currently supported Interactions API models.
+     * Primary model:
+     * gemini-3.8-flash
+     *
+     * Low thinking level is intentionally used to reduce
+     * waiting time while preserving good reasoning.
      */
 
     const models = [
       "gemini-3.8-flash",
-      "gemini-3.6-flash"
+      "gemini-3.5-flash"
     ];
 
     let lastError = null;
 
-    /*
-     * =========================================================
-     * 9. CALL GEMINI
-     * =========================================================
-     */
-
     for (const model of models) {
       try {
         const response = await fetch(
-          "https://generativelanguage.googleapis.com/v1beta/interactions",
+          `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent`,
           {
             method: "POST",
+
             headers: {
               "Content-Type": "application/json",
               "x-goog-api-key": geminiKey
             },
+
             body: JSON.stringify({
-              model,
-              input: prompt
+              contents: [
+                {
+                  role: "user",
+                  parts: [
+                    {
+                      text: prompt
+                    }
+                  ]
+                }
+              ],
+
+              generationConfig: {
+                maxOutputTokens: 10000,
+
+                thinkingConfig: {
+                  thinkingLevel: "low"
+                }
+              }
             })
           }
         );
@@ -893,8 +470,9 @@ researched Ethiopian Orthodox Tewahedo theological answer.
         const data = await response.json();
 
         /*
-         * Temporary overload / server errors:
-         * try the next supported model.
+         * ====================================================
+         * TEMPORARY CAPACITY ERRORS
+         * ====================================================
          */
 
         if (
@@ -905,16 +483,22 @@ researched Ethiopian Orthodox Tewahedo theological answer.
           response.status === 504
         ) {
           console.error(
-            `Gemini ${model} temporarily unavailable:`,
+            `Gemini ${model} unavailable:`,
             data
           );
 
           lastError =
             data?.error?.message ||
-            `Model ${model} unavailable`;
+            `Gemini ${model} unavailable`;
 
           continue;
         }
+
+        /*
+         * ====================================================
+         * OTHER API ERRORS
+         * ====================================================
+         */
 
         if (!response.ok) {
           console.error(
@@ -930,138 +514,123 @@ researched Ethiopian Orthodox Tewahedo theological answer.
         }
 
         /*
-         * =====================================================
-         * 10. EXTRACT ANSWER
-         * =====================================================
+         * ====================================================
+         * EXTRACT ANSWER
+         * ====================================================
          */
 
         let answer = "";
 
         if (
-          typeof data.output_text === "string"
+          Array.isArray(data.candidates)
         ) {
-          answer =
-            data.output_text.trim();
-        }
-
-        /*
-         * REST responses may provide steps.
-         */
-
-        if (
-          !answer &&
-          Array.isArray(data.steps)
-        ) {
-          answer = data.steps
-            .filter(
-              step =>
-                step?.type === "model_output"
-            )
+          answer = data.candidates
             .flatMap(
-              step =>
-                Array.isArray(step.content)
-                  ? step.content
-                  : []
-            )
-            .filter(
-              content =>
-                content?.type === "text"
+              candidate =>
+                candidate?.content?.parts || []
             )
             .map(
-              content =>
-                content.text || ""
+              part =>
+                typeof part?.text === "string"
+                  ? part.text
+                  : ""
             )
-            .join("\n")
-            .trim();
-        }
-
-        /*
-         * Compatibility fallback.
-         */
-
-        if (
-          !answer &&
-          Array.isArray(data.outputs)
-        ) {
-          answer = data.outputs
-            .map(item => {
-              if (
-                typeof item === "string"
-              ) {
-                return item;
-              }
-
-              if (
-                typeof item?.text === "string"
-              ) {
-                return item.text;
-              }
-
-              if (
-                Array.isArray(item?.content)
-              ) {
-                return item.content
-                  .map(
-                    content =>
-                      content?.text || ""
-                  )
-                  .join("");
-              }
-
-              return "";
-            })
-            .join("\n")
+            .join("")
             .trim();
         }
 
         if (!answer) {
           lastError =
-            "Gemini returned no answer";
+            "Gemini returned an empty answer.";
 
           continue;
         }
 
         /*
-         * =====================================================
-         * 11. RETURN
-         * =====================================================
+         * ====================================================
+         * SUCCESS
+         * ====================================================
          */
 
         return res.status(200).json({
           answer,
+
           source:
             knowledge.length > 0
               ? "Orthodox Knowledge Base + Gemini AI"
               : "Gemini AI – Orthodox Christian Context",
+
           language,
+
           knowledge_count:
             knowledge.length,
+
           model
         });
 
-      } catch (modelError) {
+      } catch (error) {
         console.error(
-          `Error using ${model}:`,
-          modelError
+          `Gemini ${model} request error:`,
+          error
         );
 
         lastError =
-          modelError?.message ||
-          "Model error";
+          error?.message ||
+          "Gemini request failed";
 
         continue;
       }
     }
 
     /*
-     * =========================================================
-     * 12. ALL MODELS FAILED
-     * =========================================================
+     * ========================================================
+     * 7. SUPABASE FALLBACK
+     * ========================================================
+     *
+     * If Gemini is temporarily unavailable but relevant
+     * knowledge exists, do not leave the user with an empty
+     * answer.
+     */
+
+    if (knowledge.length > 0) {
+      const fallbackAnswer = knowledge
+        .slice(0, 10)
+        .map(item => {
+          return `
+### ${item.section_title || item.topic || "ትምህርት"}
+
+${item.content || ""}
+`;
+        })
+        .join("\n")
+        .trim();
+
+      return res.status(200).json({
+        answer: fallbackAnswer,
+
+        source:
+          "Orthodox Knowledge Base",
+
+        language,
+
+        knowledge_count:
+          knowledge.length,
+
+        model:
+          "supabase-fallback"
+      });
+    }
+
+    /*
+     * ========================================================
+     * 8. FINAL ERROR
+     * ========================================================
      */
 
     return res.status(503).json({
       error:
-        "Gemini AI is temporarily unavailable. Please try again shortly.",
+        "የመልስ አገልግሎቱ ለጊዜው አልተገኘም። እባክዎ እንደገና ይሞክሩ።",
+
       details:
         lastError ||
         "All Gemini models were unavailable."
