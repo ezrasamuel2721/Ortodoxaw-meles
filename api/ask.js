@@ -1,4 +1,5 @@
 // api/ask.js
+// Orthodox Answer — focused theological answer engine
 
 const SUPABASE_URL =
   process.env.SUPABASE_URL ||
@@ -110,6 +111,9 @@ function languageMatches(row, language) {
   );
 }
 
+/*
+ * Fetch lessons from Supabase.
+ */
 async function getLessons() {
   if (!SUPABASE_ANON_KEY) {
     throw new Error(
@@ -162,166 +166,346 @@ async function getLessons() {
   return data;
 }
 
+/*
+ * Remove common punctuation and normalize
+ * Amharic / multilingual search text.
+ */
+function tokenize(value) {
+  return normalize(value)
+    .split(/\s+/)
+    .filter(word => word.length >= 2);
+}
+
+/*
+ * Build meaningful search terms.
+ *
+ * Important:
+ * We don't simply search every word equally.
+ * The question itself gets the highest weight.
+ */
+function getSearchTerms(question) {
+  const words = tokenize(question);
+
+  const stopWords = new Set([
+    "ምን",
+    "ምንድን",
+    "ነው",
+    "ምንድ",
+    "እንዴት",
+    "ለምን",
+    "ማለት",
+    "የሚለው",
+    "የሚለውን",
+    "ስለ",
+    "ነውን",
+    "what",
+    "is",
+    "are",
+    "the",
+    "a",
+    "an",
+    "how",
+    "why",
+    "about",
+    "of",
+    "does",
+    "mean"
+  ]);
+
+  return [
+    ...new Set(
+      words.filter(
+        word => !stopWords.has(word)
+      )
+    )
+  ];
+}
+
+/*
+ * Score one database row.
+ *
+ * The critical improvement here is that:
+ * - exact question is extremely strong
+ * - title/question matching is much stronger
+ * - category matching is useful
+ * - random words inside a long answer have very low weight
+ *
+ * Therefore an unrelated lesson is unlikely
+ * to enter the final context.
+ */
+function scoreRow(row, question, language) {
+  if (!languageMatches(row, language)) {
+    return {
+      row,
+      score: -1,
+      matchedTerms: []
+    };
+  }
+
+  const q = normalize(question);
+
+  const qText =
+    normalize(rowQuestion(row));
+
+  const answerText =
+    normalize(rowAnswer(row));
+
+  const category =
+    normalize(row.category);
+
+  const terms =
+    getSearchTerms(question);
+
+  let score = 0;
+  const matchedTerms = [];
+
+  /*
+   * Exact question.
+   */
+  if (qText === q) {
+    score += 20000;
+  }
+
+  /*
+   * Database question contains the complete user question.
+   */
+  if (qText.includes(q)) {
+    score += 10000;
+  }
+
+  /*
+   * User's main terms.
+   */
+  for (const term of terms) {
+    let matched = false;
+
+    if (qText.includes(term)) {
+      score += 1500;
+      matched = true;
+    }
+
+    if (category.includes(term)) {
+      score += 800;
+      matched = true;
+    }
+
+    /*
+     * Answer text is intentionally weak.
+     * This prevents unrelated lessons from
+     * becoming relevant simply because they
+     * mention one common word.
+     */
+    if (answerText.includes(term)) {
+      score += 40;
+      matched = true;
+    }
+
+    if (matched) {
+      matchedTerms.push(term);
+    }
+  }
+
+  /*
+   * Reward rows matching multiple important terms.
+   */
+  if (terms.length > 0) {
+    const ratio =
+      matchedTerms.length / terms.length;
+
+    if (ratio >= 1) {
+      score += 5000;
+    } else if (ratio >= 0.75) {
+      score += 2500;
+    } else if (ratio >= 0.5) {
+      score += 1000;
+    }
+  }
+
+  return {
+    row,
+    score,
+    matchedTerms
+  };
+}
+
+/*
+ * Find only strongly relevant lessons.
+ *
+ * IMPORTANT:
+ * We no longer blindly return five rows.
+ */
 function findRelevantLessons(
   rows,
   question,
   language
 ) {
-  const q = normalize(question);
-
-  const queryWords = [
-    ...new Set(
-      q
-        .split(/\s+/)
-        .filter(word => word.length >= 2)
-    )
-  ];
-
-  const ranked = rows
-    .map(row => {
-      if (!languageMatches(row, language)) {
-        return {
+  const scored =
+    rows
+      .map(row =>
+        scoreRow(
           row,
-          score: 0
-        };
-      }
+          question,
+          language
+        )
+      )
+      .filter(
+        item =>
+          item.score >= 1000
+      )
+      .sort(
+        (a, b) =>
+          b.score - a.score
+      );
 
-      const questionText =
-        normalize(rowQuestion(row));
+  if (!scored.length) {
+    return [];
+  }
 
-      const answerText =
-        normalize(rowAnswer(row));
+  /*
+   * Always keep the strongest result.
+   */
+  const strongest =
+    scored[0];
 
-      const category =
-        normalize(row.category);
+  /*
+   * Only allow additional sources when
+   * they are genuinely close to the strongest.
+   *
+   * This is the main protection against
+   * mixing unrelated subjects.
+   */
+  const selected = scored.filter(
+    item =>
+      item === strongest ||
+      item.score >=
+        strongest.score * 0.35
+  );
 
-      let score = 0;
-
-      if (
-        questionText === q
-      ) {
-        score += 10000;
-      }
-
-      if (
-        questionText.includes(q)
-      ) {
-        score += 4000;
-      }
-
-      for (const word of queryWords) {
-        if (questionText.includes(word)) {
-          score += 500;
-        }
-
-        if (category.includes(word)) {
-          score += 250;
-        }
-
-        if (answerText.includes(word)) {
-          score += 30;
-        }
-      }
-
-      return {
-        row,
-        score
-      };
-    })
-    .filter(item => item.score > 0)
-    .sort(
-      (a, b) => b.score - a.score
-    );
-
-  return ranked.slice(0, 5);
+  /*
+   * Maximum 3 highly related sources.
+   */
+  return selected.slice(0, 3);
 }
 
 function buildSources(items) {
-  return items.map(item => ({
-    score: item.score,
+  return items.map(
+    item => ({
+      score: item.score,
 
-    question: clean(
-      rowQuestion(item.row)
-    ),
+      question: clean(
+        rowQuestion(item.row)
+      ),
 
-    category: clean(
-      item.row.category
-    ),
+      category: clean(
+        item.row.category
+      ),
 
-    language: getRowLanguage(item.row),
+      language:
+        getRowLanguage(item.row),
 
-    answer: clean(
-      rowAnswer(item.row)
-    ).slice(0, 12000),
+      answer: clean(
+        rowAnswer(item.row)
+      ).slice(0, 14000),
 
-    bible_references: clean(
-      item.row.bible_references
-    ),
+      bible_references:
+        clean(
+          item.row.bible_references
+        ),
 
-    church_sources: clean(
-      item.row.church_sources
-    )
-  }));
+      church_sources:
+        clean(
+          item.row.church_sources
+        )
+    })
+  );
 }
 
+/*
+ * Direct Supabase fallback.
+ *
+ * IMPORTANT:
+ * Only the selected relevant sources
+ * are returned. No unrelated lessons.
+ */
 function buildDirectAnswer(
   sources,
   question,
   language
 ) {
   if (!sources.length) {
-    return language === "am"
-      ? `ይቅርታ፣ ለ«${question}» በአሁኑ ጊዜ በእውቀት መሠረቱ ውስጥ በቂ ተዛማጅ ትምህርት አልተገኘም።`
-      : `No directly matching teaching was found for "${question}".`;
+    if (language === "am") {
+      return [
+        "### የጥያቄዎ መልስ",
+        "",
+        `«${question}»`,
+        "",
+        "በአሁኑ ጊዜ በእውቀት መሠረቱ ውስጥ ለዚህ ጥያቄ በቂ ተዛማጅ የሆነ ትምህርት አልተገኘም።",
+        "",
+        "ከጥያቄው ጋር በቀጥታ የሚዛመድ ምንጭ ሲገኝ በዚያ መሠረት የተደራጀ መልስ ይቀርባል።"
+      ].join("\n");
+    }
+
+    return `No sufficiently relevant teaching was found for "${question}".`;
   }
 
-  const parts = sources
-    .map((source, index) => {
-      const title =
-        source.question ||
-        `Teaching ${index + 1}`;
+  const primary =
+    sources[0];
 
-      const answer =
-        source.answer;
+  const title =
+    primary.question ||
+    "የጥያቄዎ ትምህርት";
 
-      const references = [];
+  const references = [];
 
-      if (source.bible_references) {
-        references.push(
-          `መጽሐፍ ቅዱስ: ${source.bible_references}`
-        );
-      }
+  if (primary.bible_references) {
+    references.push(
+      `**መጽሐፍ ቅዱስ:** ${primary.bible_references}`
+    );
+  }
 
-      if (source.church_sources) {
-        references.push(
-          `የቤተ ክርስቲያን ምንጮች: ${source.church_sources}`
-        );
-      }
-
-      return [
-        `## ${title}`,
-        answer,
-        references.length
-          ? `\n${references.join("\n")}`
-          : ""
-      ].join("\n");
-    });
+  if (primary.church_sources) {
+    references.push(
+      `**የቤተ ክርስቲያን ምንጮች:** ${primary.church_sources}`
+    );
+  }
 
   if (language === "am") {
     return [
-      `### የጥያቄዎ መልስ`,
-      `«${question}»`,
+      "### የጥያቄዎ መልስ",
       "",
-      parts.join("\n\n---\n\n"),
+      `## ${title}`,
+      "",
+      primary.answer,
+      "",
+      references.length
+        ? references.join("\n")
+        : "",
       "",
       "### መደምደሚያ",
-      "ይህ መልስ በኦርቶዶክሳዊ ትምህርት የተገኘውን የእውቀት መሠረት በመጠቀም ቀጥታ ተዘጋጅቷል።"
-    ].join("\n");
+      "",
+      "ከጥያቄው ጋር በቀጥታ ከተዛመደው የእውቀት መሠረት በመነሳት የተዘጋጀ መልስ ነው።"
+    ]
+      .filter(Boolean)
+      .join("\n");
   }
 
-  return parts.join("\n\n---\n\n");
+  return [
+    `## ${title}`,
+    "",
+    primary.answer,
+    "",
+    references.join("\n")
+  ]
+    .filter(Boolean)
+    .join("\n");
 }
 
+/*
+ * Gemini answer generation.
+ *
+ * Gemini is explicitly instructed to stay
+ * inside the question's subject.
+ */
 async function askGemini(
   question,
   languageName,
@@ -343,80 +527,132 @@ You are the theological answer engine
 inside the Ethiopian Orthodox Tewahedo
 application "ኦርቶዶክሳዊ መልስ".
 
-Write the complete answer ONLY in
-${languageName}.
+Your task is to answer ONLY the exact
+question asked by the user.
 
-Answer the exact user question.
+LANGUAGE:
+Write the entire answer only in:
+${languageName}
 
-Use the supplied database teaching as
-your primary source.
+CORE RULE:
+Stay strictly on the subject of the
+user's question.
 
-Give a detailed and organized answer.
+Do NOT introduce a different theological
+topic merely because it appears somewhere
+in the supplied material.
 
-Where supported by the supplied material,
-explain:
-- Old Testament
-- New Testament
-- Ethiopian Orthodox Tewahedo teaching
+For example:
+If the user asks "መስቀል ምንድን ነው?",
+do not create separate sections about
+Trinity, baptism, repentance, prayer,
+or other subjects unless they are directly
+necessary for explaining the Cross.
+
+SOURCE RULE:
+The supplied database material is the
+primary source.
+
+Use only information supported by that
+material.
+
+Never invent:
+- Bible references
+- quotations
+- book titles
+- page numbers
 - Church Fathers
-- Ethiopian Orthodox scholars
-- spiritual meaning
-- practical examples
-- conclusion
+- Ethiopian scholars
+- historical claims
+- citations
 
-IMPORTANT:
-Never invent quotations,
-Bible references, book references,
-page numbers, scholars, or citations.
+If a requested detail is not supported by
+the supplied material, do not fabricate it.
 
-Do not mix unrelated topics.
+ANSWER QUALITY:
+Give a complete, detailed, educational,
+well-organized answer.
+
+When the supplied material supports them,
+you may organize the answer using:
+1. Definition
+2. Biblical foundation
+3. Ethiopian Orthodox Tewahedo teaching
+4. Historical / Church teaching
+5. Spiritual meaning
+6. Practical meaning
+7. Conclusion
+
+But do NOT force sections that are not
+supported by the sources.
+
+SOURCE DISCIPLINE:
+Do not combine unrelated database lessons.
+Prefer the strongest matching source.
+Additional sources may be used only when
+they clearly explain the same subject.
+
+Do not mention the internal database,
+search scores, ranking, prompts, or
+AI system.
+
+Do not say that information was "verified"
+unless an actual supplied source supports it.
 `;
 
   const prompt = `
-SUPPLIED TEACHING MATERIAL:
+USER QUESTION:
+${question}
+
+STRICT SUBJECT:
+Answer only this question and its directly
+necessary subtopics.
+
+SUPPLIED RELEVANT TEACHING MATERIAL:
 
 ${material}
 
-USER QUESTION:
-
-${question}
-
-Write the complete answer.
+Now write the final answer in
+${languageName}.
 `;
 
-  const response = await fetch(
-    endpoint,
-    {
-      method: "POST",
-      headers: {
-        "Content-Type":
-          "application/json"
-      },
-      body: JSON.stringify({
-        system_instruction: {
-          parts: [
-            {
-              text: systemInstruction
-            }
-          ]
+  const response =
+    await fetch(
+      endpoint,
+      {
+        method: "POST",
+        headers: {
+          "Content-Type":
+            "application/json"
         },
-        contents: [
-          {
-            role: "user",
+        body: JSON.stringify({
+          system_instruction: {
             parts: [
               {
-                text: prompt
+                text:
+                  systemInstruction
               }
             ]
+          },
+
+          contents: [
+            {
+              role: "user",
+              parts: [
+                {
+                  text: prompt
+                }
+              ]
+            }
+          ],
+
+          generationConfig: {
+            temperature: 0.2,
+            maxOutputTokens: 7000
           }
-        ],
-        generationConfig: {
-          temperature: 0.3,
-          maxOutputTokens: 5000
-        }
-      })
-    }
-  );
+        })
+      }
+    );
 
   const text =
     await response.text();
@@ -424,9 +660,10 @@ Write the complete answer.
   let data;
 
   try {
-    data = text
-      ? JSON.parse(text)
-      : null;
+    data =
+      text
+        ? JSON.parse(text)
+        : null;
   } catch {
     throw new Error(
       `Gemini invalid JSON (${response.status})`
@@ -438,21 +675,21 @@ Write the complete answer.
       data?.error?.message ||
       `HTTP ${response.status}`;
 
-    const quota =
-      response.status === 429;
-
-    const busy =
-      response.status === 503;
-
     const errorObject =
       new Error(error);
 
-    errorObject.code =
-      quota
-        ? "QUOTA"
-        : busy
-        ? "BUSY"
-        : "GEMINI_ERROR";
+    if (response.status === 429) {
+      errorObject.code =
+        "QUOTA";
+    } else if (
+      response.status === 503
+    ) {
+      errorObject.code =
+        "BUSY";
+    } else {
+      errorObject.code =
+        "GEMINI_ERROR";
+    }
 
     throw errorObject;
   }
@@ -475,32 +712,35 @@ Write the complete answer.
   return answer;
 }
 
+/*
+ * Only send relevant sources to Gemini.
+ */
 function materialForGemini(
   sources
 ) {
   if (!sources.length) {
-    return "No directly matching database lesson was found.";
+    return "";
   }
 
   return sources
     .map(
       (source, index) =>
         `
-SOURCE ${index + 1}
+RELEVANT SOURCE ${index + 1}
 
-Question:
+Source question:
 ${source.question}
 
 Category:
 ${source.category}
 
 Bible references:
-${source.bible_references}
+${source.bible_references || "Not supplied"}
 
 Church sources:
-${source.church_sources}
+${source.church_sources || "Not supplied"}
 
-Lesson:
+Teaching:
 ${source.answer}
 `
     )
@@ -511,6 +751,28 @@ export default async function handler(
   req,
   res
 ) {
+  /*
+   * CORS
+   */
+  res.setHeader(
+    "Access-Control-Allow-Origin",
+    "*"
+  );
+
+  res.setHeader(
+    "Access-Control-Allow-Methods",
+    "POST, OPTIONS"
+  );
+
+  res.setHeader(
+    "Access-Control-Allow-Headers",
+    "Content-Type"
+  );
+
+  if (req.method === "OPTIONS") {
+    return res.status(200).end();
+  }
+
   if (req.method !== "POST") {
     return res.status(405).json({
       success: false,
@@ -544,6 +806,9 @@ export default async function handler(
       LANGUAGE_NAMES[language] ||
       LANGUAGE_NAMES.am;
 
+    /*
+     * 1. Load database.
+     */
     let rows;
 
     try {
@@ -558,10 +823,15 @@ export default async function handler(
       return res.status(500).json({
         success: false,
         stage: "supabase",
-        error: error.message
+        error:
+          error?.message ||
+          "Supabase error"
       });
     }
 
+    /*
+     * 2. Find strongly relevant material.
+     */
     const relevant =
       findRelevantLessons(
         rows,
@@ -569,18 +839,43 @@ export default async function handler(
         language
       );
 
+    /*
+     * 3. Build clean source objects.
+     */
     const sources =
       buildSources(
         relevant
       );
 
+    console.log(
+      "QUESTION:",
+      question
+    );
+
+    console.log(
+      "LANGUAGE:",
+      language
+    );
+
+    console.log(
+      "RELEVANT SOURCES:",
+      sources.map(
+        source => ({
+          question:
+            source.question,
+          category:
+            source.category
+        })
+      )
+    );
+
     /*
-     * IMPORTANT:
-     * Supabase is the fallback.
-     * Gemini is optional.
+     * 4. Try Gemini only when we have
+     * actual relevant material.
      */
     let answer = null;
-    let aiStatus = "not_used";
+    let aiStatus =
+      "not_used";
 
     if (sources.length > 0) {
       try {
@@ -597,7 +892,8 @@ export default async function handler(
           );
 
         if (answer) {
-          aiStatus = "gemini";
+          aiStatus =
+            "gemini";
         }
       } catch (error) {
         console.error(
@@ -605,18 +901,26 @@ export default async function handler(
           error
         );
 
-        aiStatus =
-          error.code === "QUOTA"
-            ? "quota_fallback"
-            : error.code === "BUSY"
-            ? "busy_fallback"
-            : "error_fallback";
+        if (
+          error?.code === "QUOTA"
+        ) {
+          aiStatus =
+            "quota_fallback";
+        } else if (
+          error?.code === "BUSY"
+        ) {
+          aiStatus =
+            "busy_fallback";
+        } else {
+          aiStatus =
+            "error_fallback";
+        }
       }
     }
 
     /*
-     * If Gemini is unavailable,
-     * ALWAYS return the database answer.
+     * 5. If Gemini fails, return ONLY
+     * the strongest relevant database lesson.
      */
     if (!answer) {
       answer =
@@ -627,15 +931,27 @@ export default async function handler(
         );
     }
 
+    /*
+     * 6. Final response.
+     */
     return res.status(200).json({
       success: true,
+
       answer,
+
       language,
+
       model:
         aiStatus === "gemini"
           ? MODEL_NAME
           : "supabase-fallback",
-      ai_status: aiStatus,
+
+      ai_status:
+        aiStatus,
+
+      source_count:
+        sources.length,
+
       sources
     });
 
