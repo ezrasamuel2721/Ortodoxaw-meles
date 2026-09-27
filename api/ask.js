@@ -1,11 +1,11 @@
-// api/ask.js
+/// api/ask.js
 
-const SUPABASE_URL =
-  process.env.SUPABASE_URL ||
-  "https://geznekrpdubpgsegseer.supabase.co";
-
-const SUPABASE_ANON_KEY =
-  process.env.SUPABASE_ANON_KEY || "";
+export default async function handler(req, res) {
+  return res.status(200).json({
+    success: true,
+    message: "API is working",
+  });
+}
 
 const GEMINI_API_KEY =
   process.env.GEMINI_API_KEY || "";
