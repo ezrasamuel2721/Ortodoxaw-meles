@@ -405,10 +405,6 @@ function scoreRow(
       hit = true;
     }
 
-    /*
-     * Answer-body matches are intentionally weak.
-     * They must never rescue an unrelated lesson.
-     */
     if (answer.includes(word)) {
       score += 8;
       hit = true;
@@ -419,10 +415,6 @@ function scoreRow(
     }
   }
 
-  /*
-   * The question/category must contain the subject.
-   * This is the main protection against mixing topics.
-   */
   if (
     questionHits === 0 &&
     categoryHits === 0
@@ -430,9 +422,6 @@ function scoreRow(
     return 0;
   }
 
-  /*
-   * Multi-word questions need reasonable coverage.
-   */
   if (
     qWords.length >= 2 &&
     totalHits <
@@ -445,9 +434,6 @@ function scoreRow(
     score += 1200;
   }
 
-  /*
-   * Strong language preference.
-   */
   score += 800;
 
   return Math.max(0, score);
@@ -497,14 +483,6 @@ async function supabaseGet(path) {
   return data;
 }
 
-/*
- * IMPORTANT:
- * Use select=* instead of naming every column.
- *
- * This prevents the whole API from failing if the table
- * does not contain an optional column such as
- * comparison_group or education_level.
- */
 async function getLessons() {
   return await supabaseGet(
     "orthodox_answers?select=*&limit=1000"
@@ -684,4 +662,6 @@ SOURCE DISCIPLINE:
 - If a detail is not established by the supplied material, explain cautiously.
 
 ORTHODOX PERSPECTIVE:
-Present the teaching from the perspective of
+Present the teaching from the perspective of the Ethiopian Orthodox Tewahedo Church tradition and its canonical teachings.
+`.trim();
+}
