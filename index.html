@@ -591,49 +591,33 @@ type="button">
 
 </div>
 
-<nav
-class="menu"
-id="mainMenu">
+<nav class="menu" id="mainMenu">
 
-<button
-type="button"
-data-section="home">
+<button type="button" data-section="home">
 🏠 <span data-i18n="home">መነሻ</span>
 </button>
 
-<button
-type="button"
-data-section="ask">
+<button type="button" data-section="ask">
 ❓ <span data-i18n="askMenu">ጥያቄ ጠይቅ</span>
 </button>
 
-<button
-type="button"
-data-section="recent">
+<button type="button" data-section="recent">
 📋 <span data-i18n="recent">የቅርብ ጥያቄዎች</span>
 </button>
 
-<button
-type="button"
-id="languageMenuButton">
+<button type="button" id="languageMenuButton">
 🌐 <span data-i18n="language">ቋንቋ</span>
 </button>
 
-<button
-type="button"
-id="darkModeButton">
+<button type="button" id="darkModeButton">
 🌙 <span data-i18n="dark">ጨለማ ሁነታ</span>
 </button>
 
-<button
-type="button"
-id="booksButton">
+<button type="button" id="booksButton">
 📖 <span data-i18n="books">መጻሕፍት</span>
 </button>
 
-<button
-type="button"
-id="aboutButton">
+<button type="button" id="aboutButton">
 ℹ️ <span data-i18n="about">ስለ አፑ</span>
 </button>
 
@@ -643,9 +627,7 @@ id="aboutButton">
 </header>
 
 
-<section
-class="hero"
-id="home">
+<section class="hero" id="home">
 
 <div class="hero-content">
 
@@ -667,18 +649,13 @@ id="home">
 
 <div class="container">
 
-
-<section
-class="card"
-id="ask">
+<section class="card" id="ask">
 
 <h2 id="askTitle">
 መንፈሳዊ ጥያቄዎን ይጠይቁ
 </h2>
 
-<p
-class="card-description"
-id="askDescription">
+<p class="card-description" id="askDescription">
 ጥያቄዎን በግልጽ ይጻፉ።
 </p>
 
@@ -706,17 +683,13 @@ type="button">
 
 </div>
 
-<div
-class="language-panel"
-id="languagePanel">
+<div class="language-panel" id="languagePanel">
 
-<label for="languageSelect">
+<label for="languageSelect" id="languageLabel">
 የመልስ ቋንቋ
 </label>
 
-<select
-class="language-select"
-id="languageSelect">
+<select class="language-select" id="languageSelect">
 
 <option value="am">አማርኛ</option>
 <option value="en">English</option>
@@ -734,43 +707,28 @@ id="languageSelect">
 
 </div>
 
-<div
-class="status"
-id="status">
-</div>
+<div class="status" id="status"></div>
 
 </section>
 
 
-<section
-class="card answer-card"
-id="answerCard">
+<section class="card answer-card" id="answerCard">
 
 <div class="answer-header">
 
-<div
-class="answer-title"
-id="answerTitle">
+<div class="answer-title" id="answerTitle">
 መልስ
 </div>
 
-<span
-class="answer-language"
-id="answerLanguage">
+<span class="answer-language" id="answerLanguage">
 AM
 </span>
 
 </div>
 
-<div
-class="answer-body"
-id="answerBody">
-</div>
+<div class="answer-body" id="answerBody"></div>
 
-<div
-class="source"
-id="sourceBox"
-style="display:none">
+<div class="source" id="sourceBox" style="display:none">
 
 <strong id="sourceLabel">
 ምንጭ
@@ -782,24 +740,15 @@ style="display:none">
 
 <div class="answer-actions">
 
-<button
-class="small-btn"
-id="copyButton"
-type="button">
+<button class="small-btn" id="copyButton" type="button">
 📋 Copy
 </button>
 
-<button
-class="small-btn"
-id="shareButton"
-type="button">
+<button class="small-btn" id="shareButton" type="button">
 ↗ Share
 </button>
 
-<button
-class="small-btn"
-id="speakButton"
-type="button">
+<button class="small-btn" id="speakButton" type="button">
 🔊 አንብብ
 </button>
 
@@ -859,18 +808,13 @@ type="button">
 </section>
 
 
-<section
-class="card"
-id="recent"
-style="margin-top:22px">
+<section class="card" id="recent" style="margin-top:22px">
 
 <h2 id="recentTitle">
 የቅርብ ጥያቄዎች
 </h2>
 
-<p
-class="card-description"
-id="recentDescription">
+<p class="card-description" id="recentDescription">
 በዚህ መድረክ የተጠየቁ ጥያቄዎች።
 </p>
 
@@ -886,9 +830,7 @@ id="recentDescription">
 
 <footer class="footer">
 
-<div
-class="footer-title"
-id="footerTitle">
+<div class="footer-title" id="footerTitle">
 ኦርቶዶክሳዊ መልስ
 </div>
 
@@ -903,9 +845,7 @@ Created by Ezra Samuel Abebe
 </footer>
 
 
-<div
-class="modal"
-id="booksModal">
+<div class="modal" id="booksModal">
 
 <div class="modal-content">
 
@@ -935,9 +875,7 @@ type="button">
 </div>
 
 
-<div
-class="modal"
-id="aboutModal">
+<div class="modal" id="aboutModal">
 
 <div class="modal-content">
 
@@ -970,7 +908,7 @@ type="button">
 <script>
 
 /* =====================================================
-   SUPABASE CONNECTION
+   SUPABASE
    ===================================================== */
 
 const SUPABASE_URL =
@@ -984,24 +922,6 @@ window.supabase.createClient(
   SUPABASE_URL,
   SUPABASE_ANON_KEY
 );
-
-
-/* =====================================================
-   TABLE NAMES
-   ===================================================== */
-
-/*
-  orthodox_answers
-  ----------------
-  ዋናው የመልስ መረጃ ቋት ነው።
-
-  questions
-  ---------
-  ተጠቃሚዎች የጠየቁትን ጥያቄ ለማስቀመጥ ነው።
-*/
-
-const ANSWERS_TABLE = "orthodox_answers";
-const QUESTIONS_TABLE = "questions";
 
 
 /* =====================================================
@@ -1149,7 +1069,7 @@ books:"መጻሕፍት",
 about:"ስለ አፑ",
 searching:"መልስ እየፈለግን ነው...",
 empty:"እባክዎ ጥያቄዎን ይጻፉ።",
-saved:"መልሱ ተገኝቷል።",
+saved:"ጥያቄዎ ተመዝግቧል።",
 notFound:"ለዚህ ጥያቄ ተዛማጅ መልስ አልተገኘም።",
 error:"መረጃውን ማምጣት አልተቻለም።",
 recentTitle:"የቅርብ ጥያቄዎች",
@@ -1159,7 +1079,11 @@ booksInfoText:"በታማኝ መንፈሳዊ ምንጮች ላይ የተመሠረ�
 teaching:"ኦርቶዶክሳዊ ትምህርት",
 teachingText:"የቤተ ክርስቲያንን ትምህርት የሚያከብር።",
 languages:"11 ቋንቋዎች",
-languageLabel:"የመልስ ቋንቋ"
+languageLabel:"የመልስ ቋንቋ",
+loadingRecent:"እየጫነ...",
+noRecent:"ምንም ጥያቄዎች አልተገኙም።",
+recentError:"መረጃውን መጫን አልተቻለም።",
+copied:"ተገልብጧል።"
 },
 
 en:{
@@ -1175,3 +1099,1887 @@ answer:"Answer",
 source:"Source",
 home:"Home",
 askMenu:"Ask a Question",
+recent:"Recent Questions",
+language:"Language",
+dark:"Dark Mode",
+books:"Books",
+about:"About",
+searching:"Searching for an answer...",
+empty:"Please write your question.",
+saved:"Your question has been saved.",
+notFound:"No matching answer was found.",
+error:"The information could not be loaded.",
+recentTitle:"Recent Questions",
+recentDesc:"Questions submitted through this platform.",
+booksInfo:"Holy Scriptures",
+booksInfoText:"Answers based on trusted spiritual sources.",
+teaching:"Orthodox Teaching",
+teachingText:"Respecting the teaching of the Church.",
+languages:"11 Languages",
+languageLabel:"Answer Language",
+loadingRecent:"Loading...",
+noRecent:"No questions found.",
+recentError:"Could not load information.",
+copied:"Copied."
+},
+
+ti:{
+brand:"ኦርቶዶክሳዊ መልሲ",
+subtitle:"መንፈሳዊ ሕቶን መልስን",
+hero:"ምሕታት ሊቅ ይገብረካ",
+heroText:"መንፈሳዊ ሕቶኻ ሕተት፤ ብትምህርቲ ኦርቶዶክስ መልሲ ርኸብ።",
+ask:"መንፈሳዊ ሕቶኻ ሕተት",
+askDesc:"ሕቶኻ ብግልጺ ጽሓፍ።",
+find:"🔎 መልሲ ድለ",
+clear:"ኣጽርይ",
+answer:"መልሲ",
+source:"ምንጪ",
+home:"መበገሲ",
+askMenu:"ሕቶ ሕተት",
+recent:"ናይ ቀረባ ሕቶታት",
+language:"ቋንቋ",
+dark:"ጸልማት ሁነታ",
+books:"መጻሕፍቲ",
+about:"ብዛዕባ",
+searching:"መልሲ እናደለና ኢና...",
+empty:"በጃኻ ሕቶኻ ጽሓፍ።",
+saved:"ሕቶኻ ተመዝጊቡ።",
+notFound:"ዝሰማማዕ መልሲ ኣይተረኽበን።",
+error:"ሓበሬታ ምምጻእ ኣይተኻእለን።",
+recentTitle:"ናይ ቀረባ ሕቶታት",
+recentDesc:"ኣብዚ መድረኽ ዝቐረቡ ሕቶታት።",
+booksInfo:"ቅዱሳት መጻሕፍቲ",
+booksInfoText:"ኣብ ዝተኣማመኑ መንፈሳዊ ምንጭታት ዝተመስረተ መልሲ።",
+teaching:"ትምህርቲ ኦርቶዶክስ",
+teachingText:"ትምህርቲ ቤተ ክርስቲያን ዝኽብር።",
+languages:"11 ቋንቋታት",
+languageLabel:"ቋንቋ መልሲ",
+loadingRecent:"እየጫነ...",
+noRecent:"ምንም ሕቶታት ኣይተረኽቡን።",
+recentError:"ሓበሬታ ምጽናዕ ኣይተኻእለን።",
+copied:"ተቐዲሑ።"
+},
+
+om:{
+brand:"Deebii Ortodoksii",
+subtitle:"Gaaffii fi Deebii Hafuuraa",
+hero:"Gaafachuun ogeessa si taasisa",
+heroText:"Gaaffii kee gaafadhu; deebii barsiisa Ortodoksii irratti hundaa'e argadhu.",
+ask:"Gaaffii Hafuuraa Kee Gaafadhu",
+askDesc:"Gaaffii kee ifatti barreessi.",
+find:"🔎 Deebii Barbaadi",
+clear:"Haqi",
+answer:"Deebii",
+source:"Madda",
+home:"Mana",
+askMenu:"Gaaffii Gaafadhu",
+recent:"Gaaffilee Dhihoo",
+language:"Afaan",
+dark:"Haala Dukkanaa",
+books:"Kitaabota",
+about:"Waa'ee",
+searching:"Deebii barbaadaa jira...",
+empty:"Maaloo gaaffii kee barreessi.",
+saved:"Gaaffiin kee galmaa'eera.",
+notFound:"Deebiin wal fakkaatu hin argamne.",
+error:"Odeeffannoo fiduu hin dandeenye.",
+recentTitle:"Gaaffilee Dhihoo",
+recentDesc:"Gaaffilee karaa kanaan dhiyaatan.",
+booksInfo:"Kitaaba Qulqulluu",
+booksInfoText:"Deebii maddoota hafuuraa amanamoo irratti hundaa'e.",
+teaching:"Barsiisa Ortodoksii",
+teachingText:"Barsiisa Mana Kiristaanaa kabaju.",
+languages:"Afaanota 11",
+languageLabel:"Afaan Deebii",
+loadingRecent:"Fe'aa jira...",
+noRecent:"Gaaffileen hin argamne.",
+recentError:"Odeeffannoo fe'uu hin dandeenye.",
+copied:"Garagalchame."
+},
+
+ar:{
+brand:"الإجابة الأرثوذكسية",
+subtitle:"الأسئلة والأجوبة الروحية",
+hero:"السؤال يجعلك حكيماً",
+heroText:"اطرح سؤالك الروحي واحصل على إجابة مبنية على التعليم الأرثوذكسي.",
+ask:"اطرح سؤالك الروحي",
+askDesc:"اكتب سؤالك بوضوح.",
+find:"🔎 ابحث عن إجابة",
+clear:"مسح",
+answer:"الإجابة",
+source:"المصدر",
+home:"الرئيسية",
+askMenu:"اسأل سؤالاً",
+recent:"الأسئلة الأخيرة",
+language:"اللغة",
+dark:"الوضع الداكن",
+books:"الكتب",
+about:"حول التطبيق",
+searching:"جارٍ البحث عن إجابة...",
+empty:"يرجى كتابة سؤالك.",
+saved:"تم حفظ سؤالك.",
+notFound:"لم يتم العثور على إجابة مطابقة.",
+error:"تعذر تحميل المعلومات.",
+recentTitle:"الأسئلة الأخيرة",
+recentDesc:"الأسئلة المرسلة عبر هذه المنصة.",
+booksInfo:"الكتب المقدسة",
+booksInfoText:"إجابات مبنية على مصادر روحية موثوقة.",
+teaching:"التعليم الأرثوذكسي",
+teachingText:"احترام تعليم الكنيسة.",
+languages:"11 لغة",
+languageLabel:"لغة الإجابة",
+loadingRecent:"جارٍ التحميل...",
+noRecent:"لم يتم العثور على أسئلة.",
+recentError:"تعذر تحميل المعلومات.",
+copied:"تم النسخ."
+},
+
+fr:{
+brand:"Réponse Orthodoxe",
+subtitle:"Questions et réponses spirituelles",
+hero:"Demander rend sage",
+heroText:"Posez votre question spirituelle et trouvez une réponse fondée sur l'enseignement orthodoxe.",
+ask:"Posez votre question spirituelle",
+askDesc:"Écrivez clairement votre question.",
+find:"🔎 Chercher une réponse",
+clear:"Effacer",
+answer:"Réponse",
+source:"Source",
+home:"Accueil",
+askMenu:"Poser une question",
+recent:"Questions récentes",
+language:"Langue",
+dark:"Mode sombre",
+books:"Livres",
+about:"À propos",
+searching:"Recherche d'une réponse...",
+empty:"Veuillez écrire votre question.",
+saved:"Votre question a été enregistrée.",
+notFound:"Aucune réponse correspondante n'a été trouvée.",
+error:"Impossible de charger les informations.",
+recentTitle:"Questions récentes",
+recentDesc:"Questions envoyées sur cette plateforme.",
+booksInfo:"Saintes Écritures",
+booksInfoText:"Réponses fondées sur des sources spirituelles fiables.",
+teaching:"Enseignement orthodoxe",
+teachingText:"Respect de l'enseignement de l'Église.",
+languages:"11 langues",
+languageLabel:"Langue de réponse",
+loadingRecent:"Chargement...",
+noRecent:"Aucune question trouvée.",
+recentError:"Impossible de charger les informations.",
+copied:"Copié."
+},
+
+de:{
+brand:"Orthodoxe Antwort",
+subtitle:"Geistliche Fragen und Antworten",
+hero:"Fragen macht weise",
+heroText:"Stellen Sie Ihre geistliche Frage und erhalten Sie eine Antwort auf Grundlage der orthodoxen Lehre.",
+ask:"Ihre geistliche Frage",
+askDesc:"Schreiben Sie Ihre Frage klar auf.",
+find:"🔎 Antwort suchen",
+clear:"Löschen",
+answer:"Antwort",
+source:"Quelle",
+home:"Startseite",
+askMenu:"Frage stellen",
+recent:"Letzte Fragen",
+language:"Sprache",
+dark:"Dunkelmodus",
+books:"Bücher",
+about:"Über",
+searching:"Antwort wird gesucht...",
+empty:"Bitte schreiben Sie Ihre Frage.",
+saved:"Ihre Frage wurde gespeichert.",
+notFound:"Keine passende Antwort gefunden.",
+error:"Informationen konnten nicht geladen werden.",
+recentTitle:"Letzte Fragen",
+recentDesc:"Über diese Plattform gestellte Fragen.",
+booksInfo:"Heilige Schriften",
+booksInfoText:"Antworten auf Grundlage vertrauenswürdiger geistlicher Quellen.",
+teaching:"Orthodoxe Lehre",
+teachingText:"Achtung vor der Lehre der Kirche.",
+languages:"11 Sprachen",
+languageLabel:"Antwortsprache",
+loadingRecent:"Wird geladen...",
+noRecent:"Keine Fragen gefunden.",
+recentError:"Informationen konnten nicht geladen werden.",
+copied:"Kopiert."
+},
+
+it:{
+brand:"Risposta Ortodossa",
+subtitle:"Domande e risposte spirituali",
+hero:"Chiedere rende saggi",
+heroText:"Fai la tua domanda spirituale e trova una risposta basata sull'insegnamento ortodosso.",
+ask:"Fai la tua domanda spirituale",
+askDesc:"Scrivi chiaramente la tua domanda.",
+find:"🔎 Cerca risposta",
+clear:"Cancella",
+answer:"Risposta",
+source:"Fonte",
+home:"Home",
+askMenu:"Fai una domanda",
+recent:"Domande recenti",
+language:"Lingua",
+dark:"Modalità scura",
+books:"Libri",
+about:"Informazioni",
+searching:"Ricerca della risposta...",
+empty:"Scrivi la tua domanda.",
+saved:"La tua domanda è stata salvata.",
+notFound:"Nessuna risposta corrispondente trovata.",
+error:"Impossibile caricare le informazioni.",
+recentTitle:"Domande recenti",
+recentDesc:"Domande inviate tramite questa piattaforma.",
+booksInfo:"Sacra Scrittura",
+booksInfoText:"Risposte basate su fonti spirituali affidabili.",
+teaching:"Insegnamento ortodosso",
+teachingText:"Rispetto dell'insegnamento della Chiesa.",
+languages:"11 lingue",
+languageLabel:"Lingua della risposta",
+loadingRecent:"Caricamento...",
+noRecent:"Nessuna domanda trovata.",
+recentError:"Impossibile caricare le informazioni.",
+copied:"Copiato."
+},
+
+es:{
+brand:"Respuesta Ortodoxa",
+subtitle:"Preguntas y respuestas espirituales",
+hero:"Preguntar te hace sabio",
+heroText:"Haz tu pregunta espiritual y encuentra una respuesta basada en la enseñanza ortodoxa.",
+ask:"Haz tu pregunta espiritual",
+askDesc:"Escribe claramente tu pregunta.",
+find:"🔎 Buscar respuesta",
+clear:"Borrar",
+answer:"Respuesta",
+source:"Fuente",
+home:"Inicio",
+askMenu:"Hacer una pregunta",
+recent:"Preguntas recientes",
+language:"Idioma",
+dark:"Modo oscuro",
+books:"Libros",
+about:"Acerca de",
+searching:"Buscando una respuesta...",
+empty:"Escribe tu pregunta.",
+saved:"Tu pregunta ha sido guardada.",
+notFound:"No se encontró una respuesta correspondiente.",
+error:"No se pudo cargar la información.",
+recentTitle:"Preguntas recientes",
+recentDesc:"Preguntas enviadas mediante esta plataforma.",
+booksInfo:"Sagradas Escrituras",
+booksInfoText:"Respuestas basadas en fuentes espirituales confiables.",
+teaching:"Enseñanza ortodoxa",
+teachingText:"Respeto por la enseñanza de la Iglesia.",
+languages:"11 idiomas",
+languageLabel:"Idioma de respuesta",
+loadingRecent:"Cargando...",
+noRecent:"No se encontraron preguntas.",
+recentError:"No se pudo cargar la información.",
+copied:"Copiado."
+},
+
+pt:{
+brand:"Resposta Ortodoxa",
+subtitle:"Perguntas e respostas espirituais",
+hero:"Perguntar torna você sábio",
+heroText:"Faça sua pergunta espiritual e encontre uma resposta baseada no ensinamento ortodoxo.",
+ask:"Faça sua pergunta espiritual",
+askDesc:"Escreva sua pergunta claramente.",
+find:"🔎 Procurar resposta",
+clear:"Limpar",
+answer:"Resposta",
+source:"Fonte",
+home:"Início",
+askMenu:"Fazer uma pergunta",
+recent:"Perguntas recentes",
+language:"Idioma",
+dark:"Modo escuro",
+books:"Livros",
+about:"Sobre",
+searching:"Procurando uma resposta...",
+empty:"Escreva sua pergunta.",
+saved:"Sua pergunta foi salva.",
+notFound:"Nenhuma resposta correspondente foi encontrada.",
+error:"Não foi possível carregar as informações.",
+recentTitle:"Perguntas recentes",
+recentDesc:"Perguntas enviadas por esta plataforma.",
+booksInfo:"Sagradas Escrituras",
+booksInfoText:"Respostas baseadas em fontes espirituais confiáveis.",
+teaching:"Ensino Ortodoxo",
+teachingText:"Respeitando o ensinamento da Igreja.",
+languages:"11 idiomas",
+languageLabel:"Idioma da resposta",
+loadingRecent:"Carregando...",
+noRecent:"Nenhuma pergunta encontrada.",
+recentError:"Não foi possível carregar as informações.",
+copied:"Copiado."
+},
+
+ru:{
+brand:"Православный Ответ",
+subtitle:"Духовные вопросы и ответы",
+hero:"Вопрос делает мудрее",
+heroText:"Задайте духовный вопрос и получите ответ на основе православного учения.",
+ask:"Задайте духовный вопрос",
+askDesc:"Напишите свой вопрос ясно.",
+find:"🔎 Найти ответ",
+clear:"Очистить",
+answer:"Ответ",
+source:"Источник",
+home:"Главная",
+askMenu:"Задать вопрос",
+recent:"Последние вопросы",
+language:"Язык",
+dark:"Тёмный режим",
+books:"Книги",
+about:"О приложении",
+searching:"Поиск ответа...",
+empty:"Пожалуйста, напишите вопрос.",
+saved:"Ваш вопрос сохранён.",
+notFound:"Подходящий ответ не найден.",
+error:"Не удалось загрузить информацию.",
+recentTitle:"Последние вопросы",
+recentDesc:"Вопросы, отправленные через эту платформу.",
+booksInfo:"Священное Писание",
+booksInfoText:"Ответы основаны на надёжных духовных источниках.",
+teaching:"Православное учение",
+teachingText:"Уважение к учению Церкви.",
+languages:"11 языков",
+languageLabel:"Язык ответа",
+loadingRecent:"Загрузка...",
+noRecent:"Вопросы не найдены.",
+recentError:"Не удалось загрузить информацию.",
+copied:"Скопировано."
+}
+
+};
+
+
+/* =====================================================
+   CURRENT LANGUAGE
+   ===================================================== */
+
+let currentLang =
+localStorage.getItem("orthodox_language") || "am";
+
+if(!LANGUAGES[currentLang]){
+  currentLang="am";
+}
+
+languageSelect.value=currentLang;
+
+
+/* =====================================================
+   MENU
+   ===================================================== */
+
+menuButton.onclick=function(e){
+
+  e.stopPropagation();
+
+  mainMenu.classList.toggle("open");
+
+};
+
+document.addEventListener("click",function(e){
+
+  if(
+    !mainMenu.contains(e.target) &&
+    e.target!==menuButton
+  ){
+    mainMenu.classList.remove("open");
+  }
+
+});
+
+
+document
+.querySelectorAll("[data-section]")
+.forEach(function(btn){
+
+  btn.onclick=function(){
+
+    const id =
+    btn.getAttribute("data-section");
+
+    const section =
+    document.getElementById(id);
+
+    if(section){
+      section.scrollIntoView({
+        behavior:"smooth"
+      });
+    }
+
+    mainMenu.classList.remove("open");
+  };
+
+});
+
+
+/* =====================================================
+   LANGUAGE PANEL
+   ===================================================== */
+
+document
+.getElementById("languageMenuButton")
+.onclick=function(){
+
+  languagePanel.classList.toggle("show");
+
+  mainMenu.classList.remove("open");
+
+};
+
+
+languageSelect.onchange=function(){
+
+  setLanguage(
+    languageSelect.value
+  );
+
+};
+
+
+document
+.getElementById("languageButton")
+.onclick=function(){
+
+  const codes =
+  Object.keys(LANGUAGES);
+
+  let index =
+  codes.indexOf(currentLang);
+
+  index++;
+
+  if(index>=codes.length){
+    index=0;
+  }
+
+  setLanguage(codes[index]);
+
+};
+
+
+/* =====================================================
+   LANGUAGE SETTER
+   ===================================================== */
+
+function setLanguage(lang){
+
+  if(!UI[lang]){
+    lang="am";
+  }
+
+  currentLang=lang;
+
+  localStorage.setItem(
+    "orthodox_language",
+    lang
+  );
+
+  const t=UI[lang];
+
+  document.documentElement.lang=lang;
+
+  document.getElementById(
+    "brandTitle"
+  ).textContent=t.brand;
+
+  document.getElementById(
+    "brandSubtitle"
+  ).textContent=t.subtitle;
+
+  document.getElementById(
+    "heroTitle"
+  ).textContent=t.hero;
+
+  document.getElementById(
+    "heroText"
+  ).textContent=t.heroText;
+
+  document.getElementById(
+    "askTitle"
+  ).textContent=t.ask;
+
+  document.getElementById(
+    "askDescription"
+  ).textContent=t.askDesc;
+
+  document.getElementById(
+    "askButton"
+  ).textContent=t.find;
+
+  document.getElementById(
+    "clearButton"
+  ).textContent=t.clear;
+
+  document.getElementById(
+    "answerTitle"
+  ).textContent=t.answer;
+
+  document.getElementById(
+    "sourceLabel"
+  ).textContent=t.source;
+
+  document.getElementById(
+    "recentTitle"
+  ).textContent=t.recentTitle;
+
+  document.getElementById(
+    "recentDescription"
+  ).textContent=t.recentDesc;
+
+  document.getElementById(
+    "booksInfoText"
+  ).textContent=t.booksInfoText;
+
+  document.getElementById(
+    "teachingText"
+  ).textContent=t.teachingText;
+
+  document.getElementById(
+    "languagesText"
+  ).textContent=t.languages;
+
+  document.getElementById(
+    "footerTitle"
+  ).textContent=t.brand;
+
+  document.getElementById(
+    "footerDescription"
+  ).textContent=t.subtitle;
+
+  document.getElementById(
+    "languageLabel"
+  ).textContent=t.languageLabel;
+
+  questionInput.placeholder =
+  LANGUAGES[lang].placeholder;
+
+  languageSelect.value=lang;
+
+  document.getElementById(
+    "languageButton"
+  ).textContent =
+  LANGUAGES[lang].short;
+
+  document
+  .querySelectorAll("[data-i18n]")
+  .forEach(function(el){
+
+    const key =
+    el.getAttribute("data-i18n");
+
+    if(t[key]){
+      el.textContent=t[key];
+    }
+
+  });
+
+}
+
+
+/* =====================================================
+   DARK MODE
+   ===================================================== */
+
+document
+.getElementById("darkModeButton")
+.onclick=function(){
+
+  document.body.classList.toggle("dark");
+
+  localStorage.setItem(
+    "orthodox_dark",
+    document.body.classList.contains("dark")
+  );
+
+  mainMenu.classList.remove("open");
+
+};
+
+if(
+  localStorage.getItem("orthodox_dark")==="true"
+){
+  document.body.classList.add("dark");
+}
+
+
+/* =====================================================
+   MODALS
+   ===================================================== */
+
+function openModal(id){
+
+  const modal =
+  document.getElementById(id);
+
+  if(modal){
+    modal.classList.add("open");
+  }
+
+}
+
+function closeModal(id){
+
+  const modal =
+  document.getElementById(id);
+
+  if(modal){
+    modal.classList.remove("open");
+  }
+
+}
+
+document
+.getElementById("booksButton")
+.onclick=function(){
+
+  openModal("booksModal");
+
+  mainMenu.classList.remove("open");
+
+};
+
+document
+.getElementById("aboutButton")
+.onclick=function(){
+
+  openModal("aboutModal");
+
+  mainMenu.classList.remove("open");
+
+};
+
+document
+.querySelectorAll("[data-close]")
+.forEach(function(btn){
+
+  btn.onclick=function(){
+
+    closeModal(
+      btn.getAttribute("data-close")
+    );
+
+  };
+
+});
+
+document
+.querySelectorAll(".modal")
+.forEach(function(modal){
+
+  modal.addEventListener("click",function(e){
+
+    if(e.target===modal){
+      modal.classList.remove("open");
+    }
+
+  });
+
+});
+
+
+/* =====================================================
+   STATUS
+   ===================================================== */
+
+function showStatus(text,type){
+
+  statusBox.textContent=text;
+
+  statusBox.className=
+  "status show "+type;
+
+}
+
+
+/* =====================================================
+   DATABASE HELPERS
+   ===================================================== */
+
+function getValue(row,names){
+
+  if(!row){
+    return "";
+  }
+
+  for(
+    const name of names
+  ){
+
+    if(
+      row[name] !== undefined &&
+      row[name] !== null &&
+      String(row[name]).trim()!==""
+    ){
+
+      return String(row[name]);
+
+    }
+
+  }
+
+  return "";
+
+}
+
+
+function getRowLanguage(row){
+
+  return getValue(
+    row,
+    [
+      "language",
+      "lang",
+      "locale"
+    ]
+  ).toLowerCase();
+
+}
+
+
+function getQuestionText(row){
+
+  return getValue(
+    row,
+    [
+      "question",
+      "question_text",
+      "title",
+      "keyword",
+      "keywords",
+      "name_text"
+    ]
+  );
+
+}
+
+
+function getAnswerText(row){
+
+  return getValue(
+    row,
+    [
+      "answer",
+      "answer_text",
+      "content",
+      "response",
+      "description",
+      "teaching",
+      "explanation"
+    ]
+  );
+
+}
+
+
+function getSourceText(row){
+
+  return getValue(
+    row,
+    [
+      "source",
+      "sources",
+      "reference",
+      "references",
+      "book",
+      "scripture",
+      "citation"
+    ]
+  );
+
+}
+
+
+/* =====================================================
+   TEXT NORMALIZATION
+   ===================================================== */
+
+function normalizeText(text){
+
+  return String(text || "")
+    .toLowerCase()
+    .normalize("NFKC")
+    .replace(/[^\p{L}\p{N}\s]/gu," ")
+    .replace(/\s+/g," ")
+    .trim();
+
+}
+
+
+function tokenize(text){
+
+  const normalized =
+  normalizeText(text);
+
+  if(!normalized){
+    return [];
+  }
+
+  return normalized
+    .split(" ")
+    .filter(word => word.length >= 2);
+
+}
+
+
+function uniqueWords(words){
+
+  return [...new Set(words)];
+
+}
+
+
+/* =====================================================
+   QUESTION MATCHING
+   ===================================================== */
+
+/*
+  ይህ ክፍል አንድ ቃል ብቻ በመፈለግ
+  ሳይሆን የጥያቄውን ቃላት ከdatabase
+  ውስጥ ካሉ ጥያቄ/keyword/content ጋር
+  ያመሳስላል።
+*/
+
+function calculateMatchScore(question,row){
+
+  const qWords =
+  uniqueWords(
+    tokenize(question)
+  );
+
+  if(!qWords.length){
+    return 0;
+  }
+
+  const fields = [
+    getQuestionText(row),
+    getAnswerText(row),
+    getSourceText(row),
+    getValue(row,[
+      "keywords",
+      "keyword",
+      "topic",
+      "category"
+    ])
+  ];
+
+  const searchable =
+  normalizeText(
+    fields.join(" ")
+  );
+
+  if(!searchable){
+    return 0;
+  }
+
+  let score=0;
+
+  qWords.forEach(function(word){
+
+    if(searchable.includes(word)){
+      score++;
+    }
+
+  });
+
+  const questionText =
+  normalizeText(
+    getQuestionText(row)
+  );
+
+  if(
+    questionText &&
+    normalizeText(question)
+      .includes(questionText)
+  ){
+    score += 3;
+  }
+
+  if(
+    questionText &&
+    questionText.includes(
+      normalizeText(question)
+    )
+  ){
+    score += 3;
+  }
+
+  return score / qWords.length;
+
+}
+
+
+/* =====================================================
+   SUPABASE KNOWLEDGE SEARCH
+   ===================================================== */
+
+async function searchSupabase(question){
+
+  /*
+    ከአሁኑ questions table ውስጥ ብዙ rows እንወስዳለን።
+    ከዚያ client-side matching እናደርጋለን።
+
+    ይህ ከ:
+      ilike("question", `%full question%`)
+    የበለጠ ጠንካራ ነው።
+  */
+
+  const result =
+  await db
+    .from("questions")
+    .select("*")
+    .limit(1000);
+
+  if(result.error){
+
+    console.error(
+      "Supabase knowledge search:",
+      result.error
+    );
+
+    return null;
+  }
+
+  const rows =
+  Array.isArray(result.data)
+    ? result.data
+    : [];
+
+  let bestRow=null;
+  let bestScore=0;
+
+  rows.forEach(function(row){
+
+    const answer =
+    getAnswerText(row);
+
+    /*
+      መልስ የሌለውን row እንደ knowledge
+      አንቀበለውም።
+    */
+
+    if(!answer){
+      return;
+    }
+
+    /*
+      ተጠቃሚው የጻፈውን ጥያቄ
+      በዚያው ቋንቋ ያለ row ቅድሚያ ያገኛል።
+    */
+
+    const rowLang =
+    getRowLanguage(row);
+
+    let score =
+    calculateMatchScore(
+      question,
+      row
+    );
+
+    if(
+      rowLang &&
+      (
+        rowLang===currentLang ||
+        rowLang===LANGUAGES[currentLang].name.toLowerCase()
+      )
+    ){
+      score += 0.20;
+    }
+
+    if(score>bestScore){
+
+      bestScore=score;
+      bestRow=row;
+
+    }
+
+  });
+
+  /*
+    0.28 በታች ከሆነ ግልጽ ተዛማጅ
+    አልተገኘም ብለን AI እንጠራለን።
+  */
+
+  if(
+    bestRow &&
+    bestScore>=0.28
+  ){
+
+    return {
+      row:bestRow,
+      score:bestScore
+    };
+
+  }
+
+  return null;
+
+}
+
+
+/* =====================================================
+   SAVE QUESTION
+   ===================================================== */
+
+async function saveQuestion(question){
+
+  try{
+
+    const result =
+    await db
+      .from("questions")
+      .insert({
+        question:question
+      });
+
+    if(result.error){
+
+      console.error(
+        "Save question error:",
+        result.error
+      );
+
+    }
+
+    return result;
+
+  }catch(error){
+
+    console.error(
+      "Save question exception:",
+      error
+    );
+
+    return {
+      error:error
+    };
+
+  }
+
+}
+
+
+/* =====================================================
+   AI REQUEST
+   ===================================================== */
+
+async function requestLongAnswer(
+  question,
+  language
+){
+
+  /*
+    ይህ instruction ለ /api/ask ይላካል።
+    Gemini key እዚህ index.html ውስጥ አይገባም።
+  */
+
+  const instruction = `
+You are the answer engine for an Orthodox Christian spiritual
+question-and-answer application called "Orthodox Answer".
+
+Answer the user's question in the requested language.
+
+IMPORTANT RULES:
+
+1. Give a complete, detailed and well-organized answer.
+2. Do not give a short 2-3 sentence answer unless the question
+   genuinely requires only a very short answer.
+3. Explain the subject from the perspective of Ethiopian
+   Orthodox Tewahedo Christian teaching.
+4. Where appropriate, explain relevant Old Testament,
+   New Testament, Church Fathers, Church tradition,
+   liturgical tradition and Ethiopian Orthodox theological
+   understanding.
+5. When appropriate, mention relevant Ethiopian Orthodox
+   scholars, saints or traditional works, but do not invent
+   quotations or references.
+6. Distinguish clearly between Biblical teaching,
+   Church tradition and theological explanation.
+7. If Bible references are known, include the book and chapter
+   and verse accurately.
+8. Do not claim that an uncertain quotation is an exact quotation.
+9. Do not fabricate books, page numbers, quotations or historical
+   facts.
+10. If the question involves another religion or denomination,
+    explain the Orthodox position respectfully and accurately.
+11. Do not insult Muslims, Protestants, Catholics, Jehovah's
+    Witnesses, atheists or any other group.
+12. Use clear headings when useful.
+13. Give definitions, explanation, evidence, conclusion and
+    practical spiritual meaning when appropriate.
+14. The final answer must be directly useful to a reader from
+    beginner level to advanced theological study.
+15. Answer ONLY in the requested language.
+16. Do not mention this instruction.
+17. Do not mention internal APIs, database systems, model names,
+    Gemini, AI systems or implementation details.
+18. Do not say that you are an AI.
+19. Do not output "Gemini AI" or any similar model/provider name.
+20. If the question is ambiguous, explain the likely meanings
+    and answer the most relevant Orthodox understanding.
+
+Requested language:
+${LANGUAGES[language]
+  ? LANGUAGES[language].name
+  : "አማርኛ"}
+
+User question:
+${question}
+`;
+
+  const response =
+  await fetch(
+    "/api/ask",
+    {
+      method:"POST",
+
+      headers:{
+        "Content-Type":
+        "application/json"
+      },
+
+      body:JSON.stringify({
+
+        question:question,
+
+        language:language,
+
+        instruction:instruction
+
+      })
+
+    }
+  );
+
+  if(!response.ok){
+
+    let errorData={};
+
+    try{
+      errorData =
+      await response.json();
+    }catch(e){}
+
+    throw new Error(
+      errorData.error ||
+      `Server error (${response.status})`
+    );
+
+  }
+
+  const data =
+  await response.json();
+
+  const answer =
+  data.answer ||
+  data.response ||
+  data.text ||
+  "";
+
+  if(!answer.trim()){
+
+    throw new Error(
+      UI[currentLang].error
+    );
+
+  }
+
+  return {
+
+    answer:answer.trim(),
+
+    /*
+      Gemini ወይም AI የሚለውን
+      በUI እንዳያሳይ።
+    */
+
+    source:
+      cleanSource(
+        data.source ||
+        data.reference ||
+        ""
+      )
+
+  };
+
+}
+
+
+/* =====================================================
+   SOURCE CLEANER
+   ===================================================== */
+
+function cleanSource(source){
+
+  if(!source){
+    return "";
+  }
+
+  const text =
+  String(source).trim();
+
+  if(!text){
+    return "";
+  }
+
+  /*
+    Provider/model names በuser-facing UI
+    እንዳይታዩ።
+  */
+
+  if(
+    /gemini|google ai|generative ai|model|api/i
+      .test(text)
+  ){
+    return "";
+  }
+
+  return text;
+
+}
+
+
+/* =====================================================
+   SHOW ANSWER
+   ===================================================== */
+
+function showAnswer(
+  answer,
+  source
+){
+
+  answerBody.textContent =
+  answer;
+
+  answerLanguage.textContent =
+  LANGUAGES[currentLang].short;
+
+  const safeSource =
+  cleanSource(source);
+
+  if(safeSource){
+
+    sourceText.textContent =
+    safeSource;
+
+    sourceBox.style.display =
+    "block";
+
+  }else{
+
+    sourceText.textContent =
+    "";
+
+    sourceBox.style.display =
+    "none";
+
+  }
+
+  answerCard.classList.add("show");
+
+}
+
+
+/* =====================================================
+   MAIN ASK FUNCTION
+   ===================================================== */
+
+askButton.onclick = async function(){
+
+  const question =
+  questionInput.value.trim();
+
+  const t =
+  UI[currentLang];
+
+  if(!question){
+
+    showStatus(
+      t.empty,
+      "error"
+    );
+
+    questionInput.focus();
+
+    return;
+  }
+
+  if(question.length<2){
+
+    showStatus(
+      t.empty,
+      "error"
+    );
+
+    return;
+  }
+
+  askButton.disabled=true;
+
+  answerCard.classList.remove("show");
+
+  sourceBox.style.display="none";
+
+  showStatus(
+    t.searching,
+    "loading"
+  );
+
+  try{
+
+    /*
+      1. FIRST search existing knowledge.
+      2. Only after search do we save the new question.
+      3. If no answer exists, call /api/ask.
+    */
+
+    let answerText="";
+    let sourceVal="";
+
+    const found =
+    await searchSupabase(
+      question
+    );
+
+    if(found){
+
+      answerText =
+      getAnswerText(
+        found.row
+      );
+
+      sourceVal =
+      getSourceText(
+        found.row
+      );
+
+    }
+
+
+    /*
+      No suitable database answer:
+      request detailed answer from server.
+    */
+
+    if(!answerText){
+
+      const aiResult =
+      await requestLongAnswer(
+        question,
+        currentLang
+      );
+
+      answerText =
+      aiResult.answer;
+
+      sourceVal =
+      aiResult.source;
+
+    }
+
+
+    if(!answerText){
+
+      throw new Error(
+        t.notFound
+      );
+
+    }
+
+
+    /*
+      Save only after successfully
+      obtaining the answer.
+    */
+
+    await saveQuestion(
+      question
+    );
+
+
+    showAnswer(
+      answerText,
+      sourceVal
+    );
+
+    showStatus(
+      t.saved,
+      "success"
+    );
+
+    loadRecentQuestions();
+
+    setTimeout(function(){
+
+      answerCard.scrollIntoView({
+        behavior:"smooth",
+        block:"start"
+      });
+
+    },100);
+
+  }catch(error){
+
+    console.error(
+      "Answer execution error:",
+      error
+    );
+
+    showStatus(
+      error.message ||
+      t.error,
+      "error"
+    );
+
+  }finally{
+
+    askButton.disabled=false;
+
+  }
+
+};
+
+
+/* =====================================================
+   ENTER / CTRL+ENTER
+   ===================================================== */
+
+questionInput.addEventListener(
+  "keydown",
+  function(e){
+
+    if(
+      e.key==="Enter" &&
+      (e.ctrlKey || e.metaKey)
+    ){
+
+      e.preventDefault();
+
+      askButton.click();
+
+    }
+
+  }
+);
+
+
+/* =====================================================
+   CLEAR
+   ===================================================== */
+
+clearButton.onclick=function(){
+
+  questionInput.value="";
+
+  statusBox.className=
+  "status";
+
+  statusBox.textContent="";
+
+  answerCard.classList.remove(
+    "show"
+  );
+
+  sourceBox.style.display=
+  "none";
+
+  questionInput.focus();
+
+};
+
+
+/* =====================================================
+   RECENT QUESTIONS
+   ===================================================== */
+
+async function loadRecentQuestions(){
+
+  const container =
+  document.getElementById(
+    "recentQuestions"
+  );
+
+  const t =
+  UI[currentLang];
+
+  container.textContent =
+  t.loadingRecent;
+
+  try{
+
+    const {
+      data,
+      error
+    } =
+    await db
+      .from("questions")
+      .select("*")
+      .order(
+        "id",
+        {
+          ascending:false
+        }
+      )
+      .limit(5);
+
+    if(error){
+      throw error;
+    }
+
+    if(
+      data &&
+      data.length>0
+    ){
+
+      container.innerHTML="";
+
+      data.forEach(function(row){
+
+        const qText =
+        getQuestionText(row);
+
+        if(!qText){
+          return;
+        }
+
+        const item =
+        document.createElement(
+          "div"
+        );
+
+        item.className=
+        "recent-item";
+
+        const q =
+        document.createElement(
+          "div"
+        );
+
+        q.className=
+        "recent-question";
+
+        q.textContent=
+        qText;
+
+        const date =
+        document.createElement(
+          "div"
+        );
+
+        date.className=
+        "recent-date";
+
+        if(row.created_at){
+
+          const d =
+          new Date(
+            row.created_at
+          );
+
+          if(!isNaN(d.getTime())){
+
+            date.textContent=
+            d.toLocaleDateString();
+
+          }
+
+        }
+
+        item.appendChild(q);
+        item.appendChild(date);
+
+        item.onclick=function(){
+
+          questionInput.value=
+          qText;
+
+          document
+            .getElementById("ask")
+            .scrollIntoView({
+              behavior:"smooth"
+            });
+
+          questionInput.focus();
+
+        };
+
+        container.appendChild(
+          item
+        );
+
+      });
+
+    }else{
+
+      container.textContent=
+      t.noRecent;
+
+    }
+
+  }catch(error){
+
+    console.error(
+      "Recent questions:",
+      error
+    );
+
+    container.textContent=
+    t.recentError;
+
+  }
+
+}
+
+
+/* =====================================================
+   COPY
+   ===================================================== */
+
+document
+.getElementById("copyButton")
+.onclick=async function(){
+
+  const text =
+  answerBody.textContent.trim();
+
+  if(!text){
+    return;
+  }
+
+  try{
+
+    await navigator
+      .clipboard
+      .writeText(text);
+
+    alert(
+      UI[currentLang].copied
+    );
+
+  }catch(error){
+
+    /*
+      fallback
+    */
+
+    const area =
+    document.createElement(
+      "textarea"
+    );
+
+    area.value=text;
+
+    document.body.appendChild(
+      area
+    );
+
+    area.select();
+
+    document.execCommand(
+      "copy"
+    );
+
+    area.remove();
+
+    alert(
+      UI[currentLang].copied
+    );
+
+  }
+
+};
+
+
+/* =====================================================
+   SHARE
+   ===================================================== */
+
+document
+.getElementById("shareButton")
+.onclick=async function(){
+
+  const text =
+  answerBody.textContent.trim();
+
+  if(!text){
+    return;
+  }
+
+  if(
+    navigator.share
+  ){
+
+    try{
+
+      await navigator.share({
+
+        title:
+        "ኦርቶዶክሳዊ መልስ",
+
+        text:text,
+
+        url:
+        window.location.href
+
+      });
+
+    }catch(error){
+
+      if(
+        error &&
+        error.name!=="AbortError"
+      ){
+
+        console.error(
+          error
+        );
+
+      }
+
+    }
+
+  }else{
+
+    try{
+
+      await navigator.clipboard
+        .writeText(text);
+
+      alert(
+        UI[currentLang].copied
+      );
+
+    }catch(error){
+
+      alert(
+        "Share is not supported on this browser."
+      );
+
+    }
+
+  }
+
+};
+
+
+/* =====================================================
+   SPEAK
+   ===================================================== */
+
+document
+.getElementById("speakButton")
+.onclick=function(){
+
+  const text =
+  answerBody.textContent.trim();
+
+  if(!text){
+    return;
+  }
+
+  if(
+    "speechSynthesis" in window
+  ){
+
+    window.speechSynthesis.cancel();
+
+    const utterance =
+    new SpeechSynthesisUtterance(
+      text
+    );
+
+    /*
+      Speech language mapping.
+      Some browsers may not have
+      every voice installed.
+    */
+
+    const speechMap={
+
+      am:"am-ET",
+      en:"en-US",
+      ti:"ti-ET",
+      om:"om-ET",
+      ar:"ar-SA",
+      fr:"fr-FR",
+      de:"de-DE",
+      it:"it-IT",
+      es:"es-ES",
+      pt:"pt-PT",
+      ru:"ru-RU"
+
+    };
+
+    utterance.lang =
+    speechMap[currentLang] ||
+    currentLang;
+
+    window.speechSynthesis
+      .speak(
+        utterance
+      );
+
+  }else{
+
+    alert(
+      "Text-to-speech is not supported on this browser."
+    );
+
+  }
+
+};
+
+
+/* =====================================================
+   KEYBOARD SHORTCUT
+   ===================================================== */
+
+document.addEventListener(
+  "keydown",
+  function(e){
+
+    if(
+      e.key==="Escape"
+    ){
+
+      mainMenu.classList.remove(
+        "open"
+      );
+
+      document
+        .querySelectorAll(".modal")
+        .forEach(function(modal){
+
+          modal.classList.remove(
+            "open"
+          );
+
+        });
+
+    }
+
+  }
+);
+
+
+/* =====================================================
+   INITIALIZATION
+   ===================================================== */
+
+setLanguage(
+  currentLang
+);
+
+loadRecentQuestions();
+
+</script>
+</body>
+</html>
