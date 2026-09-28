@@ -13,6 +13,7 @@
 // - Forces a full teaching-style answer
 // - Preserves the user's selected language
 // - Automatically retries temporary Gemini errors
+// - Automatically switches Gemini models when necessary
 // ============================================================
 
 const SUPABASE_URL =
@@ -27,6 +28,20 @@ const GEMINI_API_KEY =
 
 const GEMINI_MODEL =
   process.env.GEMINI_MODEL || "gemini-3.8-flash";
+
+// ------------------------------------------------------------
+// Gemini fallback models
+//
+// If 3.8 is temporarily unavailable, the system automatically
+// tries the next supported model instead of immediately failing.
+// ------------------------------------------------------------
+
+const GEMINI_FALLBACK_MODELS = [
+  "gemini-3.8-flash",
+  "gemini-3.7-flash",
+  "gemini-3.6-flash",
+  "gemini-3.5-flash"
+];
 
 const TABLE_NAME = "orthodox_answers";
 
@@ -83,8 +98,14 @@ function unique(array) {
 // ------------------------------------------------------------
 
 function calculateRelevance(question, row) {
-  const q = normalize(question);
-  const qTokens = unique(tokenize(question));
+
+  const q =
+    normalize(question);
+
+  const qTokens =
+    unique(
+      tokenize(question)
+    );
 
   const rowQuestion =
     normalize(row.question);
@@ -106,22 +127,34 @@ function calculateRelevance(question, row) {
 
   let score = 0;
 
-  // Exact question match
+  // ----------------------------------------------------------
+  // Exact question
+  // ----------------------------------------------------------
+
   if (rowQuestion === q) {
     score += 1500;
   }
 
-  // Exact phrase inside stored question
-  if (rowQuestion.includes(q)) {
+  // ----------------------------------------------------------
+  // Exact phrase
+  // ----------------------------------------------------------
+
+  if (q && rowQuestion.includes(q)) {
     score += 700;
   }
 
-  // User question appears in answer
-  if (rowAnswer.includes(q)) {
+  // ----------------------------------------------------------
+  // Question appears inside answer
+  // ----------------------------------------------------------
+
+  if (q && rowAnswer.includes(q)) {
     score += 300;
   }
 
-  // Match individual concepts
+  // ----------------------------------------------------------
+  // Individual concept matching
+  // ----------------------------------------------------------
+
   for (const token of qTokens) {
 
     if (rowQuestion.includes(token)) {
@@ -149,7 +182,10 @@ function calculateRelevance(question, row) {
     }
   }
 
+  // ----------------------------------------------------------
   // Prefer substantial knowledge records
+  // ----------------------------------------------------------
+
   if (rowAnswer.length > 500) {
     score += 15;
   }
@@ -173,7 +209,8 @@ async function fetchKnowledge(language) {
 
   const headers = {
     apikey: SUPABASE_ANON_KEY,
-    Authorization: `Bearer ${SUPABASE_ANON_KEY}`,
+    Authorization:
+      `Bearer ${SUPABASE_ANON_KEY}`,
     "Content-Type": "application/json"
   };
 
@@ -183,10 +220,11 @@ async function fetchKnowledge(language) {
     `&language=eq.${encodeURIComponent(language)}` +
     `&limit=300`;
 
-  const response = await fetch(url, {
-    method: "GET",
-    headers
-  });
+  const response =
+    await fetch(url, {
+      method: "GET",
+      headers
+    });
 
   if (!response.ok) {
 
@@ -210,7 +248,8 @@ async function fetchAllKnowledge() {
 
   const headers = {
     apikey: SUPABASE_ANON_KEY,
-    Authorization: `Bearer ${SUPABASE_ANON_KEY}`,
+    Authorization:
+      `Bearer ${SUPABASE_ANON_KEY}`,
     "Content-Type": "application/json"
   };
 
@@ -219,10 +258,11 @@ async function fetchAllKnowledge() {
     `?select=id,question,answer,language,category,education_level,bible_references,church_sources` +
     `&limit=500`;
 
-  const response = await fetch(url, {
-    method: "GET",
-    headers
-  });
+  const response =
+    await fetch(url, {
+      method: "GET",
+      headers
+    });
 
   if (!response.ok) {
     return [];
@@ -233,28 +273,37 @@ async function fetchAllKnowledge() {
 
 // ------------------------------------------------------------
 // Build evidence package
+//
+// IMPORTANT:
+// Does NOT stop at one short database answer.
+// Multiple related records are selected.
 // ------------------------------------------------------------
 
 function buildEvidence(question, rows) {
 
-  const scored = rows
-    .map(row => ({
-      ...row,
-      _score: calculateRelevance(
-        question,
-        row
+  const scored =
+    rows
+      .map(row => ({
+        ...row,
+
+        _score:
+          calculateRelevance(
+            question,
+            row
+          )
+      }))
+      .filter(
+        row =>
+          row._score > 0
       )
-    }))
-    .filter(row => row._score > 0)
-    .sort(
-      (a, b) =>
-        b._score - a._score
-    );
+      .sort(
+        (a, b) =>
+          b._score - a._score
+      );
 
   // ----------------------------------------------------------
   // IMPORTANT:
-  // Do NOT stop at one short database answer.
-  // Use many related knowledge records.
+  // Keep many related records.
   // ----------------------------------------------------------
 
   const selected =
@@ -310,10 +359,18 @@ You are the main teaching engine of an Ethiopian Orthodox Tewahedo
 spiritual question-and-answer application called
 "ኦርቶዶክሳዊ መልስ".
 
-Your task is NOT to give a short chatbot reply.
+============================================================
+CORE PURPOSE
+============================================================
 
-Your task is to produce a COMPLETE, DETAILED, ORGANIZED,
-SOURCE-GROUNDED Orthodox teaching.
+Your job is NOT to return one short database answer.
+
+Your job is to transform the supplied Orthodox knowledge
+into a COMPLETE, DETAILED, COHERENT and STRUCTURED
+Orthodox teaching.
+
+The user should feel that they received a complete lesson,
+not a short chatbot response.
 
 ============================================================
 USER QUESTION
@@ -333,24 +390,26 @@ STRICT LANGUAGE RULE
 
 Write the entire answer in ${languageName}.
 
-Do not answer in another language.
+Do NOT answer in another language.
 
-Do not switch to English merely because some source material
-is written in English.
+Do NOT switch to English because some evidence is in English.
 
-Do not mix languages unnecessarily.
+Do NOT mix languages unnecessarily.
 
-Use the selected language consistently throughout the answer.
+Use the selected language consistently.
+
+Proper names, Biblical book names and traditional theological
+terms may remain in their established form when necessary.
 
 ============================================================
-ORTHODOX TEACHING RULE
+ORTHODOX TEACHING
 ============================================================
 
 Follow Ethiopian Orthodox Tewahedo teaching.
 
 Use the supplied knowledge base as primary evidence.
 
-Do NOT invent:
+Do not invent:
 
 - Bible references
 - Church Father quotations
@@ -361,12 +420,12 @@ Do NOT invent:
 - historical claims
 - quotations
 
-If an exact quotation is not supplied,
-do not present an invented sentence as a direct quotation.
+If a precise quotation is not supplied,
+do not present your own wording as a direct quotation.
 
-Instead, explain the teaching in your own words.
+Instead, explain the teaching as a paraphrase.
 
-Clearly distinguish between:
+Clearly distinguish:
 
 1. Biblical teaching
 2. Church teaching
@@ -375,25 +434,53 @@ Clearly distinguish between:
 5. Explanatory interpretation
 
 ============================================================
-DEPTH REQUIREMENT
+MOST IMPORTANT DEPTH RULE
 ============================================================
 
 DO NOT give a 3-line answer.
 
 DO NOT give a 5-sentence answer.
 
-DO NOT summarize the entire subject into one paragraph.
+DO NOT answer with only one database record.
 
-The answer must be a COMPLETE TEACHING.
+DO NOT simply copy the first matching answer.
 
-It should be useful to:
+DO NOT summarize everything into one paragraph.
+
+Use multiple relevant knowledge sources.
+
+Connect related teachings.
+
+Explain the subject progressively.
+
+The answer should normally be substantial and detailed.
+
+The answer must be useful to:
 
 - beginners
 - students
 - teachers
 - advanced readers
 
-The answer should contain substantial paragraphs.
+============================================================
+ANSWER QUALITY
+============================================================
+
+The answer must be:
+
+- coherent
+- focused
+- educational
+- source-grounded
+- theologically careful
+- comprehensive
+- easy to follow
+- detailed without unnecessary repetition
+
+Do not add unrelated Orthodox topics simply to make
+the answer longer.
+
+Depth must come from explaining the user's actual question.
 
 ============================================================
 MANDATORY ANSWER STRUCTURE
@@ -401,103 +488,141 @@ MANDATORY ANSWER STRUCTURE
 
 # 1. ቀጥተኛ መልስ
 
-Give a clear direct answer to the user's question.
+Give a clear and direct answer to the question.
+
+Do not begin with vague generalities.
+
+State the central Orthodox teaching first.
 
 # 2. የትምህርቱ ሙሉ ማብራሪያ
 
-Explain the subject carefully and progressively.
+Explain the subject carefully.
 
 Define important theological terms.
 
-Explain the meaning and purpose of the teaching.
+Explain the meaning, purpose and significance.
+
+Break difficult concepts into understandable parts.
 
 # 3. የመጽሐፍ ቅዱስ ምስክር
 
-Explain the relevant Biblical passages.
+Explain the supplied Biblical references.
 
-Do not merely list references.
+Do not merely list verses.
 
-Explain what the passages teach and how they support
-the Orthodox understanding.
+Explain:
+
+- what the passage says
+- its context
+- what it teaches
+- how it supports Orthodox understanding
+
+Never invent a reference.
 
 # 4. የቤተ ክርስቲያን ትምህርት
 
 Explain the Ethiopian Orthodox Tewahedo understanding.
 
-Explain how the teaching is understood within the
-life and worship of the Church.
+Connect the teaching with the worship and sacramental
+life of the Church where relevant.
 
 # 5. የቅዱሳን አባቶች ትምህርት
 
-Use only supplied Church Father material.
+Use supplied Church Father sources.
 
-If a precise quotation is not supplied,
-paraphrase the teaching.
+If only a general teaching is supplied,
+paraphrase it.
 
-Never fabricate a direct quotation.
+Never invent direct quotations.
 
 # 6. የኢትዮጵያ ትውፊትና ሊቃውንት
 
 Use supplied Ethiopian Orthodox sources when available.
 
-Never invent a source.
+Never invent Ethiopian scholars or books.
+
+If no verified source is supplied,
+say that the specific source was not supplied.
 
 # 7. ጥልቅ ማብራሪያ
 
-Explain difficult theological points step by step.
+Go deeper into the theological meaning.
 
-Connect related concepts where relevant.
+Explain connections between related doctrines.
 
-Make the explanation understandable to both beginners
-and advanced readers.
+For example, when relevant, explain the relationship
+between Incarnation, salvation, Sacrament, Church,
+faith and Christian life.
+
+Only make such connections when relevant to the question.
 
 # 8. ተግባራዊ ትምህርት
 
 Explain what the teaching means for Christian life.
 
-Explain its spiritual significance where appropriate.
+Explain appropriate spiritual implications.
 
 # 9. የተሳሳቱ ግንዛቤዎች
 
-Where appropriate, identify common misunderstandings and
-correct them according to Orthodox Tewahedo teaching.
+Where appropriate, identify common misunderstandings.
+
+Correct them according to Orthodox Tewahedo teaching.
+
+Do not invent controversies that are unrelated to the question.
 
 # 10. መደምደሚያ
 
-Give a clear and strong conclusion.
+Give a clear final conclusion.
 
-Summarize the central teaching without reducing
-the whole answer to a short paragraph.
+Reinforce the central teaching.
+
+Do not reduce the entire answer to only a few sentences.
 
 # 11. ምንጮች
 
-List the actual Biblical and supplied Church sources used.
+List the actual Biblical and supplied Church sources
+used in the answer.
+
+Do not fabricate sources.
 
 ============================================================
 SOURCE INTEGRITY
 ============================================================
 
-Do not pretend that an unverified source was checked.
+Never pretend an unverified source was checked.
 
-Do not create fake quotations.
+Never create fake quotations.
 
-Do not create fake citations.
+Never create fake citations.
 
-If the knowledge base does not contain a specific source,
-say so naturally rather than inventing it.
+Never invent page numbers.
+
+Never invent Ethiopian scholar references.
+
+If a source is unavailable in the supplied evidence,
+do not claim that you used it.
 
 ============================================================
-IMPORTANT
+DATABASE USE
 ============================================================
 
-Do not simply copy one database record.
+The knowledge base is EVIDENCE.
 
-Combine relevant knowledge sources when they address
-the same subject.
+It is NOT the final answer.
 
-Use the database as evidence, not as a short final answer.
+Combine multiple relevant records.
 
-The final response must feel like a complete Orthodox lesson.
+Resolve repeated information into a coherent explanation.
+
+Do not simply concatenate database records.
+
+Do not mention the database in the final answer.
+
+============================================================
+FINAL RULE
+============================================================
+
+Return ONLY the final Orthodox teaching.
 
 Do not mention:
 
@@ -505,10 +630,10 @@ Do not mention:
 - API
 - database
 - prompt
+- software
 - internal instructions
-- software implementation
-
-Return ONLY the final answer.
+- model
+- system
 `;
 
   const userPrompt = `
@@ -522,214 +647,330 @@ ${languageName}
 
 KNOWLEDGE BASE EVIDENCE:
 
-${evidence || "No directly matching knowledge-base record was found."}
+${evidence ||
+  "No directly matching knowledge-base record was found."}
 
-Using the evidence above, produce the complete,
-detailed and structured Orthodox teaching.
+============================================================
+FINAL TASK
+============================================================
 
-Do NOT simply repeat one short database record.
+Produce a complete, detailed and structured Orthodox teaching.
+
+Use the relevant evidence above.
+
+Do NOT simply copy one database record.
 
 Combine related evidence where appropriate.
 
-Keep the answer coherent and focused on the user's question.
+Keep the answer focused on the user's actual question.
 
-Write the final answer ONLY in ${languageName}.
+Write ONLY in ${languageName}.
+
+The final answer must be a substantial teaching,
+not a short chatbot response.
 `;
 
-  const endpoint =
-    `https://generativelanguage.googleapis.com/v1beta/models/` +
-    `${encodeURIComponent(GEMINI_MODEL)}` +
-    `:generateContent?key=` +
-    encodeURIComponent(GEMINI_API_KEY);
-
-  const requestBody = {
-
-    system_instruction: {
-      parts: [
-        {
-          text: systemInstruction
-        }
-      ]
-    },
-
-    contents: [
-      {
-        role: "user",
-
-        parts: [
-          {
-            text: userPrompt
-          }
-        ]
-      }
-    ],
-
-    generationConfig: {
-
-      temperature: 0.35,
-
-      topP: 0.9,
-
-      // Large output budget
-      maxOutputTokens: 12000
-    }
-  };
-
   // ==========================================================
-  // GEMINI RETRY SYSTEM
+  // MODEL ORDER
   // ==========================================================
 
-  const MAX_RETRIES = 3;
+  const modelsToTry =
+    unique([
+      GEMINI_MODEL,
+      ...GEMINI_FALLBACK_MODELS
+    ]);
 
   let lastError = null;
 
+  // ==========================================================
+  // TRY EACH MODEL
+  // ==========================================================
+
   for (
-    let attempt = 1;
-    attempt <= MAX_RETRIES;
-    attempt++
+    const model of modelsToTry
   ) {
 
-    try {
+    const endpoint =
+      `https://generativelanguage.googleapis.com/v1beta/models/` +
+      `${encodeURIComponent(model)}` +
+      `:generateContent?key=` +
+      encodeURIComponent(GEMINI_API_KEY);
 
-      console.log(
-        `Gemini request attempt ${attempt}/${MAX_RETRIES}`
-      );
+    // --------------------------------------------------------
+    // Gemini 3 configuration
+    // --------------------------------------------------------
 
-      const response =
-        await fetch(endpoint, {
+    const requestBody = {
 
-          method: "POST",
+      system_instruction: {
 
-          headers: {
-            "Content-Type": "application/json"
-          },
+        parts: [
+          {
+            text:
+              systemInstruction
+          }
+        ]
+      },
 
-          body:
-            JSON.stringify(requestBody)
-        });
+      contents: [
 
-      // ------------------------------------------------------
-      // SUCCESS
-      // ------------------------------------------------------
+        {
+          role: "user",
 
-      if (response.ok) {
+          parts: [
 
-        const data =
-          await response.json();
+            {
+              text:
+                userPrompt
+            }
 
-        const text =
-          data?.candidates?.[0]?.content?.parts
-            ?.map(part => part.text || "")
-            .join("")
-            .trim();
-
-        if (!text) {
-
-          throw new Error(
-            "Gemini returned an empty answer."
-          );
+          ]
         }
 
-        return text;
+      ],
+
+      generationConfig: {
+
+        // Gemini 3.8 supports low / medium / high.
+        // Medium provides enough reasoning for detailed teaching.
+        thinking_level: "medium",
+
+        // Large output allowance.
+        maxOutputTokens: 12000
       }
+    };
 
-      // ------------------------------------------------------
-      // ERROR
-      // ------------------------------------------------------
+    // ========================================================
+    // RETRY CURRENT MODEL
+    // ========================================================
 
-      const errorText =
-        await response.text();
+    const MAX_RETRIES = 2;
 
-      lastError = new Error(
-        `Gemini error ${response.status}: ${errorText}`
-      );
+    for (
+      let attempt = 1;
+      attempt <= MAX_RETRIES;
+      attempt++
+    ) {
 
-      console.error(
-        `Gemini attempt ${attempt} failed:`,
-        lastError.message
-      );
+      try {
 
-      // ------------------------------------------------------
-      // Temporary errors that should be retried
-      // ------------------------------------------------------
+        console.log(
+          `Gemini model ${model}, ` +
+          `attempt ${attempt}/${MAX_RETRIES}`
+        );
 
-      const shouldRetry =
-        response.status === 429 ||
-        response.status === 500 ||
-        response.status === 502 ||
-        response.status === 503 ||
-        response.status === 504;
+        const response =
+          await fetch(
+            endpoint,
+            {
 
-      // 400 / 401 / 403 / 404 etc.
-      // are not temporary retry errors.
-      if (!shouldRetry) {
-        throw lastError;
-      }
+              method: "POST",
 
-      // No attempts remaining
-      if (attempt === MAX_RETRIES) {
-        break;
-      }
+              headers: {
+                "Content-Type":
+                  "application/json"
+              },
 
-      // ------------------------------------------------------
-      // Exponential backoff
-      //
-      // Attempt 1 -> 2 seconds
-      // Attempt 2 -> 4 seconds
-      // ------------------------------------------------------
+              body:
+                JSON.stringify(
+                  requestBody
+                )
+            }
+          );
 
-      const waitTime =
-        Math.pow(2, attempt) * 1000;
+        // ----------------------------------------------------
+        // SUCCESS
+        // ----------------------------------------------------
 
-      console.log(
-        `Gemini temporarily unavailable. ` +
-        `Retrying in ${waitTime / 1000} seconds...`
-      );
+        if (response.ok) {
 
-      await new Promise(
-        resolve =>
-          setTimeout(
-            resolve,
-            waitTime
+          const data =
+            await response.json();
+
+          const text =
+            data
+              ?.candidates?.[0]
+              ?.content?.parts
+              ?.map(
+                part =>
+                  part.text || ""
+              )
+              .join("")
+              .trim();
+
+          if (!text) {
+
+            throw new Error(
+              `Gemini ${model} returned an empty answer.`
+            );
+          }
+
+          console.log(
+            `Gemini success using ${model}`
+          );
+
+          return text;
+        }
+
+        // ----------------------------------------------------
+        // ERROR BODY
+        // ----------------------------------------------------
+
+        const errorText =
+          await response.text();
+
+        lastError =
+          new Error(
+            `Gemini error ${response.status}: ${errorText}`
+          );
+
+        console.error(
+          `Gemini ${model} failed:`,
+          lastError.message
+        );
+
+        // ----------------------------------------------------
+        // 404
+        //
+        // Model unavailable.
+        // Immediately move to next model.
+        // ----------------------------------------------------
+
+        if (
+          response.status === 404
+        ) {
+          break;
+        }
+
+        // ----------------------------------------------------
+        // Permanent errors
+        // ----------------------------------------------------
+
+        if (
+          response.status === 400 ||
+          response.status === 401 ||
+          response.status === 403
+        ) {
+          throw lastError;
+        }
+
+        // ----------------------------------------------------
+        // Temporary errors
+        // ----------------------------------------------------
+
+        const temporaryError =
+          response.status === 429 ||
+          response.status === 500 ||
+          response.status === 502 ||
+          response.status === 503 ||
+          response.status === 504;
+
+        if (!temporaryError) {
+          throw lastError;
+        }
+
+        // ----------------------------------------------------
+        // Current model exhausted
+        // ----------------------------------------------------
+
+        if (
+          attempt === MAX_RETRIES
+        ) {
+          break;
+        }
+
+        // ----------------------------------------------------
+        // Exponential backoff
+        //
+        // attempt 1 = 2 sec
+        // ----------------------------------------------------
+
+        const waitTime =
+          Math.pow(
+            2,
+            attempt
+          ) * 1000;
+
+        console.log(
+          `Temporary Gemini error. ` +
+          `Retrying ${model} in ` +
+          `${waitTime / 1000} seconds...`
+        );
+
+        await new Promise(
+          resolve =>
+            setTimeout(
+              resolve,
+              waitTime
+            )
+        );
+
+      } catch (error) {
+
+        lastError = error;
+
+        console.error(
+          `Gemini exception on ${model}:`,
+          error.message
+        );
+
+        // ----------------------------------------------------
+        // Do not retry permanent configuration errors.
+        // ----------------------------------------------------
+
+        const message =
+          String(
+            error?.message || ""
+          );
+
+        if (
+          message.includes(
+            "Gemini error 400"
+          ) ||
+          message.includes(
+            "Gemini error 401"
+          ) ||
+          message.includes(
+            "Gemini error 403"
           )
-      );
+        ) {
+          throw error;
+        }
 
-    } catch (error) {
+        if (
+          attempt === MAX_RETRIES
+        ) {
+          break;
+        }
 
-      lastError = error;
-
-      console.error(
-        `Gemini exception on attempt ${attempt}:`,
-        error.message
-      );
-
-      if (
-        attempt === MAX_RETRIES
-      ) {
-        break;
+        await new Promise(
+          resolve =>
+            setTimeout(
+              resolve,
+              2000
+            )
+        );
       }
-
-      const waitTime =
-        Math.pow(2, attempt) * 1000;
-
-      await new Promise(
-        resolve =>
-          setTimeout(
-            resolve,
-            waitTime
-          )
-      );
     }
+
+    // --------------------------------------------------------
+    // Current model failed.
+    // Move to fallback model.
+    // --------------------------------------------------------
+
+    console.log(
+      `Switching from ${model} to the next Gemini model.`
+    );
   }
 
-  // ----------------------------------------------------------
-  // All retries failed
-  // ----------------------------------------------------------
+  // ==========================================================
+  // ALL MODELS FAILED
+  // ==========================================================
 
   throw (
     lastError ||
     new Error(
-      "Gemini was temporarily unavailable."
+      "All Gemini models are temporarily unavailable."
     )
   );
 }
@@ -738,7 +979,10 @@ Write the final answer ONLY in ${languageName}.
 // Main API handler
 // ------------------------------------------------------------
 
-export default async function handler(req, res) {
+export default async function handler(
+  req,
+  res
+) {
 
   // ----------------------------------------------------------
   // CORS
@@ -763,7 +1007,10 @@ export default async function handler(req, res) {
   // OPTIONS
   // ----------------------------------------------------------
 
-  if (req.method === "OPTIONS") {
+  if (
+    req.method === "OPTIONS"
+  ) {
+
     return res
       .status(200)
       .end();
@@ -773,13 +1020,18 @@ export default async function handler(req, res) {
   // POST ONLY
   // ----------------------------------------------------------
 
-  if (req.method !== "POST") {
+  if (
+    req.method !== "POST"
+  ) {
 
     return res
       .status(405)
       .json({
+
         success: false,
-        error: "POST method required."
+
+        error:
+          "POST method required."
       });
   }
 
@@ -789,30 +1041,38 @@ export default async function handler(req, res) {
     // Environment validation
     // --------------------------------------------------------
 
-    if (!SUPABASE_ANON_KEY) {
+    if (
+      !SUPABASE_ANON_KEY
+    ) {
 
       return res
         .status(500)
         .json({
+
           success: false,
+
           error:
             "SUPABASE_ANON_KEY is missing."
         });
     }
 
-    if (!GEMINI_API_KEY) {
+    if (
+      !GEMINI_API_KEY
+    ) {
 
       return res
         .status(500)
         .json({
+
           success: false,
+
           error:
             "GEMINI_API_KEY is missing."
         });
     }
 
     // --------------------------------------------------------
-    // Parse request body
+    // Parse body
     // --------------------------------------------------------
 
     const body =
@@ -839,7 +1099,9 @@ export default async function handler(req, res) {
       return res
         .status(400)
         .json({
+
           success: false,
+
           error:
             "Question is required."
         });
@@ -853,9 +1115,9 @@ export default async function handler(req, res) {
       LANGUAGE_NAMES[language] ||
       language;
 
-    // --------------------------------------------------------
-    // 1. Search selected language
-    // --------------------------------------------------------
+    // ========================================================
+    // 1. SEARCH SELECTED LANGUAGE
+    // ========================================================
 
     let languageRows = [];
 
@@ -874,9 +1136,9 @@ export default async function handler(req, res) {
       );
     }
 
-    // --------------------------------------------------------
-    // 2. Broaden search if selected language is insufficient
-    // --------------------------------------------------------
+    // ========================================================
+    // 2. BROAD SEARCH
+    // ========================================================
 
     let allRows = [
       ...languageRows
@@ -905,13 +1167,14 @@ export default async function handler(req, res) {
       }
     }
 
-    // --------------------------------------------------------
-    // 3. Remove duplicates
-    // --------------------------------------------------------
+    // ========================================================
+    // 3. REMOVE DUPLICATES
+    // ========================================================
 
     const uniqueRows = [];
 
-    const seen = new Set();
+    const seen =
+      new Set();
 
     for (
       const row of allRows
@@ -931,9 +1194,9 @@ export default async function handler(req, res) {
       }
     }
 
-    // --------------------------------------------------------
-    // 4. Build relevant evidence
-    // --------------------------------------------------------
+    // ========================================================
+    // 4. BUILD EVIDENCE
+    // ========================================================
 
     const evidence =
       buildEvidence(
@@ -941,9 +1204,9 @@ export default async function handler(req, res) {
         uniqueRows
       );
 
-    // --------------------------------------------------------
-    // 5. Generate complete detailed answer
-    // --------------------------------------------------------
+    // ========================================================
+    // 5. GENERATE COMPLETE ANSWER
+    // ========================================================
 
     const answer =
       await generateAnswer({
@@ -957,9 +1220,9 @@ export default async function handler(req, res) {
         evidence
       });
 
-    // --------------------------------------------------------
-    // 6. Return result
-    // --------------------------------------------------------
+    // ========================================================
+    // 6. RETURN ANSWER
+    // ========================================================
 
     return res
       .status(200)
