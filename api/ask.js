@@ -31,16 +31,14 @@ const GEMINI_MODEL =
 
 // ------------------------------------------------------------
 // Gemini fallback models
-//
-// If 3.8 is temporarily unavailable, the system automatically
-// tries the next supported model instead of immediately failing.
 // ------------------------------------------------------------
 
 const GEMINI_FALLBACK_MODELS = [
   "gemini-3.8-flash",
   "gemini-3.7-flash",
   "gemini-3.6-flash",
-  "gemini-3.5-flash"
+  "gemini-3.5-flash",
+  "gemini-3.5-flash-lite"
 ];
 
 const TABLE_NAME = "orthodox_answers";
@@ -98,14 +96,11 @@ function unique(array) {
 // ------------------------------------------------------------
 
 function calculateRelevance(question, row) {
+  const q = normalize(question);
 
-  const q =
-    normalize(question);
-
-  const qTokens =
-    unique(
-      tokenize(question)
-    );
+  const qTokens = unique(
+    tokenize(question)
+  );
 
   const rowQuestion =
     normalize(row.question);
@@ -127,34 +122,22 @@ function calculateRelevance(question, row) {
 
   let score = 0;
 
-  // ----------------------------------------------------------
   // Exact question
-  // ----------------------------------------------------------
-
   if (rowQuestion === q) {
     score += 1500;
   }
 
-  // ----------------------------------------------------------
   // Exact phrase
-  // ----------------------------------------------------------
-
   if (q && rowQuestion.includes(q)) {
     score += 700;
   }
 
-  // ----------------------------------------------------------
-  // Question appears inside answer
-  // ----------------------------------------------------------
-
+  // Question appears in answer
   if (q && rowAnswer.includes(q)) {
     score += 300;
   }
 
-  // ----------------------------------------------------------
   // Individual concept matching
-  // ----------------------------------------------------------
-
   for (const token of qTokens) {
 
     if (rowQuestion.includes(token)) {
@@ -182,10 +165,7 @@ function calculateRelevance(question, row) {
     }
   }
 
-  // ----------------------------------------------------------
   // Prefer substantial knowledge records
-  // ----------------------------------------------------------
-
   if (rowAnswer.length > 500) {
     score += 15;
   }
@@ -301,11 +281,7 @@ function buildEvidence(question, rows) {
           b._score - a._score
       );
 
-  // ----------------------------------------------------------
-  // IMPORTANT:
   // Keep many related records.
-  // ----------------------------------------------------------
-
   const selected =
     scored.slice(0, 25);
 
@@ -550,10 +526,6 @@ Go deeper into the theological meaning.
 
 Explain connections between related doctrines.
 
-For example, when relevant, explain the relationship
-between Incarnation, salvation, Sacrament, Church,
-faith and Christian life.
-
 Only make such connections when relevant to the question.
 
 # 8. ተግባራዊ ትምህርት
@@ -568,7 +540,7 @@ Where appropriate, identify common misunderstandings.
 
 Correct them according to Orthodox Tewahedo teaching.
 
-Do not invent controversies that are unrelated to the question.
+Do not invent controversies unrelated to the question.
 
 # 10. መደምደሚያ
 
@@ -686,9 +658,7 @@ not a short chatbot response.
   // TRY EACH MODEL
   // ==========================================================
 
-  for (
-    const model of modelsToTry
-  ) {
+  for (const model of modelsToTry) {
 
     const endpoint =
       `https://generativelanguage.googleapis.com/v1beta/models/` +
@@ -696,14 +666,13 @@ not a short chatbot response.
       `:generateContent?key=` +
       encodeURIComponent(GEMINI_API_KEY);
 
-    // --------------------------------------------------------
-    // Gemini 3 configuration
-    // --------------------------------------------------------
+    // ========================================================
+    // REQUEST BODY
+    // ========================================================
 
     const requestBody = {
 
       system_instruction: {
-
         parts: [
           {
             text:
@@ -713,31 +682,30 @@ not a short chatbot response.
       },
 
       contents: [
-
         {
           role: "user",
 
           parts: [
-
             {
               text:
                 userPrompt
             }
-
           ]
         }
-
       ],
 
       generationConfig: {
 
-        // Gemini 3.8 supports low / medium / high.
-        // Medium provides enough reasoning for detailed teaching.
-        generationConfig: {
+        // Gemini 3.8 / 3.7:
+        // balanced reasoning for detailed teaching.
+        thinkingConfig: {
+          thinkingLevel: "medium"
+        },
 
-  // Large output allowance.
-  maxOutputTokens: 12000
-}
+        // Large visible-output allowance.
+        maxOutputTokens: 12000
+      }
+    };
 
     // ========================================================
     // RETRY CURRENT MODEL
@@ -762,7 +730,6 @@ not a short chatbot response.
           await fetch(
             endpoint,
             {
-
               method: "POST",
 
               headers: {
@@ -829,10 +796,8 @@ not a short chatbot response.
         );
 
         // ----------------------------------------------------
-        // 404
-        //
-        // Model unavailable.
-        // Immediately move to next model.
+        // 404 = model unavailable
+        // Move immediately to next model.
         // ----------------------------------------------------
 
         if (
@@ -842,7 +807,8 @@ not a short chatbot response.
         }
 
         // ----------------------------------------------------
-        // Permanent errors
+        // 400 / 401 / 403 = configuration/auth errors
+        // Do not waste retries.
         // ----------------------------------------------------
 
         if (
@@ -880,7 +846,6 @@ not a short chatbot response.
 
         // ----------------------------------------------------
         // Exponential backoff
-        //
         // attempt 1 = 2 sec
         // ----------------------------------------------------
 
@@ -913,15 +878,12 @@ not a short chatbot response.
           error.message
         );
 
-        // ----------------------------------------------------
-        // Do not retry permanent configuration errors.
-        // ----------------------------------------------------
-
         const message =
           String(
             error?.message || ""
           );
 
+        // Do not retry permanent errors.
         if (
           message.includes(
             "Gemini error 400"
@@ -942,11 +904,17 @@ not a short chatbot response.
           break;
         }
 
+        const waitTime =
+          Math.pow(
+            2,
+            attempt
+          ) * 1000;
+
         await new Promise(
           resolve =>
             setTimeout(
               resolve,
-              2000
+              waitTime
             )
         );
       }
@@ -954,11 +922,12 @@ not a short chatbot response.
 
     // --------------------------------------------------------
     // Current model failed.
-    // Move to fallback model.
+    // Move to next fallback model.
     // --------------------------------------------------------
 
     console.log(
-      `Switching from ${model} to the next Gemini model.`
+      `Switching from ${model} ` +
+      `to the next Gemini model.`
     );
   }
 
@@ -1026,9 +995,7 @@ export default async function handler(
     return res
       .status(405)
       .json({
-
         success: false,
-
         error:
           "POST method required."
       });
@@ -1047,9 +1014,7 @@ export default async function handler(
       return res
         .status(500)
         .json({
-
           success: false,
-
           error:
             "SUPABASE_ANON_KEY is missing."
         });
@@ -1062,9 +1027,7 @@ export default async function handler(
       return res
         .status(500)
         .json({
-
           success: false,
-
           error:
             "GEMINI_API_KEY is missing."
         });
@@ -1098,9 +1061,7 @@ export default async function handler(
       return res
         .status(400)
         .json({
-
           success: false,
-
           error:
             "Question is required."
         });
@@ -1209,13 +1170,9 @@ export default async function handler(
 
     const answer =
       await generateAnswer({
-
         question,
-
         language,
-
         languageName,
-
         evidence
       });
 
