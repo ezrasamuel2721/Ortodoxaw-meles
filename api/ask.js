@@ -733,12 +733,11 @@ not a short chatbot response.
 
         // Gemini 3.8 supports low / medium / high.
         // Medium provides enough reasoning for detailed teaching.
-        thinking_level: "medium",
+        generationConfig: {
 
-        // Large output allowance.
-        maxOutputTokens: 12000
-      }
-    };
+  // Large output allowance.
+  maxOutputTokens: 12000
+}
 
     // ========================================================
     // RETRY CURRENT MODEL
