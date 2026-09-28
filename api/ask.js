@@ -1,7 +1,9 @@
+// =========================================================
 // Vercel Serverless Function: api/ask.js
-// Orthodox Answer Engine
+// ኦርቶዶክሳዊ መልስ
 // Supabase Knowledge Base + Gemini
-// Detailed, structured, source-grounded Orthodox teaching
+// Detailed, structured, source-grounded answer engine
+// =========================================================
 
 const SUPABASE_URL =
   process.env.SUPABASE_URL ||
@@ -15,7 +17,14 @@ const MODELS = [
   "gemini-3.7-flash",
   "gemini-3.6-flash",
   "gemini-2.5-flash"
-].filter((v, i, a) => v && a.indexOf(v) === i);
+].filter(
+  (v, i, a) => v && a.indexOf(v) === i
+);
+
+
+// =========================================================
+// LANGUAGES
+// =========================================================
 
 const LANGUAGE_NAMES = {
   am: "Amharic (አማርኛ)",
@@ -38,15 +47,16 @@ const LANGUAGE_NAMES = {
 };
 
 
-/* =========================================================
-   BASIC HELPERS
-========================================================= */
+// =========================================================
+// BASIC HELPERS
+// =========================================================
 
 function cleanText(value) {
   return String(value ?? "")
     .replace(/\s+/g, " ")
     .trim();
 }
+
 
 function normalize(value) {
   return cleanText(value)
@@ -57,6 +67,7 @@ function normalize(value) {
     .trim();
 }
 
+
 function words(value) {
   return [
     ...new Set(
@@ -66,6 +77,7 @@ function words(value) {
     )
   ];
 }
+
 
 function rowQuestion(row) {
   return (
@@ -79,6 +91,7 @@ function rowQuestion(row) {
   );
 }
 
+
 function rowAnswer(row) {
   return (
     row.answer ??
@@ -91,6 +104,7 @@ function rowAnswer(row) {
   );
 }
 
+
 function rowLanguage(row) {
   return cleanText(
     row.language ??
@@ -101,21 +115,42 @@ function rowLanguage(row) {
 }
 
 
-/* =========================================================
-   SEARCH / RELEVANCE ENGINE
-========================================================= */
+// =========================================================
+// SEARCH / RELEVANCE ENGINE
+// =========================================================
 
 function scoreRow(row, query, lang) {
+
   const q = normalize(query);
   const qWords = words(query);
 
-  const question = normalize(rowQuestion(row));
-  const answer = normalize(rowAnswer(row));
-  const category = normalize(row.category);
-  const education = normalize(row.education_level);
-  const bible = normalize(row.bible_references);
-  const church = normalize(row.church_sources);
-  const comparison = normalize(row.comparison_group);
+  const question = normalize(
+    rowQuestion(row)
+  );
+
+  const answer = normalize(
+    rowAnswer(row)
+  );
+
+  const category = normalize(
+    row.category
+  );
+
+  const education = normalize(
+    row.education_level
+  );
+
+  const bible = normalize(
+    row.bible_references
+  );
+
+  const church = normalize(
+    row.church_sources
+  );
+
+  const comparison = normalize(
+    row.comparison_group
+  );
 
   const fields = [
     question,
@@ -127,81 +162,174 @@ function scoreRow(row, query, lang) {
     comparison
   ];
 
-  if (!question && !answer) return 0;
+  if (!question && !answer) {
+    return 0;
+  }
 
   let score = 0;
 
-  // Exact question match
+
+  // -------------------------------------------------------
+  // EXACT QUESTION
+  // -------------------------------------------------------
+
   if (question === q) {
-    score += 2500;
+    score += 3000;
   }
 
-  // Question contains the complete query
-  if (question.includes(q)) {
-    score += 1000;
+
+  // -------------------------------------------------------
+  // COMPLETE QUERY INSIDE QUESTION
+  // -------------------------------------------------------
+
+  if (
+    q.length > 2 &&
+    question.includes(q)
+  ) {
+    score += 1500;
   }
 
-  // User query contains database question
-  if (q.includes(question) && question.length > 3) {
-    score += 400;
+
+  // -------------------------------------------------------
+  // DATABASE QUESTION INSIDE USER QUESTION
+  // -------------------------------------------------------
+
+  if (
+    question.length > 3 &&
+    q.includes(question)
+  ) {
+    score += 500;
   }
 
-  // Category match
-  if (category.includes(q)) {
-    score += 600;
+
+  // -------------------------------------------------------
+  // CATEGORY
+  // -------------------------------------------------------
+
+  if (
+    category &&
+    q.length > 2 &&
+    category.includes(q)
+  ) {
+    score += 700;
   }
 
-  for (const w of qWords) {
-    if (question.includes(w)) score += 100;
-    if (category.includes(w)) score += 70;
-    if (answer.includes(w)) score += 35;
-    if (education.includes(w)) score += 20;
-    if (bible.includes(w)) score += 25;
-    if (church.includes(w)) score += 25;
-    if (comparison.includes(w)) score += 15;
+
+  // -------------------------------------------------------
+  // WORD MATCHING
+  // -------------------------------------------------------
+
+  let hits = 0;
+
+  for (const word of qWords) {
+
+    let found = false;
+
+    if (question.includes(word)) {
+      score += 120;
+      found = true;
+    }
+
+    if (category.includes(word)) {
+      score += 90;
+      found = true;
+    }
+
+    if (answer.includes(word)) {
+      score += 45;
+      found = true;
+    }
+
+    if (education.includes(word)) {
+      score += 20;
+    }
+
+    if (bible.includes(word)) {
+      score += 30;
+    }
+
+    if (church.includes(word)) {
+      score += 30;
+    }
+
+    if (comparison.includes(word)) {
+      score += 20;
+    }
+
+    if (found) {
+      hits++;
+    }
   }
 
-  // Number of query words found anywhere
-  const hits = qWords.filter(
-    w => fields.some(f => f.includes(w))
-  ).length;
 
-  if (qWords.length) {
+  // -------------------------------------------------------
+  // QUERY COVERAGE
+  // -------------------------------------------------------
+
+  if (qWords.length > 0) {
+
     score += Math.round(
-      (hits / qWords.length) * 150
+      (hits / qWords.length) * 250
     );
   }
 
-  // Language preference
+
+  // -------------------------------------------------------
+  // LANGUAGE PRIORITY
+  // -------------------------------------------------------
+
   const rl = rowLanguage(row);
 
   if (rl === lang) {
-    score += 200;
+    score += 300;
   }
 
   if (
     lang === "am" &&
     ["amh", "amharic"].includes(rl)
   ) {
-    score += 200;
+    score += 300;
   }
 
   if (
     lang === "en" &&
     ["eng", "english"].includes(rl)
   ) {
-    score += 200;
+    score += 300;
   }
+
+  if (
+    lang === "ti" &&
+    ["tir", "tigrinya"].includes(rl)
+  ) {
+    score += 300;
+  }
+
+  if (
+    lang === "om" &&
+    ["orm", "oromo", "afaanoromo"].includes(rl)
+  ) {
+    score += 300;
+  }
+
+  if (
+    lang === "ar" &&
+    ["ara", "arabic"].includes(rl)
+  ) {
+    score += 300;
+  }
+
 
   return score;
 }
 
 
-/* =========================================================
-   SUPABASE
-========================================================= */
+// =========================================================
+// SUPABASE
+// =========================================================
 
 async function supabaseGet(path) {
+
   if (!SUPABASE_ANON_KEY) {
     throw new Error(
       "SUPABASE_ANON_KEY is not configured."
@@ -211,41 +339,60 @@ async function supabaseGet(path) {
   const response = await fetch(
     `${SUPABASE_URL}/rest/v1/${path}`,
     {
+      method: "GET",
+
       headers: {
         apikey: SUPABASE_ANON_KEY,
+
         Authorization:
           `Bearer ${SUPABASE_ANON_KEY}`,
-        Accept: "application/json"
+
+        Accept:
+          "application/json"
       }
     }
   );
+
 
   const responseText =
     await response.text();
 
   let data = null;
 
+
   try {
+
     data = responseText
       ? JSON.parse(responseText)
       : null;
+
   } catch {
+
     data = null;
   }
 
+
   if (!response.ok) {
+
     throw new Error(
       data?.message ||
       data?.hint ||
+      data?.error_description ||
       `Supabase error ${response.status}`
     );
   }
+
 
   return data;
 }
 
 
+// =========================================================
+// LOAD KNOWLEDGE BASE
+// =========================================================
+
 async function getLessons() {
+
   const columns = [
     "id",
     "question",
@@ -258,139 +405,222 @@ async function getLessons() {
     "comparison_group"
   ].join(",");
 
+
   const path =
-    `orthodox_answers?select=${encodeURIComponent(columns)}&limit=500`;
+    `orthodox_answers?select=${encodeURIComponent(
+      columns
+    )}&limit=500`;
+
 
   return await supabaseGet(path);
 }
 
 
-/* =========================================================
-   SOURCE PREPARATION
-========================================================= */
+// =========================================================
+// SOURCE PREPARATION
+// =========================================================
 
-function buildSources(ranked, limit) {
+function buildSources(
+  ranked,
+  limit
+) {
+
   return ranked
     .slice(0, limit)
-    .map(({ row }) => ({
-      question: cleanText(
-        rowQuestion(row)
-      ),
+    .map(({ row }) => {
 
-      category: cleanText(
-        row.category
-      ),
+      return {
 
-      education_level: cleanText(
-        row.education_level
-      ),
+        question:
+          cleanText(
+            rowQuestion(row)
+          ),
 
-      bible_references: cleanText(
-        row.bible_references
-      ),
+        category:
+          cleanText(
+            row.category
+          ),
 
-      church_sources: cleanText(
-        row.church_sources
-      ),
+        education_level:
+          cleanText(
+            row.education_level
+          ),
 
-      comparison_group: cleanText(
-        row.comparison_group
-      ),
+        bible_references:
+          cleanText(
+            row.bible_references
+          ),
 
-      answer: cleanText(
-        rowAnswer(row)
-      ).slice(0, 7000)
-    }));
+        church_sources:
+          cleanText(
+            row.church_sources
+          ),
+
+        comparison_group:
+          cleanText(
+            row.comparison_group
+          ),
+
+        answer:
+          cleanText(
+            rowAnswer(row)
+          ).slice(0, 9000)
+      };
+    });
 }
 
 
-function sourceText(sources) {
+// =========================================================
+// SOURCE TEXT FOR GEMINI
+// =========================================================
+
+function sourceText(
+  sources
+) {
+
   if (!sources.length) {
-    return "NO MATCHING KNOWLEDGE-BASE MATERIAL WAS FOUND.";
+
+    return (
+      "NO MATCHING KNOWLEDGE-BASE MATERIAL WAS FOUND."
+    );
   }
+
 
   return sources
     .map((s, i) => {
+
       return [
         `SOURCE ${i + 1}`,
-        `Question: ${s.question}`,
-        `Category: ${s.category}`,
-        `Education level: ${s.education_level}`,
-        `Bible references: ${s.bible_references}`,
-        `Church sources: ${s.church_sources}`,
-        `Comparison group: ${s.comparison_group}`,
-        `Lesson text: ${s.answer}`
-      ]
-        .filter(Boolean)
-        .join("\n");
+
+        `Question: ${
+          s.question || ""
+        }`,
+
+        `Category: ${
+          s.category || ""
+        }`,
+
+        `Education level: ${
+          s.education_level || ""
+        }`,
+
+        `Bible references: ${
+          s.bible_references || ""
+        }`,
+
+        `Church sources: ${
+          s.church_sources || ""
+        }`,
+
+        `Comparison group: ${
+          s.comparison_group || ""
+        }`,
+
+        `Lesson text: ${
+          s.answer || ""
+        }`
+      ].join("\n");
+
     })
-    .join("\n\n");
+    .join("\n\n====================\n\n");
 }
 
 
-/* =========================================================
-   ANSWER LEVEL
-========================================================= */
+// =========================================================
+// ANSWER LEVEL
+// =========================================================
 
-function levelConfig(level) {
-  const n = Number(level) || 2;
+function levelConfig(
+  level
+) {
+
+  const n =
+    Number(level) || 2;
+
 
   if (n === 1) {
+
     return {
+
       name: "Basic",
 
       length:
         "normally about 450-750 words when explanation is needed",
 
       focus:
-        "Give a clear foundation. Answer directly, explain the essential Orthodox teaching, provide the most important biblical basis, and finish with a short practical conclusion."
+        "Give a clear foundation. Answer directly, define the main concept, explain the essential Orthodox teaching, provide the most important biblical basis, and finish with a practical conclusion."
     };
   }
 
+
   if (n === 3) {
+
     return {
+
       name: "Scholarly",
 
       length:
         "normally about 1800-3000 words when the subject requires depth",
 
       focus:
-        "Treat the question as a serious theological study. Give definitions, distinctions, biblical connections, historical context, early Church Fathers, Ethiopian Orthodox Tewahedo tradition, relevant Ethiopian scholars and church texts when supplied, common misunderstandings, doctrinal comparisons where relevant, and a carefully reasoned conclusion."
+        "Treat the question as a serious theological study. Give definitions, distinctions, biblical connections, historical context, early Church Fathers, Ethiopian Orthodox Tewahedo tradition, relevant Ethiopian scholars and church texts when supplied, common misunderstandings, doctrinal comparisons where relevant, evidence comparison, and a carefully reasoned conclusion."
     };
   }
 
+
   return {
+
     name: "Detailed",
 
     length:
       "normally about 900-1600 words when the subject requires explanation",
 
     focus:
-      "Give a complete teaching suitable for a serious learner. Explain the direct answer, meaning, biblical foundation, Orthodox theological understanding, tradition, spiritual significance, important distinctions, examples, and conclusion."
+      "Give a complete teaching suitable for a serious learner. Explain the direct answer, meaning, biblical foundation, Orthodox theological understanding, Church Fathers, Ethiopian Orthodox Tewahedo tradition, important distinctions, examples, spiritual significance, and conclusion."
   };
 }
 
 
-/* =========================================================
-   ORTHODOX ANSWER INSTRUCTION
-========================================================= */
+// =========================================================
+// ORTHODOX ANSWER INSTRUCTION
+// =========================================================
 
 function systemInstruction(
   languageName,
   answerLevel
 ) {
+
   const level =
     levelConfig(answerLevel);
 
+
   return `
-You are the scholarly answer engine of an Ethiopian Orthodox Tewahedo spiritual question-and-answer application called "ኦርቶዶክሳዊ መልስ".
+You are the scholarly theological answer engine of an Ethiopian Orthodox Tewahedo spiritual question-and-answer application called "ኦርቶዶክሳዊ መልስ".
 
-Your task is to answer the user's spiritual question accurately, deeply, respectfully, and in a structured educational form.
+Your responsibility is to answer the user's question accurately, deeply, respectfully, and in a logically organized educational form.
 
-FINAL ANSWER LANGUAGE:
-Write ONLY in ${languageName}.
+=========================================================
+ABSOLUTE LANGUAGE RULE
+=========================================================
 
-Never mention:
+Write the FINAL ANSWER ONLY in:
+
+${languageName}
+
+Do not switch to English.
+
+Do not mix languages unnecessarily.
+
+Scripture references, names of people, books, and proper names may remain in their standard form when necessary.
+
+=========================================================
+IMPORTANT
+=========================================================
+
+The reader must receive a finished teaching, not a discussion about how the answer was generated.
+
+NEVER mention:
+
 - AI
 - Gemini
 - model
@@ -399,240 +629,376 @@ Never mention:
 - API
 - prompt
 - retrieval
-- internal system
 - source selection
-- this instruction
+- internal instruction
+- system message
+- knowledge base
 
-The reader should experience the response as a carefully prepared Orthodox teaching.
+Do not say "I found".
+
+Do not say "according to the AI".
 
 =========================================================
 ANSWER DEPTH
 =========================================================
 
 Selected level:
+
 ${level.name}
 
-Depth requirement:
+Required focus:
+
 ${level.focus}
 
 Target length:
+
 ${level.length}
 
-Do NOT give a three-line answer when the question requires explanation.
+Do not produce a short three-line answer when the question requires explanation.
 
-Increase depth through:
-- definitions
-- biblical evidence
-- theological explanation
-- historical context
-- connections between teachings
-- distinctions
-- examples
-- practical spiritual meaning
-- relevant Orthodox tradition
-
-Do not increase length through repetition.
+Make the answer longer by adding useful theological substance, not repetition.
 
 =========================================================
-ORTHODOX THEOLOGICAL FRAMEWORK
+CORE ANSWER METHOD
 =========================================================
 
-When relevant, explain the teaching according to the faith and tradition of the Ethiopian Orthodox Tewahedo Church.
+For every question, follow this reasoning order:
 
-Give special attention to:
+1. Identify exactly what the user is asking.
 
-1. Holy Scripture
-   - Old Testament
-   - New Testament
-   - relevant biblical passages
-   - relationship between prophecy/figure and fulfillment
+2. Give the DIRECT ANSWER first.
 
-2. Orthodox theology
-   - Trinity
-   - Incarnation
-   - salvation
-   - Christology
-   - Cross
-   - Resurrection
-   - Church
-   - Sacraments
-   - Christian life
+3. Define the central term or doctrine.
 
-3. Holy Fathers
-   When supplied by the knowledge material, accurately preserve the teaching and attribution of Church Fathers.
+4. Explain the biblical foundation.
 
-4. Ethiopian Orthodox Tewahedo tradition
-   When supplied by the knowledge material, accurately use:
-   - Ethiopian scholars
-   - traditional teachings
-   - Ethiopian church literature
-   - relevant ecclesiastical texts
+5. Explain the Ethiopian Orthodox Tewahedo theological understanding.
 
-5. Practical spiritual life
-   Explain what the teaching means for the believer's faith, worship, repentance, prayer, conduct, and hope when relevant.
+6. Use relevant Church Fathers when reliable material is supplied.
+
+7. Use relevant Ethiopian Orthodox sources, scholars, church literature, liturgical tradition, or ecclesiastical teaching when supplied.
+
+8. Explain important distinctions and common misunderstandings.
+
+9. If another religion or Christian denomination is relevant, explain its position fairly.
+
+10. Present the evidence used by the different positions when available.
+
+11. Compare the teachings carefully without insulting another religion or group.
+
+12. Explain the Ethiopian Orthodox Tewahedo response using Scripture, theology, Fathers, and verified tradition.
+
+13. Explain the spiritual and practical meaning.
+
+14. End with a meaningful conclusion.
 
 =========================================================
-IMPORTANT RULE ABOUT SOURCES
+MANDATORY ORGANIZATION
 =========================================================
 
-The supplied knowledge-base material is the primary source material.
-
-Use it intelligently.
-
-Synthesize related materials rather than copying one lesson.
-
-Never invent:
-- quotations
-- Bible verses
-- verse numbers
-- Church Fathers
-- Ethiopian scholars
-- books
-- manuscripts
-- historical events
-- page numbers
-- citations
-- theological claims presented as quotations
-
-If a specific attribution is not supplied and you are not confident it is accurate, explain the doctrine without inventing an attribution.
-
-Do not manufacture a citation simply to make the answer look scholarly.
-
-=========================================================
-SCRIPTURE
-=========================================================
-
-When Scripture is relevant:
-
-- explain the passage rather than merely listing references
-- connect Old Testament and New Testament when appropriate
-- distinguish direct teaching from typology/foreshadowing
-- do not create false quotations
-- do not attach an incorrect verse reference
-
-For example, when discussing the Cross, relevant themes may include:
-- the bronze serpent in Numbers
-- Christ's words in John
-- Paul's teaching about the Cross
-- Peter's teaching about Christ bearing sins on the tree
-
-Only use references when appropriate and accurate.
-
-=========================================================
-THE CROSS: SPECIAL REQUIREMENT
-=========================================================
-
-If the question is about:
-- መስቀል
-- Cross
-- Crucifixion
-- Cross of Christ
-- sign of the Cross
-- Feast of the Cross
-- Meskel
-- salvation through the Cross
-- why Christians honor the Cross
-
-then provide a particularly complete explanation.
-
-Where relevant, cover:
-
-1. What the Cross is.
-2. The Cross as the place of Christ's saving suffering and sacrifice.
-3. The Cross as connected to Christ's Incarnation.
-4. The relationship between Cross, death, and Resurrection.
-5. The Cross as victory over death and the power of evil.
-6. Old Testament figures and foreshadowings where appropriate.
-7. New Testament teaching about the Cross.
-8. Why something formerly associated with shame became a sign of glory and victory.
-9. The difference between worshipping God and honoring the Cross as the sign associated with Christ's saving work.
-10. The spiritual meaning of making the sign of the Cross.
-11. The place of the Cross in Ethiopian Orthodox Tewahedo worship and tradition when supported by the supplied material.
-12. Practical meaning for Christian life.
-
-Do not reduce the Cross to merely a physical object.
-
-=========================================================
-STRUCTURE
-=========================================================
-
-Whenever appropriate, use this structure:
+When relevant, organize the final answer approximately as follows:
 
 # Direct Answer
 
-Give the answer to the user's question immediately.
+Answer the question immediately.
 
-## 1. Meaning / Definition
+## 1. Meaning and Definition
 
 Explain the central concept.
 
 ## 2. Biblical Foundation
 
-Give relevant Scripture and explain it.
+Explain the relevant Old Testament and New Testament passages.
 
-## 3. Orthodox Theological Understanding
+## 3. Ethiopian Orthodox Tewahedo Understanding
 
-Explain the teaching according to Orthodox theology.
+Explain the doctrine clearly and precisely.
 
-## 4. Teaching of the Church and Fathers
+## 4. Teaching of the Church Fathers
 
-Use supplied church sources accurately.
+Use relevant Fathers only when the attribution is reliable.
 
-## 5. Ethiopian Orthodox Tewahedo Tradition
+## 5. Ethiopian Orthodox Tradition and Sources
 
-Use supplied Ethiopian sources accurately.
+Use supplied Ethiopian material accurately.
 
-## 6. Important Distinctions
+## 6. Important Distinctions and Misunderstandings
 
-Explain common misunderstandings and important doctrinal distinctions.
+Clarify difficult points.
 
-## 7. Spiritual and Practical Meaning
+## 7. Comparison with Other Positions
 
-Explain how the teaching applies to Christian life.
+Use only when relevant.
+
+## 8. Evidence and Orthodox Response
+
+Compare the relevant teachings and explain the Orthodox response.
+
+## 9. Spiritual and Practical Meaning
+
+Explain how the teaching affects Christian life.
 
 ## Conclusion
 
-Give a concise but meaningful conclusion.
+Summarize the central teaching.
 
-Do not force every heading into every answer if it is irrelevant.
-
-=========================================================
-COMPARISON QUESTIONS
-=========================================================
-
-If the user asks about another Christian or religious belief:
-
-- explain the Ethiopian Orthodox Tewahedo position clearly
-- describe the other position fairly
-- distinguish the positions using documented teachings
-- do not insult or ridicule another religion or its followers
-- do not invent what another group believes
+Do not force irrelevant sections into an answer.
 
 =========================================================
-LANGUAGE RULE
+SCRIPTURE RULE
 =========================================================
 
-Answer ONLY in the selected language.
+When Scripture is relevant:
 
-Do not answer in English when Amharic is selected.
+- use accurate references
+- explain the passage
+- do not merely list verses
+- connect Old Testament and New Testament where appropriate
+- distinguish direct teaching from typology or foreshadowing
+- do not invent quotations
+- do not invent verse numbers
 
-Do not mix languages unnecessarily.
+Never create a Bible reference simply to make the answer appear scholarly.
 
-Preserve proper names and Scripture references accurately.
+=========================================================
+SOURCE INTEGRITY
+=========================================================
+
+The supplied lesson material is source material for the answer.
+
+Synthesize multiple relevant lessons into ONE coherent teaching.
+
+Do NOT simply copy one lesson when several relevant materials are available.
+
+Never invent:
+
+- quotations
+- Bible references
+- Church Fathers
+- Ethiopian scholars
+- books
+- manuscripts
+- page numbers
+- historical claims
+- citations
+- denominational teachings
+- theological quotations
+
+Never place quotation marks around a paraphrase.
+
+If an exact attribution is uncertain, do not manufacture it.
+
+If a specific source is not supplied and you are not confident that the attribution is accurate, explain the doctrine without falsely attributing it.
+
+=========================================================
+ORTHODOX THEOLOGICAL FRAMEWORK
+=========================================================
+
+When relevant, give attention to:
+
+- the Holy Trinity
+- the Incarnation
+- Christology
+- salvation
+- the Cross
+- the Resurrection
+- the Church
+- the mysteries/sacraments
+- repentance
+- prayer
+- fasting
+- Christian holiness
+- eternal life
+
+Do not force unrelated doctrines into the answer.
+
+=========================================================
+CHURCH FATHERS
+=========================================================
+
+Use Church Fathers only when they are relevant.
+
+When reliable source material provides a Father and his teaching:
+
+- identify the Father
+- identify the work when available
+- explain the teaching accurately
+- distinguish quotation from paraphrase
+
+Never invent a quotation.
+
+Never claim that "all the Fathers" taught something unless the evidence actually establishes that.
+
+=========================================================
+ETHIOPIAN ORTHODOX SOURCES
+=========================================================
+
+When supplied material contains Ethiopian Orthodox sources, use them accurately.
+
+This may include:
+
+- Ethiopian Orthodox scholars
+- traditional teachers
+- ecclesiastical literature
+- liturgical teaching
+- church order
+- canonical material
+- Ethiopian theological texts
+
+Do not invent statements by Ethiopian scholars.
+
+Do not invent page numbers.
+
+=========================================================
+COMPARATIVE RELIGION
+=========================================================
+
+If the question concerns Catholic, Protestant, Jehovah's Witnesses, Muslim, Jewish, atheist, "Only Jesus", or another religious position:
+
+First explain the Ethiopian Orthodox Tewahedo teaching clearly.
+
+Then, when relevant, explain the other position fairly.
+
+Then explain the evidence associated with each position.
+
+Then identify the exact points of agreement and disagreement.
+
+Then explain the Ethiopian Orthodox response.
+
+Do not insult, ridicule, stereotype, or misrepresent another religion or its followers.
+
+Do not invent what another group believes.
+
+=========================================================
+SPECIAL TOPIC: THE CROSS
+=========================================================
+
+If the question concerns:
+
+- መስቀል
+- Cross
+- Crucifixion
+- Cross of Christ
+- sign of the Cross
+- Meskel
+- Feast of the Cross
+- salvation through the Cross
+- why Christians honor the Cross
+
+give a particularly complete teaching.
+
+Where relevant, explain:
+
+1. What the Cross is.
+2. Christ's suffering and saving death.
+3. The relationship between the Cross and the Incarnation.
+4. The relationship between death and Resurrection.
+5. Victory over death and evil.
+6. Old Testament figures and foreshadowings.
+7. New Testament teaching.
+8. Why the Cross changed from an instrument of shame into a sign of glory and victory.
+9. Worship of God versus honor shown to the Cross associated with Christ's saving work.
+10. The spiritual meaning of making the sign of the Cross.
+11. Ethiopian Orthodox Tewahedo tradition when supplied.
+12. Practical Christian meaning.
+
+Do not reduce the Cross to merely a physical object.
+
+=========================================================
+SPECIAL TOPIC: BAPTISM
+=========================================================
+
+If the question concerns:
+
+- ጥምቀት
+- baptism
+- infant baptism
+- child baptism
+- baptism of adults
+- baptism by immersion
+- baptism in the Trinity
+- rebirth through baptism
+
+give a complete teaching.
+
+Where relevant, explain:
+
+- meaning of baptism
+- new birth
+- water and the Holy Spirit
+- Christ's command
+- baptism into the Trinity
+- death and rising with Christ
+- forgiveness and new life
+- Church membership
+- infant baptism
+- adult baptism
+- immersion
+- Ethiopian Orthodox practice
+- relevant Fathers
+- relevant biblical evidence
+- comparison with traditions that reject infant baptism
+- evidence and Orthodox response
+- spiritual significance
+
+Do not invent historical claims.
+
+=========================================================
+MULTIPLE SOURCE SYNTHESIS
+=========================================================
+
+If several supplied sources discuss the same subject:
+
+Do not answer with several disconnected mini-answers.
+
+Instead:
+
+1. identify the common teaching
+2. combine complementary information
+3. resolve repetition
+4. preserve important distinctions
+5. produce ONE coherent teaching
+
+The final answer should read as if one knowledgeable Orthodox teacher prepared it.
+
+=========================================================
+WHEN MATERIAL IS INSUFFICIENT
+=========================================================
+
+If the supplied material does not establish a specialized historical or theological claim:
+
+Do not invent information.
+
+Use only what can be stated confidently.
+
+It is better to give a precise answer with a stated limitation than a fabricated scholarly claim.
 
 =========================================================
 STYLE
 =========================================================
 
 Use:
+
 - clear headings
 - numbered sections
+- readable paragraphs
 - bullets where useful
-- short readable paragraphs
-- theological precision
-- respectful Orthodox terminology
+- precise Orthodox terminology
+- respectful language
+- logical progression
+- meaningful explanations
+
+Avoid:
+
+- unnecessary repetition
+- empty introductory phrases
+- unsupported claims
+- fake quotations
+- fake references
+- overly short answers
 
 The answer must be understandable to:
+
 - ordinary believers
 - students
 - teachers
@@ -640,37 +1006,64 @@ The answer must be understandable to:
 - serious learners
 - advanced readers
 
-But do not simplify away important doctrine.
+Do not simplify away important doctrine.
 
-End with a meaningful conclusion.
+=========================================================
+FINAL QUALITY CHECK
+=========================================================
 
-Do not include a bibliography unless actual bibliographic information is supplied.
+Before producing the answer, silently verify:
 
-Do not say "according to the AI".
+1. Did I answer the exact question?
+2. Did I give the direct answer first?
+3. Did I define the main concept?
+4. Did I provide relevant Scripture?
+5. Did I explain the Orthodox theological meaning?
+6. Did I use relevant Fathers only when reliable?
+7. Did I use Ethiopian Orthodox material when supplied?
+8. Did I combine related sources rather than repeating them?
+9. Did I represent other positions fairly when relevant?
+10. Did I avoid invented quotations and references?
+11. Did I maintain the selected language?
+12. Is the answer structured and readable?
+13. Did I give practical spiritual meaning?
+14. Did I finish with a meaningful conclusion?
 
-Do not say "I found".
-
-Do not mention the knowledge base.
-
-Return ONLY the final answer.
+Return ONLY the finished answer.
 `;
 }
 
 
-/* =========================================================
-   GEMINI
-========================================================= */
+// =========================================================
+// GEMINI TEXT EXTRACTION
+// =========================================================
 
-function extractGeminiText(data) {
+function extractGeminiText(
+  data
+) {
+
+  const candidates =
+    data?.candidates || [];
+
+  if (!candidates.length) {
+    return "";
+  }
+
   const parts =
-    data?.candidates?.[0]?.content?.parts || [];
+    candidates[0]?.content?.parts || [];
 
   return parts
-    .map(p => p?.text || "")
+    .map(
+      part => part?.text || ""
+    )
     .join("\n")
     .trim();
 }
 
+
+// =========================================================
+// GEMINI GENERATION
+// =========================================================
 
 async function generateWithGemini(
   question,
@@ -678,8 +1071,10 @@ async function generateWithGemini(
   sources,
   answerLevel
 ) {
+
   const apiKey =
     process.env.GEMINI_API_KEY;
+
 
   if (!apiKey) {
     throw new Error(
@@ -687,9 +1082,11 @@ async function generateWithGemini(
     );
   }
 
+
   const languageName =
     LANGUAGE_NAMES[language] ||
     LANGUAGE_NAMES.am;
+
 
   const instruction =
     systemInstruction(
@@ -697,10 +1094,14 @@ async function generateWithGemini(
       answerLevel
     );
 
+
   let lastError = null;
 
+
   for (const model of MODELS) {
+
     try {
+
       const response =
         await fetch(
           `https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(
@@ -717,10 +1118,12 @@ async function generateWithGemini(
             },
 
             body: JSON.stringify({
+
               systemInstruction: {
                 parts: [
                   {
-                    text: instruction
+                    text:
+                      instruction
                   }
                 ]
               },
@@ -732,18 +1135,29 @@ async function generateWithGemini(
                   parts: [
                     {
                       text:
-                        `USER QUESTION:\n${question}\n\n` +
-                        `KNOWLEDGE-BASE MATERIAL:\n` +
-                        sourceText(sources)
+                        [
+                          "USER QUESTION:",
+                          question,
+                          "",
+                          "RELEVANT TEACHING MATERIAL:",
+                          sourceText(sources)
+                        ].join("\n")
                     }
                   ]
                 }
               ],
 
               generationConfig: {
-                temperature: 0.25,
-                topP: 0.9,
-                maxOutputTokens: 7000,
+
+                temperature: 0.20,
+
+                topP: 0.90,
+
+                maxOutputTokens:
+                  answerLevel === 3
+                    ? 9000
+                    : 7000,
+
                 responseMimeType:
                   "text/plain"
               }
@@ -751,26 +1165,39 @@ async function generateWithGemini(
           }
         );
 
+
       const responseText =
         await response.text();
 
+
       let data = null;
 
+
       try {
-        data = responseText
-          ? JSON.parse(responseText)
-          : null;
+
+        data =
+          responseText
+            ? JSON.parse(
+                responseText
+              )
+            : null;
+
       } catch {
+
         data = null;
       }
 
+
       if (response.ok) {
+
         const answer =
           extractGeminiText(data);
+
 
         if (answer) {
           return answer;
         }
+
 
         lastError =
           new Error(
@@ -780,14 +1207,20 @@ async function generateWithGemini(
         continue;
       }
 
+
+      const errorMessage =
+        data?.error?.message ||
+        `Answer service error ${response.status}`;
+
+
       lastError =
         new Error(
-          data?.error?.message ||
-          `Answer service error ${response.status}`
+          errorMessage
         );
 
-      // Continue to another configured model
-      // for temporary/model availability errors.
+
+      // Try the next model for
+      // temporary availability/rate errors.
       if (
         ![
           400,
@@ -799,15 +1232,20 @@ async function generateWithGemini(
           502,
           503,
           504
-        ].includes(response.status)
+        ].includes(
+          response.status
+        )
       ) {
         break;
       }
 
     } catch (error) {
-      lastError = error;
+
+      lastError =
+        error;
     }
   }
+
 
   throw (
     lastError ||
@@ -818,28 +1256,152 @@ async function generateWithGemini(
 }
 
 
-/* =========================================================
-   FALLBACK
-========================================================= */
+// =========================================================
+// FALLBACK ANSWER
+// =========================================================
 
-function fallbackAnswer(ranked) {
-  const best =
-    ranked[0]?.row;
+function fallbackAnswer(
+  ranked,
+  language
+) {
 
-  if (!best) return "";
+  if (!ranked.length) {
+    return "";
+  }
 
-  return cleanText(
-    rowAnswer(best)
+
+  const selected =
+    ranked
+      .slice(0, 8)
+      .map(
+        item => item.row
+      );
+
+
+  const parts = [];
+
+
+  // -------------------------------------------------------
+  // Direct answer
+  // -------------------------------------------------------
+
+  const firstAnswer =
+    cleanText(
+      rowAnswer(
+        selected[0]
+      )
+    );
+
+
+  if (firstAnswer) {
+
+    parts.push(
+      firstAnswer
+    );
+  }
+
+
+  // -------------------------------------------------------
+  // Additional relevant teachings
+  // -------------------------------------------------------
+
+  for (
+    let i = 1;
+    i < selected.length;
+    i++
+  ) {
+
+    const answer =
+      cleanText(
+        rowAnswer(
+          selected[i]
+        )
+      );
+
+
+    if (!answer) {
+      continue;
+    }
+
+
+    // Prevent exact duplicate answers.
+    const duplicate =
+      parts.some(
+        part =>
+          normalize(part) ===
+          normalize(answer)
+      );
+
+
+    if (!duplicate) {
+
+      parts.push(
+        answer
+      );
+    }
+  }
+
+
+  if (!parts.length) {
+    return "";
+  }
+
+
+  /*
+   * When Gemini is unavailable, the fallback cannot
+   * create new theology. Therefore it only combines
+   * material already stored in Supabase.
+   *
+   * This is intentionally safer than inventing doctrine.
+   */
+
+  if (language === "am") {
+
+    return [
+      "## መልስ",
+
+      parts.join(
+        "\n\n"
+      ),
+
+      "## ማጠቃለያ",
+
+      "ከተያያዙት የትምህርት ምንጮች መሠረት ይህ ጉዳይ በቤተ ክርስቲያን ትምህርት፣ በቅዱሳት መጻሕፍትና በተረጋገጡ የትምህርት ምንጮች መሠረት መታየት ይገባዋል።"
+    ].join(
+      "\n\n"
+    );
+  }
+
+
+  return [
+    "Answer",
+
+    parts.join(
+      "\n\n"
+    ),
+
+    "Conclusion",
+
+    "The teaching should be understood in the context of Scripture and the relevant Orthodox teaching provided above."
+  ].join(
+    "\n\n"
   );
 }
 
 
-/* =========================================================
-   MAIN API HANDLER
-========================================================= */
+// =========================================================
+// MAIN API HANDLER
+// =========================================================
 
 module.exports =
-  async function handler(req, res) {
+  async function handler(
+    req,
+    res
+  ) {
+
+    // -----------------------------------------------------
+    // RESPONSE HEADERS
+    // -----------------------------------------------------
 
     res.setHeader(
       "Cache-Control",
@@ -851,93 +1413,143 @@ module.exports =
       "application/json; charset=utf-8"
     );
 
-    if (req.method !== "POST") {
-      return res.status(405).json({
-        error:
-          "Method not allowed"
-      });
+
+    // -----------------------------------------------------
+    // METHOD CHECK
+    // -----------------------------------------------------
+
+    if (
+      req.method !== "POST"
+    ) {
+
+      return res
+        .status(405)
+        .json({
+          error:
+            "Method not allowed"
+        });
     }
 
+
     try {
+
+      // ---------------------------------------------------
+      // BODY
+      // ---------------------------------------------------
+
       const body =
         req.body || {};
+
 
       const question =
         cleanText(
           body.question
         );
 
+
       const language =
         cleanText(
-          body.language || "am"
+          body.language ||
+          "am"
         ).toLowerCase();
+
 
       const answerLevel =
         [1, 2, 3].includes(
-          Number(body.answerLevel)
+          Number(
+            body.answerLevel
+          )
         )
-          ? Number(body.answerLevel)
+          ? Number(
+              body.answerLevel
+            )
           : 2;
 
+
+      // ---------------------------------------------------
+      // VALIDATION
+      // ---------------------------------------------------
+
       if (!question) {
-        return res.status(400).json({
-          error:
-            "Question is required"
-        });
+
+        return res
+          .status(400)
+          .json({
+            error:
+              "Question is required"
+          });
       }
 
-      if (question.length > 5000) {
-        return res.status(400).json({
-          error:
-            "Question is too long"
-        });
+
+      if (
+        question.length > 5000
+      ) {
+
+        return res
+          .status(400)
+          .json({
+            error:
+              "Question is too long"
+          });
       }
 
-      /* -----------------------------------------
-         LOAD KNOWLEDGE BASE
-      ----------------------------------------- */
+
+      // ---------------------------------------------------
+      // LOAD SUPABASE
+      // ---------------------------------------------------
 
       const loadedRows =
         await getLessons();
 
+
       const rows =
-        Array.isArray(loadedRows)
+        Array.isArray(
+          loadedRows
+        )
           ? loadedRows
           : [];
 
-      /* -----------------------------------------
-         RANK KNOWLEDGE
-      ----------------------------------------- */
+
+      // ---------------------------------------------------
+      // RANK
+      // ---------------------------------------------------
 
       const ranked =
         rows
           .map(row => ({
+
             row,
+
             score:
               scoreRow(
                 row,
                 question,
                 language
               )
+
           }))
           .filter(
-            item => item.score > 0
+            item =>
+              item.score > 0
           )
           .sort(
             (a, b) =>
-              b.score - a.score
+              b.score -
+              a.score
           );
 
-      /* -----------------------------------------
-         SOURCE LIMIT
-      ----------------------------------------- */
+
+      // ---------------------------------------------------
+      // SOURCE LIMIT
+      // ---------------------------------------------------
 
       const sourceLimit =
         answerLevel === 1
-          ? 6
+          ? 8
           : answerLevel === 3
-          ? 15
-          : 10;
+          ? 18
+          : 12;
+
 
       const selected =
         buildSources(
@@ -945,13 +1557,19 @@ module.exports =
           sourceLimit
         );
 
+
+      // ---------------------------------------------------
+      // GENERATE
+      // ---------------------------------------------------
+
       let answer = "";
 
-      /* -----------------------------------------
-         GEMINI GENERATION
-      ----------------------------------------- */
+      let generationUsed =
+        false;
+
 
       try {
+
         answer =
           await generateWithGemini(
             question,
@@ -960,77 +1578,113 @@ module.exports =
             answerLevel
           );
 
+
+        generationUsed =
+          true;
+
       } catch (generationError) {
 
         console.error(
-          "Answer generation failed:",
+          "Gemini generation failed:",
+          generationError?.message ||
           generationError
         );
 
+
+        // -------------------------------------------------
+        // SAFE FALLBACK
+        // -------------------------------------------------
+
         answer =
           fallbackAnswer(
-            ranked
+            ranked,
+            language
           );
       }
 
-      /* -----------------------------------------
-         NO ANSWER
-      ----------------------------------------- */
+
+      // ---------------------------------------------------
+      // NO ANSWER
+      // ---------------------------------------------------
 
       if (!answer) {
-        return res.status(503).json({
-          error:
-            "The answer service is temporarily unavailable."
-        });
+
+        return res
+          .status(503)
+          .json({
+
+            error:
+              "The answer service is temporarily unavailable.",
+
+            matchedCount:
+              ranked.length
+          });
       }
 
-      /* -----------------------------------------
-         RESPONSE
-      ----------------------------------------- */
 
-      return res.status(200).json({
+      // ---------------------------------------------------
+      // RESPONSE
+      // ---------------------------------------------------
 
-        answer,
+      return res
+        .status(200)
+        .json({
 
-        language,
+          answer,
 
-        answerLevel,
+          language,
 
-        matchedCount:
-          selected.length,
+          answerLevel,
 
-        sources:
-          selected.map(s => ({
-            question:
-              s.question,
+          matchedCount:
+            ranked.length,
 
-            category:
-              s.category,
+          usedKnowledgeSources:
+            selected.length,
 
-            education_level:
-              s.education_level,
+          generationUsed,
 
-            bible_references:
-              s.bible_references,
+          sources:
+            selected.map(
+              source => ({
 
-            church_sources:
-              s.church_sources,
+                question:
+                  source.question,
 
-            comparison_group:
-              s.comparison_group
-          }))
-      });
+                category:
+                  source.category,
+
+                education_level:
+                  source.education_level,
+
+                bible_references:
+                  source.bible_references,
+
+                church_sources:
+                  source.church_sources,
+
+                comparison_group:
+                  source.comparison_group
+              })
+            )
+        });
+
 
     } catch (error) {
 
       console.error(
         "/api/ask error:",
+        error?.message ||
         error
       );
 
-      return res.status(500).json({
-        error:
-          "Unable to answer the question right now."
-      });
+
+      return res
+        .status(500)
+        .json({
+
+          error:
+            "Unable to answer the question right now."
+        });
     }
   };
