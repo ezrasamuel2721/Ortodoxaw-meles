@@ -2,7 +2,7 @@
 // api/ask.js
 // ኦርቶዶክሳዊ መልስ
 //
-// Supabase Knowledge Base + Gemini (Optimized & Fixed)
+// Supabase Knowledge Base + Gemini (Clean & Fixed)
 // Detailed / Structured / Topic-Coherent Orthodox Answer Engine
 // ============================================================
 
@@ -16,15 +16,13 @@ const SUPABASE_ANON_KEY =
 const GEMINI_API_KEY =
   process.env.GEMINI_API_KEY || "";
 
-// ተስተካክሏል፡ ትክክለኛ የጂሚኒ ሞዴል ስም ተተክቷል
 const GEMINI_MODEL =
   process.env.GEMINI_MODEL || "gemini-1.5-flash";
 
 const SUPABASE_TABLE =
   "orthodox_answers";
 
-const MAX_QUESTION_LENGTH =
-  3000;
+const MAX_QUESTION_LENGTH = 3000;
 
 // ============================================================
 // SUPPORTED LANGUAGES
@@ -163,13 +161,12 @@ function scoreRow(row, question, language) {
   return score;
 }
 
-// የተሻሻለ፡ የSupabase ዳታን በፍጥነት እና በገደብ (Limit) የማምጫ ዘዴ
 async function getLessons() {
   if (!SUPABASE_ANON_KEY) throw new Error("SUPABASE_ANON_KEY is missing");
 
   const url = `${SUPABASE_URL}/rest/v1/${SUPABASE_TABLE}` +
     `?select=id,created_at,question,answer,language,category,education_level,bible_references,church_sources,comparison_group` +
-    `&order=id.asc&limit=300`; // የመልስ ፍጥነትን ለመጨመር የተመጠነ limit
+    `&order=id.asc&limit=300`;
 
   const response = await fetch(url, {
     method: "GET",
@@ -232,11 +229,6 @@ Comparison: ${source.comparison_group}
 `).join("\n-------------------------\n");
 }
 
-function normalizeAnswerLevel(value) {
-  const n = Number(value);
-  return [1, 2, 3].includes(n) ? n : 3;
-}
-
 function buildSystemInstruction(language) {
   const lang = languageName(language);
   return `
@@ -249,7 +241,7 @@ Translate and compose the entire response fluently in: ${lang}.
 STRUCTURE OF THE RESPONSE:
 1. **Direct Orthodox Answer**: Clear theological statement.
 2. **Biblical Foundations**: Quote/reference Old and New Testament (81 Books framework).
-3. **Church Fathers & Scholars**: St. Athanasius, St. Cyril, St. John Chrysostom, and Ethiopian Scholars (የኢትዮጵያ ሊቃውንት ት his Commentary/ትርጓሜ).
+3. **Church Fathers & Scholars**: St. Athanasius, St. Cyril, St. John Chrysostom, and Ethiopian Scholars (የኢትዮጵያ ሊቃውንት Commentary/ትርጓሜ).
 4. **Ethiopian Orthodox Tradition & Liturgy**: Deep traditional perspective.
 5. **Comparative Analysis (ንፅፅራዊ ትምህርት)**: Respectfully contrast Orthodox theology with Protestantism, Catholicism, or Islam on this specific topic.
 6. **Spiritual/Practical Application & Conclusion**.
@@ -273,7 +265,6 @@ Provide a fully detailed, comparative, and scriptural Orthodox response in ${lan
 `;
 }
 
-// ተስተካክሏል፡ ትክክለኛ የጂሚኒ ሞዴል ስሞች ተተክተዋል
 function getModelCandidates() {
   const candidates = [
     GEMINI_MODEL,
@@ -285,15 +276,14 @@ function getModelCandidates() {
 }
 
 async function callGemini(model, systemInstruction, userPrompt) {
-  if (!GEMINI_API_KEY) throw new Error("GEMINI_API_KEY is missing");
+  if (!GEMINI_API_KEY) throw new Error("GEMINI_API_KEY is missing in Environment Variables");
 
-  const url = `https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(model)}:generateContent`;
+  const url = `https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(model)}:generateContent?key=${GEMINI_API_KEY}`;
 
   const response = await fetch(url, {
     method: "POST",
     headers: {
-      "Content-Type": "application/json",
-      "x-goog-api-key": GEMINI_API_KEY
+      "Content-Type": "application/json"
     },
     body: JSON.stringify({
       systemInstruction: { parts: [{ text: systemInstruction }] },
@@ -365,14 +355,14 @@ module.exports = async function handler(req, res) {
     const question = String(body.question || "").trim();
     const language = normalizeLanguage(body.language || "am");
 
-    if (!question) return res.status(400).json({ error: "Please enter a question." });
-    if (question.length > MAX_QUESTION_LENGTH) return res.status(400).json({ error: "Question is too long." });
+    if (!question) return res.status(400).json({ error: "እባክዎ ጥያቄ ያስገቡ።" });
+    if (question.length > MAX_QUESTION_LENGTH) return res.status(400).json({ error: "ጥያቄው በጣም ረጅም ነው።" });
 
     let loadedRows = [];
     try {
       loadedRows = await getLessons();
     } catch (e) {
-      console.warn("Supabase load failed, falling back purely to Gemini API context.");
+      console.warn("Supabase load failed, falling back purely to Gemini API context:", e.message);
     }
 
     const rows = Array.isArray(loadedRows) ? loadedRows : [];
@@ -400,7 +390,7 @@ module.exports = async function handler(req, res) {
     }
 
     if (!answer) {
-      return res.status(503).json({ error: "የተጠየቀውን ጥያቄ አሁን ማስተናገድ አልተቻለም። እባክዎ ትንሽ ቆይተው ደግመው ይሞክሩ።" });
+      return res.status(503).json({ error: "የተጠየቀውን ጥያቄ ለማስተናገድ የመረጃ ምንጭ ማግኘት አልተቻለም።" });
     }
 
     return res.status(200).json({
@@ -413,6 +403,12 @@ module.exports = async function handler(req, res) {
 
   } catch (error) {
     console.error("/api/ask internal error:", error);
-    return res.status(500).json({ error: "አገልግሎቱ ላይ ጊዜያዊ ችግር አጋጥሟል።" });
+    
+    // ችግሩ ከየት እንደሆነ በግልጽ የሚያሳየው የምላሽ አካል
+    return res.status(500).json({ 
+      error: "የሰርቨር ስህተት አጋጥሟል",
+      errorMessage: error.message,
+      stack: process.env.NODE_ENV === "development" ? error.stack : undefined
+    });
   }
 };
