@@ -3,33 +3,7 @@
 // api/ask.js
 //
 // 15-LANGUAGE ORTHODOX ANSWER ENGINE
-//
-// 15 languages:
-// am  - አማርኛ
-// ti  - ትግርኛ
-// om  - Afaan Oromoo
-// sid - Sidaamu Afoo
-// wal - Wolayttatto
-// kaa - Kaffoono
-// gez - ጉራጊኛ
-// so  - ሶማልኛ
-// aa  - አፋርኛ
-// had - ሐዲይኛ
-// kmb - ከምባታኛ
-// gamo- ጋሞኛ
-// en  - English
-// ar  - العربية
-// zh  - 中文
-//
-// Supabase
-//    ↓
-// broad topic matching
-//    ↓
-// language-aware ranking
-//    ↓
-// Gemini 3.8 Flash
-//    ↓
-// multilingual fallback
+// Supabase Knowledge Base + Gemini
 // ============================================================
 
 const SUPABASE_URL =
@@ -42,8 +16,7 @@ const SUPABASE_ANON_KEY =
   "";
 
 const GEMINI_API_KEY =
-  process.env.GEMINI_API_KEY ||
-  "";
+  process.env.GEMINI_API_KEY || "";
 
 const GEMINI_MODEL =
   process.env.GEMINI_MODEL ||
@@ -52,8 +25,7 @@ const GEMINI_MODEL =
 const TABLE_NAME = "orthodox_answers";
 
 /* ============================================================
-   EXACT 15 LANGUAGES
-   DO NOT REMOVE ANY OF THESE
+   15 LANGUAGES
    ============================================================ */
 
 const LANGUAGE_NAMES = {
@@ -79,39 +51,129 @@ const LANGUAGE_NAMES = {
    ============================================================ */
 
 const LANGUAGE_ALIASES = {
-  am: ["am", "amh", "amharic", "አማርኛ"],
-  ti: ["ti", "tir", "tigrinya", "ትግርኛ"],
-  om: ["om", "orm", "oromo", "afaan oromoo"],
-  sid: ["sid", "sidaamu", "sidaama", "sidaamu afoo"],
-  wal: ["wal", "wolaytta", "wolayttatto", "wolayita"],
-  kaa: ["kaa", "kaf", "kafa", "kaffoono"],
+  am: [
+    "am",
+    "amh",
+    "amharic",
+    "አማርኛ"
+  ],
+
+  ti: [
+    "ti",
+    "tir",
+    "tigrinya",
+    "ትግርኛ"
+  ],
+
+  om: [
+    "om",
+    "orm",
+    "oromo",
+    "afaan oromoo",
+    "afaan oromo"
+  ],
+
+  sid: [
+    "sid",
+    "sidaamu",
+    "sidaama",
+    "sidaamu afoo",
+    "sidaama afoo"
+  ],
+
+  wal: [
+    "wal",
+    "wolaytta",
+    "wolayttatto",
+    "wolayita",
+    "wolaytta afoo"
+  ],
+
+  kaa: [
+    "kaa",
+    "kaf",
+    "kafa",
+    "kaffoono",
+    "kafa afoo"
+  ],
+
   gez: [
     "gez",
     "gur",
     "guragie",
     "guragigna",
     "gurage",
-    "guragigna",
     "ጉራጊኛ"
   ],
-  so: ["so", "som", "somali", "ሶማልኛ"],
-  aa: ["aa", "aar", "afar", "afaraf", "አፋርኛ"],
-  had: ["had", "hadiyya", "hadiyyigna", "ሐዲይኛ"],
-  kmb: ["kmb", "kembata", "kambata", "ከምባታኛ"],
-  gamo: ["gamo", "gma", "ጋሞኛ"],
-  en: ["en", "eng", "english"],
-  ar: ["ar", "ara", "arabic", "العربية"],
-  zh: ["zh", "chi", "zho", "chinese", "中文"]
+
+  so: [
+    "so",
+    "som",
+    "somali",
+    "ሶማልኛ"
+  ],
+
+  aa: [
+    "aa",
+    "aar",
+    "afar",
+    "afaraf",
+    "አፋርኛ"
+  ],
+
+  had: [
+    "had",
+    "hadiyya",
+    "hadiyyigna",
+    "ሐዲይኛ"
+  ],
+
+  kmb: [
+    "kmb",
+    "kembata",
+    "kambata",
+    "kembatigna",
+    "ከምባታኛ"
+  ],
+
+  gamo: [
+    "gamo",
+    "gma",
+    "gamogna",
+    "ጋሞኛ"
+  ],
+
+  en: [
+    "en",
+    "eng",
+    "english"
+  ],
+
+  ar: [
+    "ar",
+    "ara",
+    "arabic",
+    "العربية"
+  ],
+
+  zh: [
+    "zh",
+    "chi",
+    "zho",
+    "chinese",
+    "中文"
+  ]
 };
 
 /* ============================================================
-   TOPIC SYNONYMS
-   Helps one question find related records.
+   TOPIC GROUPS
    ============================================================ */
 
 const TOPIC_GROUPS = [
+
   {
     key: "baptism",
+
     terms: [
       "ጥምቀት",
       "ጥምቀትን",
@@ -119,26 +181,32 @@ const TOPIC_GROUPS = [
       "መጠመቅ",
       "ሕፃን ጥምቀት",
       "በጥምቀት",
+
       "baptism",
       "baptize",
       "baptized",
       "baptismal",
+
       "التعميد",
       "المعمودية",
+
       "洗礼"
     ]
   },
 
   {
     key: "communion",
+
     terms: [
       "ቁርባን",
       "ቅዱስ ቁርባን",
       "ሥጋው",
       "ደሙ",
+
       "holy communion",
       "communion",
       "eucharist",
+
       "الإفخارستيا",
       "التناول"
     ]
@@ -146,27 +214,33 @@ const TOPIC_GROUPS = [
 
   {
     key: "repentance",
+
     terms: [
       "ንስሐ",
       "ንስሐ ገባ",
       "ኃጢአት",
       "ንስሐ መግባት",
+
       "repentance",
       "repent",
       "sin",
+
       "التوبة"
     ]
   },
 
   {
     key: "mary",
+
     terms: [
       "ማርያም",
       "ድንግል",
       "ቅድስት ድንግል",
       "የእመቤታችን",
+
       "mary",
       "virgin mary",
+
       "مريم",
       "العذراء"
     ]
@@ -174,26 +248,33 @@ const TOPIC_GROUPS = [
 
   {
     key: "cross",
+
     terms: [
       "መስቀል",
       "የጌታ መስቀል",
+
       "cross",
       "holy cross",
+
       "الصليب"
     ]
   },
 
   {
     key: "incarnation",
+
     terms: [
       "ሥጋዌ",
       "ተዋሕዶ",
       "ወልድ ሰው ሆነ",
+
       "incarnation",
       "tewahedo",
+
       "التجسد"
     ]
   }
+
 ];
 
 /* ============================================================
@@ -216,9 +297,12 @@ function normalize(value) {
 }
 
 function words(value) {
+
   const text = normalize(value);
 
-  if (!text) return [];
+  if (!text) {
+    return [];
+  }
 
   return [
     ...new Set(
@@ -229,7 +313,48 @@ function words(value) {
   ];
 }
 
+/* ============================================================
+   CANONICAL LANGUAGE
+   ============================================================ */
+
+function canonicalLanguage(value) {
+
+  const normalized = normalize(value);
+
+  if (!normalized) {
+    return "am";
+  }
+
+  if (LANGUAGE_NAMES[normalized]) {
+    return normalized;
+  }
+
+  for (const [code, aliases] of Object.entries(
+    LANGUAGE_ALIASES
+  )) {
+
+    for (const alias of aliases) {
+
+      if (
+        normalize(alias) ===
+        normalized
+      ) {
+        return code;
+      }
+
+    }
+
+  }
+
+  return "";
+}
+
+/* ============================================================
+   ROW HELPERS
+   ============================================================ */
+
 function rowQuestion(row) {
+
   return (
     row.question ??
     row.Question ??
@@ -242,6 +367,7 @@ function rowQuestion(row) {
 }
 
 function rowAnswer(row) {
+
   return (
     row.answer ??
     row.Answer ??
@@ -254,7 +380,8 @@ function rowAnswer(row) {
 }
 
 function rowLanguage(row) {
-  return normalize(
+
+  return (
     row.language ??
     row.lang ??
     row.lang_code ??
@@ -262,19 +389,14 @@ function rowLanguage(row) {
   );
 }
 
-/* ============================================================
-   LANGUAGE MATCHING
-   ============================================================ */
+function languageMatches(
+  value,
+  requestedLanguage
+) {
 
-function languageMatches(rowLanguageValue, requestedLanguage) {
-  const value = normalize(rowLanguageValue);
-
-  const aliases =
-    LANGUAGE_ALIASES[requestedLanguage] ||
-    [requestedLanguage];
-
-  return aliases.some(alias =>
-    normalize(alias) === value
+  return (
+    canonicalLanguage(value) ===
+    requestedLanguage
   );
 }
 
@@ -283,33 +405,48 @@ function languageMatches(rowLanguageValue, requestedLanguage) {
    ============================================================ */
 
 function detectTopics(query) {
+
   const q = normalize(query);
 
   return TOPIC_GROUPS
     .filter(group =>
       group.terms.some(term =>
-        q.includes(normalize(term))
+        q.includes(
+          normalize(term)
+        )
       )
     )
     .map(group => group.key);
 }
 
-function rowMatchesTopic(row, topicKey) {
+/* ============================================================
+   TOPIC MATCH
+   ============================================================ */
+
+function rowMatchesTopic(
+  row,
+  topicKey
+) {
+
   const group =
     TOPIC_GROUPS.find(
-      item => item.key === topicKey
+      item =>
+        item.key === topicKey
     );
 
-  if (!group) return false;
+  if (!group) {
+    return false;
+  }
 
-  const searchable = normalize([
-    rowQuestion(row),
-    rowAnswer(row),
-    row.category,
-    row.bible_references,
-    row.church_sources,
-    row.comparison_group
-  ].join(" "));
+  const searchable =
+    normalize([
+      rowQuestion(row),
+      rowAnswer(row),
+      row.category,
+      row.bible_references,
+      row.church_sources,
+      row.comparison_group
+    ].join(" "));
 
   return group.terms.some(term =>
     searchable.includes(
@@ -319,81 +456,117 @@ function rowMatchesTopic(row, topicKey) {
 }
 
 /* ============================================================
-   SCORE ROW
+   SCORE
    ============================================================ */
 
-function scoreRow(row, query, requestedLanguage) {
-  const q = normalize(query);
-  const qWords = words(query);
+function scoreRow(
+  row,
+  query,
+  requestedLanguage,
+  topics
+) {
 
-  const question = normalize(rowQuestion(row));
-  const answer = normalize(rowAnswer(row));
-  const category = normalize(row.category);
-  const education = normalize(row.education_level);
-  const bible = normalize(row.bible_references);
-  const church = normalize(row.church_sources);
-  const comparison = normalize(row.comparison_group);
+  const q =
+    normalize(query);
 
-  const fields = [
-    question,
-    answer,
-    category,
-    education,
-    bible,
-    church,
-    comparison
-  ];
+  const qWords =
+    words(query);
 
-  if (!fields.some(Boolean)) {
+  const question =
+    normalize(rowQuestion(row));
+
+  const answer =
+    normalize(rowAnswer(row));
+
+  const category =
+    normalize(row.category);
+
+  const bible =
+    normalize(row.bible_references);
+
+  const church =
+    normalize(row.church_sources);
+
+  const comparison =
+    normalize(row.comparison_group);
+
+  if (
+    !question &&
+    !answer &&
+    !category
+  ) {
     return 0;
   }
 
   let score = 0;
 
   /* Exact question */
+
   if (question === q) {
-    score += 3000;
+    score += 5000;
   }
 
   /* Exact phrase */
-  if (q.length >= 3 && question.includes(q)) {
-    score += 1200;
+
+  if (
+    q.length >= 3 &&
+    question.includes(q)
+  ) {
+    score += 1800;
   }
 
   /* Category */
-  if (q.length >= 3 && category.includes(q)) {
-    score += 700;
+
+  if (
+    q.length >= 3 &&
+    category.includes(q)
+  ) {
+    score += 900;
   }
 
-  /* Query words */
+  /* Word matching */
+
   for (const word of qWords) {
+
     if (question.includes(word)) {
-      score += 140;
+      score += 180;
     }
 
     if (category.includes(word)) {
-      score += 90;
+      score += 110;
     }
 
     if (answer.includes(word)) {
-      score += 40;
+      score += 45;
     }
 
     if (bible.includes(word)) {
-      score += 30;
+      score += 35;
     }
 
     if (church.includes(word)) {
-      score += 30;
+      score += 35;
     }
 
     if (comparison.includes(word)) {
       score += 15;
     }
+
   }
 
   /* Coverage */
+
+  const fields = [
+    question,
+    answer,
+    category,
+    bible,
+    church,
+    comparison
+  ];
+
   if (qWords.length) {
+
     const hits =
       qWords.filter(word =>
         fields.some(field =>
@@ -402,18 +575,36 @@ function scoreRow(row, query, requestedLanguage) {
       ).length;
 
     score += Math.round(
-      (hits / qWords.length) * 250
+      (hits / qWords.length) *
+      300
     );
+
   }
 
-  /* Selected language */
+  /* Requested language */
+
   if (
     languageMatches(
       rowLanguage(row),
       requestedLanguage
     )
   ) {
-    score += 1000;
+    score += 1400;
+  }
+
+  /* Main topic */
+
+  for (const topic of topics) {
+
+    if (
+      rowMatchesTopic(
+        row,
+        topic
+      )
+    ) {
+      score += 1200;
+    }
+
   }
 
   return score;
@@ -424,10 +615,13 @@ function scoreRow(row, query, requestedLanguage) {
    ============================================================ */
 
 async function supabaseGet(path) {
+
   if (!SUPABASE_ANON_KEY) {
+
     throw new Error(
       "SUPABASE_ANON_KEY is missing in Vercel."
     );
+
   }
 
   const response =
@@ -435,45 +629,53 @@ async function supabaseGet(path) {
       `${SUPABASE_URL}/rest/v1/${path}`,
       {
         method: "GET",
+
         headers: {
-          apikey: SUPABASE_ANON_KEY,
+          apikey:
+            SUPABASE_ANON_KEY,
+
           Authorization:
             `Bearer ${SUPABASE_ANON_KEY}`,
+
           Accept:
             "application/json"
         }
       }
     );
 
-  const text =
+  const raw =
     await response.text();
 
   let data = null;
 
   try {
-    data = text
-      ? JSON.parse(text)
-      : null;
+    data =
+      raw
+        ? JSON.parse(raw)
+        : null;
   } catch {
     data = null;
   }
 
   if (!response.ok) {
+
     throw new Error(
       data?.message ||
       data?.hint ||
       `Supabase error ${response.status}`
     );
+
   }
 
   return data;
 }
 
 /* ============================================================
-   LOAD ALL AVAILABLE RECORDS
+   LOAD KNOWLEDGE BASE
    ============================================================ */
 
 async function getLessons() {
+
   const columns = [
     "id",
     "question",
@@ -486,11 +688,6 @@ async function getLessons() {
     "comparison_group"
   ].join(",");
 
-  /*
-   * 5000 is intentionally larger than the old 500.
-   * This does not change any database data.
-   */
-
   const path =
     `${TABLE_NAME}?select=${encodeURIComponent(
       columns
@@ -500,14 +697,14 @@ async function getLessons() {
 }
 
 /* ============================================================
-   BUILD SOURCE MATERIAL
+   BUILD SOURCES
    ============================================================ */
 
-function buildSources(ranked) {
-  return ranked.map(item => {
-    const row = item.row;
+function buildSources(items) {
 
-    return {
+  return items.map(
+    ({ row }) => ({
+
       question:
         cleanText(
           rowQuestion(row)
@@ -516,11 +713,14 @@ function buildSources(ranked) {
       answer:
         cleanText(
           rowAnswer(row)
-        ).slice(0, 12000),
+        ).slice(
+          0,
+          14000
+        ),
 
       language:
         cleanText(
-          row.language
+          rowLanguage(row)
         ),
 
       category:
@@ -547,8 +747,9 @@ function buildSources(ranked) {
         cleanText(
           row.comparison_group
         )
-    };
-  });
+
+    })
+  );
 }
 
 /* ============================================================
@@ -556,12 +757,20 @@ function buildSources(ranked) {
    ============================================================ */
 
 function sourceText(sources) {
+
   if (!sources.length) {
-    return "No directly matched knowledge-base record was found.";
+
+    return `
+No directly matched knowledge-base
+material was found.
+`;
+
   }
 
   return sources
-    .map((source, index) => `
+    .map(
+      (source, index) => `
+
 ==============================
 KNOWLEDGE SOURCE ${index + 1}
 ==============================
@@ -589,7 +798,8 @@ ${source.comparison_group}
 
 Answer:
 ${source.answer}
-`)
+`
+    )
     .join("\n");
 }
 
@@ -598,28 +808,43 @@ ${source.answer}
    ============================================================ */
 
 function levelConfig(level) {
-  const number = Number(level) || 2;
 
-  if (number === 1) {
+  const n =
+    Number(level);
+
+  if (n === 1) {
+
     return {
+
       name: "Basic",
+
       instruction:
-        "Give a clear foundation while still answering the question completely."
+        "Explain clearly for a beginner, but answer the actual question completely."
+
     };
+
   }
 
-  if (number === 3) {
+  if (n === 3) {
+
     return {
+
       name: "Scholarly",
+
       instruction:
-        "Give a deep theological teaching with definitions, Biblical foundations, theological distinctions, Church Fathers and Ethiopian Orthodox Tewahedo sources only when actually supplied, historical context where relevant, common misunderstandings and a reasoned conclusion."
+        "Give deep theological treatment, distinctions, Biblical foundations, historical or patristic context only when supported by the supplied sources, and a careful conclusion."
+
     };
+
   }
 
   return {
+
     name: "Detailed",
+
     instruction:
-      "Give a full, coherent teaching suitable for serious learners. Do not stop after a short definition."
+      "Give a full, coherent teaching suitable for serious learners. Do not stop at a short definition."
+
   };
 }
 
@@ -627,7 +852,11 @@ function levelConfig(level) {
    SYSTEM INSTRUCTION
    ============================================================ */
 
-function systemInstruction(language, level) {
+function systemInstruction(
+  language,
+  level
+) {
+
   const languageName =
     LANGUAGE_NAMES[language];
 
@@ -635,52 +864,86 @@ function systemInstruction(language, level) {
     levelConfig(level);
 
   return `
-You are the theological answer engine for
-"ኦርቶዶክሳዊ መልስ".
 
-SELECTED OUTPUT LANGUAGE:
+You are the theological answer engine
+for the application:
+
+"ኦርቶዶክሳዊ መልስ"
+
+============================================================
+OUTPUT LANGUAGE
+============================================================
+
+The final answer MUST be written entirely
+in:
+
 ${languageName}
 
-STRICT LANGUAGE RULE:
+This rule is absolute.
 
-The final answer MUST be entirely in:
+Do NOT answer in Amharic merely because
+the source material is in Amharic.
+
+Do NOT answer in English.
+
+Do NOT mix languages.
+
+Translate the meaning of the supplied
+knowledge into the requested language.
+
+============================================================
+TOPIC COHERENCE
+============================================================
+
+First understand the exact subject of
+the user's question.
+
+Answer ONLY that subject.
+
+Combine multiple sources ONLY when they
+belong to the same subject or directly
+help explain it.
+
+Do not mix unrelated teachings.
+
+Example:
+
+If the user asks about baptism:
+
+Discuss baptism, its meaning, Biblical
+foundation, Christian life, child baptism,
+faith, repentance, Trinitarian baptism,
+Ethiopian Orthodox Tewahedo teaching,
+and relevant supplied sources.
+
+Do NOT suddenly discuss unrelated subjects
+such as fasting, marriage or prayer.
+
+============================================================
+KNOWLEDGE BASE
+============================================================
+
+The supplied knowledge-base is the primary
+source of the answer.
+
+Do not simply copy one database record.
+
+Synthesize the relevant records into one
+clear teaching.
+
+You may use records written in another
+language as supporting knowledge.
+
+However, the final answer MUST remain
+entirely in:
+
 ${languageName}
 
-Never switch to Amharic merely because the sources are
-written in Amharic.
+============================================================
+ACCURACY
+============================================================
 
-Never switch to English.
-
-Never mix languages.
-
-The selected language has the highest priority for output.
-
-TOPIC RULE:
-
-Answer ONLY the subject asked by the user.
-
-Identify the main theological topic first.
-
-Use related knowledge-base records about the SAME topic.
-
-Do not combine unrelated topics.
-
-For example, if the question is about baptism,
-do not turn the answer into a general lesson about prayer,
-fasting, marriage or unrelated subjects.
-
-KNOWLEDGE-BASE RULE:
-
-The supplied knowledge-base is the primary source.
-
-Combine multiple relevant records into ONE coherent answer.
-
-Do not simply copy one record.
-
-Do not invent information that is not supported by the supplied
-sources or universally established Biblical information.
-
-Do not invent:
+Never invent:
 
 - quotations
 - Bible references
@@ -691,59 +954,100 @@ Do not invent:
 - historical claims
 - citations
 
-If a source does not provide a quotation, do not manufacture one.
+If a source does not provide a quotation,
+DO NOT manufacture a quotation.
 
-ORTHODOX PERSPECTIVE:
+If a specific claim is not supported by
+the supplied material, present it carefully
+without pretending that a source supplied it.
 
-Explain the teaching according to the Ethiopian Orthodox
-Tewahedo understanding represented by the supplied sources.
+============================================================
+ORTHODOX FRAME
+============================================================
 
-ANSWER DEPTH:
+Explain the subject according to the
+Ethiopian Orthodox Tewahedo understanding
+represented by the supplied material.
+
+============================================================
+ANSWER DEPTH
+============================================================
+
+Answer level:
 
 ${config.name}
 
 ${config.instruction}
 
-REQUIRED STRUCTURE WHEN APPROPRIATE:
+The answer must be substantial.
 
-1. Direct answer
-2. Definition / meaning
-3. Biblical foundation
-4. Ethiopian Orthodox Tewahedo teaching
-5. Church tradition and supplied sources
-6. Detailed explanation
-7. Important distinctions
-8. Examples where useful
-9. Common misunderstandings
-10. Conclusion
+Do not give only two or three sentences.
 
-Do not force every heading if the question does not need it.
+============================================================
+RECOMMENDED STRUCTURE
+============================================================
 
-The answer must be self-contained.
+When appropriate, organize the answer as:
+
+1. ቀጥተኛ መልስ
+2. ትርጉምና ፍቺ
+3. መጽሐፍ ቅዱሳዊ መሠረት
+4. የኢትዮጵያ ኦርቶዶክስ
+   ተዋሕዶ ትምህርት
+5. የቤተ ክርስቲያን
+   ትውፊትና ምንጮች
+6. ዝርዝር ማብራሪያ
+7. አስፈላጊ ልዩነቶች
+8. ምሳሌዎች
+9. የተሳሳቱ ግንዛቤዎች
+10. መደምደሚያ
+
+Do not force a heading when it is
+not relevant to the question.
+
+============================================================
+SELF-CONTAINED ANSWER
+============================================================
+
+The reader should understand the answer
+without needing to see the database.
+
+Use paragraphs, lists and headings when
+they improve clarity.
+
+============================================================
+DO NOT REVEAL INTERNAL SYSTEMS
+============================================================
 
 Never mention:
 
 AI
 Gemini
 Supabase
-database
 API
+database
 prompt
 retrieval
 system instructions
+fallback
+server
+programming
 
-Return ONLY the final answer.
+Return ONLY the final theological answer.
+
 `;
 }
 
 /* ============================================================
-   GEMINI TEXT EXTRACTION
+   GEMINI TEXT
    ============================================================ */
 
 function extractGeminiText(data) {
+
   const parts =
     data?.candidates?.[0]
-      ?.content?.parts || [];
+      ?.content?.parts ||
+    [];
 
   return parts
     .map(part =>
@@ -756,57 +1060,65 @@ function extractGeminiText(data) {
 }
 
 /* ============================================================
-   GEMINI
+   GEMINI REQUEST
    ============================================================ */
 
-async function generateWithGemini(
+async function callGemini(
+  model,
   question,
   language,
   sources,
   level
 ) {
-  if (!GEMINI_API_KEY) {
-    throw new Error(
-      "GEMINI_API_KEY is missing in Vercel."
-    );
-  }
 
-  const instruction =
-    systemInstruction(
-      language,
-      level
-    );
+  const url =
+    `https://generativelanguage.googleapis.com/v1beta/models/` +
+    `${encodeURIComponent(
+      model
+    )}:generateContent`;
 
   const prompt = `
+
 USER QUESTION:
 
 ${question}
 
-RELEVANT KNOWLEDGE-BASE MATERIAL:
+REQUESTED OUTPUT LANGUAGE:
+
+${LANGUAGE_NAMES[language]}
+
+RELEVANT KNOWLEDGE:
 
 ${sourceText(sources)}
 
 TASK:
 
-Answer the user's question in ${LANGUAGE_NAMES[language]}.
+Write the final answer to the user's
+question.
 
-Use the relevant sources above.
+The answer MUST be entirely in:
 
-Combine related records into one coherent teaching.
+${LANGUAGE_NAMES[language]}
 
-Stay strictly on the user's topic.
+The answer must be:
 
-Do not invent citations or quotations.
+- detailed
+- organized
+- coherent
+- self-contained
+- Orthodox in theological perspective
+- strictly related to the question
 
-The final response must be detailed enough to teach the subject,
-not merely define it.
+Combine relevant knowledge sources.
 
-Return only the final answer.
+Do not simply copy one source.
+
+Do not invent citations.
+
+Do not invent quotations.
+
+Return ONLY the final answer.
 `;
-
-  const url =
-    `https://generativelanguage.googleapis.com/v1beta/models/` +
-    `${encodeURIComponent(GEMINI_MODEL)}:generateContent`;
 
   const response =
     await fetch(
@@ -815,27 +1127,37 @@ Return only the final answer.
         method: "POST",
 
         headers: {
+
           "Content-Type":
             "application/json",
 
           "x-goog-api-key":
             GEMINI_API_KEY
+
         },
 
         body:
           JSON.stringify({
+
             systemInstruction: {
+
               parts: [
                 {
                   text:
-                    instruction
+                    systemInstruction(
+                      language,
+                      level
+                    )
                 }
               ]
+
             },
 
             contents: [
+
               {
                 role: "user",
+
                 parts: [
                   {
                     text:
@@ -843,49 +1165,129 @@ Return only the final answer.
                   }
                 ]
               }
+
             ],
 
             generationConfig: {
-              maxOutputTokens: 12000,
+
+              temperature:
+                0.25,
+
+              maxOutputTokens:
+                12000,
 
               thinkingConfig: {
-                thinkingLevel: "medium"
+                thinkingLevel:
+                  "medium"
               }
+
             }
+
           })
       }
     );
 
-  const text =
+  const raw =
     await response.text();
 
   let data = null;
 
   try {
-    data = text
-      ? JSON.parse(text)
-      : null;
+
+    data =
+      raw
+        ? JSON.parse(raw)
+        : null;
+
   } catch {
+
     data = null;
+
   }
 
   if (!response.ok) {
+
     throw new Error(
       data?.error?.message ||
       `Gemini error ${response.status}`
     );
+
   }
 
   const answer =
     extractGeminiText(data);
 
   if (!answer) {
+
     throw new Error(
       "Gemini returned an empty answer."
     );
+
   }
 
   return answer;
+}
+
+/* ============================================================
+   GEMINI GENERATION
+   ============================================================ */
+
+async function generateWithGemini(
+  question,
+  language,
+  sources,
+  level
+) {
+
+  if (!GEMINI_API_KEY) {
+
+    throw new Error(
+      "GEMINI_API_KEY is missing in Vercel."
+    );
+
+  }
+
+  const models = [
+    GEMINI_MODEL
+  ];
+
+  let lastError = null;
+
+  for (
+    const model of models
+  ) {
+
+    try {
+
+      return await callGemini(
+        model,
+        question,
+        language,
+        sources,
+        level
+      );
+
+    } catch (error) {
+
+      lastError =
+        error;
+
+      console.error(
+        `Gemini model ${model} failed:`,
+        error?.message ||
+        error
+      );
+
+    }
+
+  }
+
+  throw (
+    lastError ||
+    new Error(
+      "Gemini generation failed."
+    )
+  );
 }
 
 /* ============================================================
@@ -896,6 +1298,7 @@ function fallbackAnswer(
   ranked,
   language
 ) {
+
   const matching =
     ranked.filter(item =>
       languageMatches(
@@ -908,49 +1311,43 @@ function fallbackAnswer(
     return "";
   }
 
-  /*
-   * Combine several related records instead of
-   * returning only ONE short database answer.
-   */
-
   const unique = [];
 
-  const seen = new Set();
+  const seen =
+    new Set();
 
-  for (const item of matching) {
+  for (
+    const item of matching
+  ) {
+
     const answer =
       cleanText(
         rowAnswer(item.row)
       );
 
-    if (!answer) continue;
+    if (!answer) {
+      continue;
+    }
 
     const key =
       normalize(answer);
 
-    if (seen.has(key)) continue;
+    if (seen.has(key)) {
+      continue;
+    }
 
     seen.add(key);
 
-    unique.push({
-      answer,
-      question:
-        cleanText(
-          rowQuestion(item.row)
-        ),
-      bible:
-        cleanText(
-          item.row.bible_references
-        ),
-      church:
-        cleanText(
-          item.row.church_sources
-        )
-    });
+    unique.push(
+      item.row
+    );
 
-    if (unique.length >= 8) {
+    if (
+      unique.length >= 8
+    ) {
       break;
     }
+
   }
 
   if (!unique.length) {
@@ -958,21 +1355,53 @@ function fallbackAnswer(
   }
 
   return unique
-    .map(item => {
-      let block = item.answer;
+    .map(
+      (row, index) => {
 
-      if (item.bible) {
-        block +=
-          `\n\n${item.bible}`;
+        let block =
+          cleanText(
+            rowAnswer(row)
+          );
+
+        const bible =
+          cleanText(
+            row.bible_references
+          );
+
+        const church =
+          cleanText(
+            row.church_sources
+          );
+
+        if (bible) {
+
+          block +=
+            `\n\n${bible}`;
+
+        }
+
+        if (church) {
+
+          block +=
+            `\n\n${church}`;
+
+        }
+
+        if (
+          unique.length > 1
+        ) {
+
+          return (
+            `### ${index + 1}\n` +
+            block
+          );
+
+        }
+
+        return block;
+
       }
-
-      if (item.church) {
-        block +=
-          `\n\n${item.church}`;
-      }
-
-      return block;
-    })
+    )
     .join("\n\n");
 }
 
@@ -981,7 +1410,10 @@ function fallbackAnswer(
    ============================================================ */
 
 module.exports =
-async function handler(req, res) {
+async function handler(
+  req,
+  res
+) {
 
   res.setHeader(
     "Cache-Control",
@@ -993,16 +1425,23 @@ async function handler(req, res) {
     "application/json; charset=utf-8"
   );
 
-  if (req.method !== "POST") {
+  /* POST ONLY */
+
+  if (
+    req.method !== "POST"
+  ) {
+
     return res
       .status(405)
       .json({
         error:
           "Only POST requests are allowed."
       });
+
   }
 
   try {
+
     const body =
       req.body || {};
 
@@ -1011,11 +1450,17 @@ async function handler(req, res) {
         body.question
       );
 
+    /*
+     * IMPORTANT:
+     * Accept both language code and
+     * language name.
+     */
+
     const language =
-      cleanText(
+      canonicalLanguage(
         body.language ||
         "am"
-      ).toLowerCase();
+      );
 
     const answerLevel =
       [1, 2, 3].includes(
@@ -1028,44 +1473,50 @@ async function handler(req, res) {
           )
         : 2;
 
-    /* ========================================================
-       QUESTION VALIDATION
-       ======================================================== */
+    /* QUESTION */
 
     if (!question) {
+
       return res
         .status(400)
         .json({
           error:
             "ጥያቄዎን ያስገቡ።"
         });
+
     }
 
-    if (question.length > 3000) {
+    if (
+      question.length >
+      3000
+    ) {
+
       return res
         .status(400)
         .json({
           error:
             "ጥያቄው ከ3000 ፊደል መብለጥ የለበትም።"
         });
+
     }
 
-    /* ========================================================
-       LANGUAGE VALIDATION
-       ======================================================== */
+    /* LANGUAGE */
 
-    if (!LANGUAGE_NAMES[language]) {
+    if (
+      !language ||
+      !LANGUAGE_NAMES[language]
+    ) {
+
       return res
         .status(400)
         .json({
           error:
-            `Unsupported language: ${language}`
+            "የተመረጠው ቋንቋ አይደገፍም።"
         });
+
     }
 
-    /* ========================================================
-       LOAD SUPABASE
-       ======================================================== */
+    /* LOAD DATABASE */
 
     const loaded =
       await getLessons();
@@ -1075,31 +1526,32 @@ async function handler(req, res) {
         ? loaded
         : [];
 
-    /* ========================================================
-       DETECT MAIN TOPIC
-       ======================================================== */
+    /* DETECT TOPIC */
 
     const detectedTopics =
-      detectTopics(question);
+      detectTopics(
+        question
+      );
 
-    /* ========================================================
-       RANK ALL RECORDS
-       ======================================================== */
+    /* RANK */
 
     let ranked =
       rows
         .map(row => ({
+
           row,
+
           score:
             scoreRow(
               row,
               question,
-              language
+              language,
+              detectedTopics
             )
+
         }))
-        .filter(
-          item =>
-            item.score > 0
+        .filter(item =>
+          item.score > 0
         )
         .sort(
           (a, b) =>
@@ -1107,57 +1559,11 @@ async function handler(req, res) {
             a.score
         );
 
-    /* ========================================================
-       TOPIC BOOST
-       ======================================================== */
+    /*
+     * Same-language sources first.
+     */
 
-    if (detectedTopics.length) {
-      ranked =
-        ranked
-          .map(item => {
-            let score =
-              item.score;
-
-            for (
-              const topic
-              of detectedTopics
-            ) {
-              if (
-                rowMatchesTopic(
-                  item.row,
-                  topic
-                )
-              ) {
-                score += 900;
-              }
-            }
-
-            if (
-              languageMatches(
-                rowLanguage(item.row),
-                language
-              )
-            ) {
-              score += 1000;
-            }
-
-            return {
-              row: item.row,
-              score
-            };
-          })
-          .sort(
-            (a, b) =>
-              b.score -
-              a.score
-          );
-    }
-
-    /* ========================================================
-       LANGUAGE-FIRST SOURCE SELECTION
-       ======================================================== */
-
-    const languageRows =
+    const sameLanguage =
       ranked.filter(item =>
         languageMatches(
           rowLanguage(item.row),
@@ -1165,7 +1571,12 @@ async function handler(req, res) {
         )
       );
 
-    const otherRows =
+    /*
+     * Other-language sources are
+     * supporting knowledge for Gemini.
+     */
+
+    const otherLanguage =
       ranked.filter(item =>
         !languageMatches(
           rowLanguage(item.row),
@@ -1174,33 +1585,56 @@ async function handler(req, res) {
       );
 
     /*
-     * For Gemini, prefer selected-language records.
-     * Other-language records are used only as supporting
-     * knowledge when needed.
+     * 16 same-language +
+     * 8 supporting sources.
      */
 
-    const selected =
-      [
-        ...languageRows.slice(0, 12),
-        ...otherRows.slice(0, 4)
-      ];
+    const selected = [
 
-    /* Remove duplicates by row id */
+      ...sameLanguage.slice(
+        0,
+        16
+      ),
+
+      ...otherLanguage.slice(
+        0,
+        8
+      )
+
+    ];
+
+    /* REMOVE DUPLICATES */
+
     const uniqueSelected = [];
 
-    const rowIds = new Set();
+    const seenIds =
+      new Set();
 
-    for (const item of selected) {
+    for (
+      const item of selected
+    ) {
+
       const id =
-        item.row.id ??
-        `${rowQuestion(item.row)}-${rowLanguage(item.row)}`;
+        String(
+          item.row.id ??
+          `${rowQuestion(item.row)}|${rowLanguage(item.row)}`
+        );
 
-      if (rowIds.has(id)) continue;
+      if (
+        seenIds.has(id)
+      ) {
+        continue;
+      }
 
-      rowIds.add(id);
+      seenIds.add(id);
 
-      uniqueSelected.push(item);
+      uniqueSelected.push(
+        item
+      );
+
     }
+
+    /* SOURCES */
 
     const sources =
       buildSources(
@@ -1208,15 +1642,21 @@ async function handler(req, res) {
       );
 
     /* ========================================================
-       GEMINI
+       GEMINI FIRST
        ======================================================== */
 
     let answer = "";
 
-    let source = "supabase";
+    let generationError =
+      null;
 
-    if (GEMINI_API_KEY) {
+    if (
+      GEMINI_API_KEY &&
+      sources.length
+    ) {
+
       try {
+
         answer =
           await generateWithGemini(
             question,
@@ -1225,34 +1665,33 @@ async function handler(req, res) {
             answerLevel
           );
 
-        source =
-          "supabase+gemini";
+      } catch (error) {
 
-      } catch (generationError) {
+        generationError =
+          error;
+
         console.error(
           "Gemini generation failed:",
-          generationError?.message ||
-          generationError
+          error?.message ||
+          error
         );
 
-        answer =
-          fallbackAnswer(
-            ranked,
-            language
-          );
-
-        source =
-          "supabase-fallback";
       }
-    } else {
+
+    }
+
+    /* ========================================================
+       FALLBACK
+       ======================================================== */
+
+    if (!answer) {
+
       answer =
         fallbackAnswer(
           ranked,
           language
         );
 
-      source =
-        "supabase-fallback";
     }
 
     /* ========================================================
@@ -1260,20 +1699,27 @@ async function handler(req, res) {
        ======================================================== */
 
     if (!answer) {
+
       return res
         .status(200)
         .json({
+
           answer: "",
+
           language,
-          source: "none",
+
           matchedCount:
             uniqueSelected.length,
 
           detectedTopics,
 
           message:
-            "No answer was generated."
+            generationError
+              ? "Answer generation failed."
+              : "No matching answer was found."
+
         });
+
     }
 
     /* ========================================================
@@ -1283,38 +1729,79 @@ async function handler(req, res) {
     return res
       .status(200)
       .json({
+
         answer,
+
         language,
-        source,
 
         matchedCount:
           uniqueSelected.length,
 
         detectedTopics,
 
+        /*
+         * Diagnostic information.
+         * The index.html can ignore these fields.
+         */
+
+        diagnostics: {
+
+          geminiConfigured:
+            Boolean(
+              GEMINI_API_KEY
+            ),
+
+          geminiUsed:
+            !generationError &&
+            Boolean(
+              GEMINI_API_KEY
+            ),
+
+          fallbackUsed:
+            Boolean(
+              generationError
+            ),
+
+          selectedLanguageSources:
+            sameLanguage.length,
+
+          supportingLanguageSources:
+            otherLanguage.length,
+
+          totalKnowledgeRows:
+            rows.length
+
+        },
+
         sources:
-          sources.map(item => ({
-            question:
-              item.question,
+          sources.map(
+            source => ({
 
-            language:
-              item.language,
+              question:
+                source.question,
 
-            category:
-              item.category,
+              language:
+                source.language,
 
-            education_level:
-              item.education_level,
+              category:
+                source.category,
 
-            bible_references:
-              item.bible_references,
+              education_level:
+                source.education_level,
 
-            church_sources:
-              item.church_sources
-          }))
+              bible_references:
+                source.bible_references,
+
+              church_sources:
+                source.church_sources
+
+            })
+          )
+
       });
 
   } catch (error) {
+
     console.error(
       "API ASK ERROR:",
       error
@@ -1323,9 +1810,13 @@ async function handler(req, res) {
     return res
       .status(500)
       .json({
+
         error:
           error?.message ||
           "Unknown API error."
+
       });
+
   }
+
 };
