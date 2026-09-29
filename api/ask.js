@@ -10,9 +10,9 @@
 // Supabase Knowledge Base
 // Strict Language Matching
 // Strict Topic Matching
-// Multi-source Retrieval
+// Single Best Source Selection
 // Gemini Detailed Answer
-// Safe Same-language Fallback
+// Safe Single-Source Fallback
 // ============================================================
 
 
@@ -43,7 +43,7 @@ const GEMINI_API_KEY =
 
 const GEMINI_MODEL =
   process.env.GEMINI_MODEL ||
-  "gemini-3.8-flash";
+  "gemini-2.0-flash";
 
 const TABLE_NAME =
   "orthodox_answers";
@@ -52,7 +52,7 @@ const PAGE_SIZE = 1000;
 
 const MAX_ROWS = 20000;
 
-const MAX_SOURCES = 10;
+const MAX_SOURCES = 5;
 
 
 // ============================================================
@@ -1803,7 +1803,7 @@ Finish with a clear conclusion.
 
 
 // ============================================================
-// FALLBACK
+// FALLBACK: SELECT SINGLE BEST ANSWER
 // ============================================================
 
 function fallbackAnswer(
@@ -1845,7 +1845,10 @@ function fallbackAnswer(
   }
 
 
-  const usable =
+  // SELECT TOP MATCH BY SCORE
+  // (NOT MULTIPLE ANSWERS)
+
+  const best =
     candidates
       .filter(
         item =>
@@ -1856,34 +1859,16 @@ function fallbackAnswer(
           b.score -
           a.score
       )
-      .slice(
-        0,
-        3
-      );
-
-
-  if (
-    !usable.length
-  ) {
-
-    return "";
-
-  }
-
-
-  const answers =
-    usable
+      .slice(0, 1)
       .map(
         item =>
           rowAnswer(item.row)
       )
-      .filter(Boolean);
+      .filter(Boolean)
+      [0] || "";
 
 
-  return [
-    ...new Set(answers)
-  ]
-    .join("\n\n");
+  return best;
 
 }
 
