@@ -2,18 +2,17 @@
 // api/ask.js
 // ኦርቶዶክሳዊ መልስ
 //
-// Supabase Knowledge Base + Gemini
+// Supabase Knowledge Base + Source Chunks + Gemini
 // FULL / DETAILED / STRUCTURED ORTHODOX ANSWER ENGINE
 //
 // IMPORTANT:
-// - Does NOT stop at one short database answer
-// - Retrieves multiple related records
-// - Ranks relevant knowledge
-// - Sends organized evidence to Gemini
-// - Forces a full teaching-style answer
-// - Preserves the user's selected language
-// - Automatically retries temporary Gemini errors
-// - Automatically switches Gemini models when necessary
+// - Searches orthodox_answers
+// - Searches orthodox_source_chunks
+// - Uses orthodox_sources metadata
+// - Combines multiple related sources
+// - Keeps the answer topic-coherent
+// - Preserves selected language
+// - Does NOT invent citations or quotations
 // ============================================================
 
 const SUPABASE_URL =
@@ -41,8 +40,6 @@ const GEMINI_FALLBACK_MODELS = [
   "gemini-3.5-flash-lite"
 ];
 
-const TABLE_NAME = "orthodox_answers";
-
 // ------------------------------------------------------------
 // Supported languages
 // ------------------------------------------------------------
@@ -67,9 +64,9 @@ const LANGUAGE_NAMES = {
   ru: "Русский"
 };
 
-// ------------------------------------------------------------
-// Helpers
-// ------------------------------------------------------------
+// ============================================================
+// HELPERS
+// ============================================================
 
 function normalize(value) {
   return String(value || "")
@@ -91,205 +88,390 @@ function unique(array) {
   return [...new Set(array)];
 }
 
-// ------------------------------------------------------------
-// Relevance scoring
-// ------------------------------------------------------------
+// ============================================================
+// FETCH SUPABASE
+// ============================================================
 
-function calculateRelevance(question, row) {
-  const q = normalize(question);
-
-  const qTokens = unique(
-    tokenize(question)
-  );
-
-  const rowQuestion =
-    normalize(row.question);
-
-  const rowAnswer =
-    normalize(row.answer);
-
-  const rowCategory =
-    normalize(row.category);
-
-  const rowEducation =
-    normalize(row.education_level);
-
-  const rowBible =
-    normalize(row.bible_references);
-
-  const rowSources =
-    normalize(row.church_sources);
-
-  let score = 0;
-
-  // Exact question
-  if (rowQuestion === q) {
-    score += 1500;
-  }
-
-  // Exact phrase
-  if (q && rowQuestion.includes(q)) {
-    score += 700;
-  }
-
-  // Question appears in answer
-  if (q && rowAnswer.includes(q)) {
-    score += 300;
-  }
-
-  // Individual concept matching
-  for (const token of qTokens) {
-
-    if (rowQuestion.includes(token)) {
-      score += 50;
-    }
-
-    if (rowCategory.includes(token)) {
-      score += 35;
-    }
-
-    if (rowAnswer.includes(token)) {
-      score += 12;
-    }
-
-    if (rowBible.includes(token)) {
-      score += 8;
-    }
-
-    if (rowSources.includes(token)) {
-      score += 8;
-    }
-
-    if (rowEducation.includes(token)) {
-      score += 5;
-    }
-  }
-
-  // Prefer substantial knowledge records
-  if (rowAnswer.length > 500) {
-    score += 15;
-  }
-
-  if (rowAnswer.length > 1200) {
-    score += 25;
-  }
-
-  if (rowAnswer.length > 2500) {
-    score += 35;
-  }
-
-  return score;
-}
-
-// ------------------------------------------------------------
-// Fetch knowledge base for selected language
-// ------------------------------------------------------------
-
-async function fetchKnowledge(language) {
-
+async function supabaseGet(path) {
   const headers = {
     apikey: SUPABASE_ANON_KEY,
-    Authorization:
-      `Bearer ${SUPABASE_ANON_KEY}`,
+    Authorization: `Bearer ${SUPABASE_ANON_KEY}`,
     "Content-Type": "application/json"
   };
 
-  const url =
-    `${SUPABASE_URL}/rest/v1/${TABLE_NAME}` +
-    `?select=id,question,answer,language,category,education_level,bible_references,church_sources` +
-    `&language=eq.${encodeURIComponent(language)}` +
-    `&limit=300`;
-
-  const response =
-    await fetch(url, {
+  const response = await fetch(
+    `${SUPABASE_URL}/rest/v1/${path}`,
+    {
       method: "GET",
       headers
-    });
+    }
+  );
 
   if (!response.ok) {
-
-    const errorText =
-      await response.text();
+    const text = await response.text();
 
     throw new Error(
-      `Supabase error ${response.status}: ${errorText}`
+      `Supabase error ${response.status}: ${text}`
     );
   }
 
   return await response.json();
 }
 
-// ------------------------------------------------------------
-// Fetch all languages if selected language has insufficient
-// knowledge.
-// ------------------------------------------------------------
+// ============================================================
+// FETCH ORTHODOX ANSWERS
+// ============================================================
 
-async function fetchAllKnowledge() {
+async function fetchAnswers(language) {
 
-  const headers = {
-    apikey: SUPABASE_ANON_KEY,
-    Authorization:
-      `Bearer ${SUPABASE_ANON_KEY}`,
-    "Content-Type": "application/json"
-  };
+  const select =
+    "id,question,answer,language,category," +
+    "education_level,bible_references,church_sources," +
+    "comparison_group";
 
-  const url =
-    `${SUPABASE_URL}/rest/v1/${TABLE_NAME}` +
-    `?select=id,question,answer,language,category,education_level,bible_references,church_sources` +
-    `&limit=500`;
+  const path =
+    `orthodox_answers?select=${select}` +
+    `&language=eq.${encodeURIComponent(language)}` +
+    `&limit=300`;
 
-  const response =
-    await fetch(url, {
-      method: "GET",
-      headers
-    });
-
-  if (!response.ok) {
-    return [];
-  }
-
-  return await response.json();
+  return await supabaseGet(path);
 }
 
-// ------------------------------------------------------------
-// Build evidence package
+// ============================================================
+// FETCH SOURCE CHUNKS
 //
 // IMPORTANT:
-// Does NOT stop at one short database answer.
-// Multiple related records are selected.
-// ------------------------------------------------------------
+// This is the part the previous version was missing.
+// ============================================================
 
-function buildEvidence(question, rows) {
+async function fetchSourceChunks(language) {
 
-  const scored =
-    rows
-      .map(row => ({
-        ...row,
+  const select =
+    "id,source_id,section_title,content,page_text," +
+    "chapter_text,verse_text,topic,keywords,language," +
+    "verified,source_label,perspective";
 
-        _score:
-          calculateRelevance(
-            question,
-            row
-          )
-      }))
-      .filter(
-        row =>
-          row._score > 0
-      )
-      .sort(
-        (a, b) =>
-          b._score - a._score
-      );
+  const path =
+    `orthodox_source_chunks?select=${select}` +
+    `&language=eq.${encodeURIComponent(language)}` +
+    `&limit=300`;
 
-  // Keep many related records.
-  const selected =
-    scored.slice(0, 25);
+  return await supabaseGet(path);
+}
 
-  return selected
-    .map((row, index) => {
+// ============================================================
+// FETCH SOURCES
+// ============================================================
 
-      return `
---- KNOWLEDGE SOURCE ${index + 1} ---
+async function fetchSources() {
+
+  const select =
+    "id,title,author,source_type,language,citation," +
+    "publisher,year_text,source_url,verified,notes,perspective";
+
+  const path =
+    `orthodox_sources?select=${select}&limit=300`;
+
+  return await supabaseGet(path);
+}
+
+// ============================================================
+// RELEVANCE FOR ANSWERS
+// ============================================================
+
+function scoreAnswer(question, row) {
+
+  const q = normalize(question);
+  const tokens = unique(tokenize(question));
+
+  const rq = normalize(row.question);
+  const ra = normalize(row.answer);
+  const rc = normalize(row.category);
+  const rb = normalize(row.bible_references);
+  const rs = normalize(row.church_sources);
+
+  let score = 0;
+
+  if (rq === q) {
+    score += 2000;
+  }
+
+  if (q && rq.includes(q)) {
+    score += 900;
+  }
+
+  if (q && ra.includes(q)) {
+    score += 300;
+  }
+
+  for (const token of tokens) {
+
+    if (rq.includes(token)) {
+      score += 80;
+    }
+
+    if (rc.includes(token)) {
+      score += 45;
+    }
+
+    if (ra.includes(token)) {
+      score += 15;
+    }
+
+    if (rb.includes(token)) {
+      score += 10;
+    }
+
+    if (rs.includes(token)) {
+      score += 10;
+    }
+  }
+
+  if (ra.length > 500) {
+    score += 15;
+  }
+
+  if (ra.length > 1200) {
+    score += 20;
+  }
+
+  if (ra.length > 2500) {
+    score += 30;
+  }
+
+  return score;
+}
+
+// ============================================================
+// RELEVANCE FOR SOURCE CHUNKS
+// ============================================================
+
+function scoreChunk(question, row) {
+
+  const q = normalize(question);
+  const tokens = unique(tokenize(question));
+
+  const content =
+    normalize(row.content);
+
+  const section =
+    normalize(row.section_title);
+
+  const topic =
+    normalize(row.topic);
+
+  const keywords =
+    normalize(row.keywords);
+
+  const page =
+    normalize(row.page_text);
+
+  const chapter =
+    normalize(row.chapter_text);
+
+  const verse =
+    normalize(row.verse_text);
+
+  const label =
+    normalize(row.source_label);
+
+  let score = 0;
+
+  // ----------------------------------------------------------
+  // Exact phrase
+  // ----------------------------------------------------------
+
+  if (
+    q &&
+    content.includes(q)
+  ) {
+    score += 500;
+  }
+
+  if (
+    q &&
+    section.includes(q)
+  ) {
+    score += 450;
+  }
+
+  if (
+    q &&
+    topic.includes(q)
+  ) {
+    score += 450;
+  }
+
+  // ----------------------------------------------------------
+  // Individual concepts
+  // ----------------------------------------------------------
+
+  for (const token of tokens) {
+
+    if (section.includes(token)) {
+      score += 80;
+    }
+
+    if (topic.includes(token)) {
+      score += 75;
+    }
+
+    if (keywords.includes(token)) {
+      score += 65;
+    }
+
+    if (content.includes(token)) {
+      score += 20;
+    }
+
+    if (page.includes(token)) {
+      score += 8;
+    }
+
+    if (chapter.includes(token)) {
+      score += 12;
+    }
+
+    if (verse.includes(token)) {
+      score += 12;
+    }
+
+    if (label.includes(token)) {
+      score += 15;
+    }
+  }
+
+  // ----------------------------------------------------------
+  // Verified source preference
+  // ----------------------------------------------------------
+
+  if (row.verified === true) {
+    score += 20;
+  }
+
+  // ----------------------------------------------------------
+  // Substantial content
+  // ----------------------------------------------------------
+
+  if (content.length > 500) {
+    score += 10;
+  }
+
+  if (content.length > 1200) {
+    score += 15;
+  }
+
+  if (content.length > 2500) {
+    score += 20;
+  }
+
+  return score;
+}
+
+// ============================================================
+// SELECT RELEVANT ANSWERS
+// ============================================================
+
+function selectAnswers(question, rows) {
+
+  return rows
+    .map(row => ({
+      ...row,
+      _score: scoreAnswer(question, row)
+    }))
+    .filter(row => row._score > 0)
+    .sort(
+      (a, b) =>
+        b._score - a._score
+    )
+    .slice(0, 15);
+}
+
+// ============================================================
+// SELECT RELEVANT SOURCE CHUNKS
+// ============================================================
+
+function selectChunks(question, rows) {
+
+  return rows
+    .map(row => ({
+      ...row,
+      _score: scoreChunk(question, row)
+    }))
+    .filter(row => row._score > 0)
+    .sort(
+      (a, b) =>
+        b._score - a._score
+    )
+    .slice(0, 40);
+}
+
+// ============================================================
+// BUILD SOURCE MAP
+// ============================================================
+
+function makeSourceMap(sources) {
+
+  const map = new Map();
+
+  for (const source of sources) {
+    map.set(
+      String(source.id),
+      source
+    );
+  }
+
+  return map;
+}
+
+// ============================================================
+// BUILD EVIDENCE
+// ============================================================
+
+function buildEvidence(
+  question,
+  answers,
+  chunks,
+  sources
+) {
+
+  const selectedAnswers =
+    selectAnswers(
+      question,
+      answers
+    );
+
+  const selectedChunks =
+    selectChunks(
+      question,
+      chunks
+    );
+
+  const sourceMap =
+    makeSourceMap(sources);
+
+  let output = "";
+
+  // ==========================================================
+  // DATABASE ANSWERS
+  // ==========================================================
+
+  if (
+    selectedAnswers.length > 0
+  ) {
+
+    output += `
+============================================================
+DIRECT ORTHODOX KNOWLEDGE RECORDS
+============================================================
+
+`;
+
+    selectedAnswers.forEach(
+      (row, index) => {
+
+        output += `
+--- ANSWER RECORD ${index + 1} ---
 
 Question:
 ${row.question || ""}
@@ -309,19 +491,117 @@ ${row.bible_references || ""}
 Church sources:
 ${row.church_sources || ""}
 
+Comparison group:
+${row.comparison_group || ""}
+
 Language:
 ${row.language || ""}
 
-Relevance score:
+Relevance:
 ${row._score}
+
 `;
-    })
-    .join("\n");
+      }
+    );
+  }
+
+  // ==========================================================
+  // SOURCE CHUNKS
+  // ==========================================================
+
+  if (
+    selectedChunks.length > 0
+  ) {
+
+    output += `
+============================================================
+BOOK / SOURCE CHUNKS
+============================================================
+
+`;
+
+    selectedChunks.forEach(
+      (row, index) => {
+
+        const source =
+          sourceMap.get(
+            String(row.source_id)
+          );
+
+        output += `
+--- SOURCE CHUNK ${index + 1} ---
+
+Source:
+${source?.title || row.source_label || "Unknown source"}
+
+Author:
+${source?.author || ""}
+
+Source type:
+${source?.source_type || ""}
+
+Perspective:
+${source?.perspective || row.perspective || ""}
+
+Section:
+${row.section_title || ""}
+
+Topic:
+${row.topic || ""}
+
+Keywords:
+${row.keywords || ""}
+
+Page:
+${row.page_text || ""}
+
+Chapter:
+${row.chapter_text || ""}
+
+Verse:
+${row.verse_text || ""}
+
+Content:
+${row.content || ""}
+
+Verified:
+${row.verified ? "Yes" : "No"}
+
+Relevance:
+${row._score}
+
+`;
+      }
+    );
+  }
+
+  if (!output.trim()) {
+
+    output =
+      `
+============================================================
+NO DIRECTLY MATCHING SOURCE WAS FOUND
+============================================================
+
+No directly matching knowledge record or source chunk
+was found for this question.
+
+Answer cautiously and do not invent citations.
+`;
+  }
+
+  return {
+    text: output,
+    answerCount:
+      selectedAnswers.length,
+    chunkCount:
+      selectedChunks.length
+  };
 }
 
-// ------------------------------------------------------------
-// Gemini answer generator
-// ------------------------------------------------------------
+// ============================================================
+// GEMINI
+// ============================================================
 
 async function generateAnswer({
   question,
@@ -331,281 +611,186 @@ async function generateAnswer({
 }) {
 
   const systemInstruction = `
-You are the main teaching engine of an Ethiopian Orthodox Tewahedo
-spiritual question-and-answer application called
+You are the main teaching engine of an Ethiopian Orthodox
+Tewahedo spiritual question-and-answer application called
 "ኦርቶዶክሳዊ መልስ".
 
-============================================================
-CORE PURPOSE
-============================================================
-
-Your job is NOT to return one short database answer.
-
-Your job is to transform the supplied Orthodox knowledge
-into a COMPLETE, DETAILED, COHERENT and STRUCTURED
-Orthodox teaching.
-
-The user should feel that they received a complete lesson,
-not a short chatbot response.
+Your task is to produce a complete, detailed and coherent
+Orthodox teaching based on the supplied evidence.
 
 ============================================================
-USER QUESTION
+LANGUAGE
 ============================================================
 
-${question}
-
-============================================================
-REQUIRED ANSWER LANGUAGE
-============================================================
+The required answer language is:
 
 ${languageName}
 
-============================================================
-STRICT LANGUAGE RULE
-============================================================
+Write the ENTIRE final answer in ${languageName}.
 
-Write the entire answer in ${languageName}.
+Do not switch languages.
 
-Do NOT answer in another language.
+Do not translate the evidence mechanically.
 
-Do NOT switch to English because some evidence is in English.
-
-Do NOT mix languages unnecessarily.
-
-Use the selected language consistently.
-
-Proper names, Biblical book names and traditional theological
-terms may remain in their established form when necessary.
+Use the selected language naturally.
 
 ============================================================
-ORTHODOX TEACHING
+SOURCE RULE
 ============================================================
 
-Follow Ethiopian Orthodox Tewahedo teaching.
+The supplied evidence comes from:
 
-Use the supplied knowledge base as primary evidence.
+1. Orthodox knowledge records
+2. Orthodox source/book chunks
+3. Source metadata
 
-Do not invent:
+Use the evidence as the primary foundation.
+
+Do NOT claim to have read a book if its content is not
+present in the supplied evidence.
+
+============================================================
+VERY IMPORTANT
+============================================================
+
+Never invent:
 
 - Bible references
+- Bible quotations
 - Church Father quotations
+- Ethiopian scholar quotations
 - book titles
-- chapter numbers
 - page numbers
-- Ethiopian scholar references
-- historical claims
-- quotations
+- chapter numbers
+- historical facts
+- citations
 
-If a precise quotation is not supplied,
-do not present your own wording as a direct quotation.
+If the evidence gives only a teaching,
+present it as an explanation/paraphrase.
 
-Instead, explain the teaching as a paraphrase.
-
-Clearly distinguish:
-
-1. Biblical teaching
-2. Church teaching
-3. Church Father teaching
-4. Ethiopian Orthodox tradition
-5. Explanatory interpretation
+If an exact quotation is supplied,
+you may identify it as a quotation.
 
 ============================================================
-MOST IMPORTANT DEPTH RULE
+TOPIC COHERENCE
 ============================================================
 
-DO NOT give a 3-line answer.
+Stay focused on the actual question.
 
-DO NOT give a 5-sentence answer.
+Do not combine unrelated topics merely because
+they appear in the database.
 
-DO NOT answer with only one database record.
+For example, if the question is about baptism,
+prioritize baptism evidence.
 
-DO NOT simply copy the first matching answer.
+If the question is about justification,
+prioritize justification evidence.
 
-DO NOT summarize everything into one paragraph.
+Use related doctrines only when they genuinely
+help explain the question.
 
-Use multiple relevant knowledge sources.
+============================================================
+COMPARATIVE SOURCES
+============================================================
 
-Connect related teachings.
+If evidence contains a different perspective,
+such as Muslim, Protestant or another perspective:
 
-Explain the subject progressively.
+- identify it clearly
+- do not present it as Orthodox teaching
+- distinguish the claim from the Orthodox response
+- use it only when relevant to the question
 
-The answer should normally be substantial and detailed.
+Never silently mix perspectives.
 
-The answer must be useful to:
+============================================================
+REQUIRED STRUCTURE
+============================================================
+
+# 1. ቀጥተኛ መልስ
+
+Answer the central question immediately.
+
+# 2. የትምህርቱ ሙሉ ማብራሪያ
+
+Give a detailed explanation.
+
+Define important terms.
+
+# 3. የመጽሐፍ ቅዱስ ምስክር
+
+Use only supplied Biblical references.
+
+Explain their meaning and context.
+
+# 4. የቤተ ክርስቲያን ትምህርት
+
+Explain the Ethiopian Orthodox Tewahedo understanding.
+
+# 5. የቅዱሳን አባቶች ትምህርት
+
+Use supplied Father sources when available.
+
+# 6. የኢትዮጵያ ሊቃውንትና ትውፊት
+
+Use supplied Ethiopian Orthodox sources when available.
+
+# 7. ጥልቅ ማብራሪያ
+
+Explain the theological connections.
+
+# 8. ተግባራዊ ትምህርት
+
+Explain the spiritual significance.
+
+# 9. የተሳሳቱ ግንዛቤዎች
+
+Correct relevant misunderstandings.
+
+# 10. መደምደሚያ
+
+Give a substantial conclusion.
+
+# 11. ምንጮች
+
+List ONLY sources actually present in the evidence.
+
+============================================================
+DEPTH
+============================================================
+
+Do not produce a 3-line answer.
+
+Do not produce a short summary.
+
+Use the relevant evidence deeply.
+
+The answer should be useful to:
 
 - beginners
 - students
 - teachers
 - advanced readers
 
-============================================================
-ANSWER QUALITY
-============================================================
-
-The answer must be:
-
-- coherent
-- focused
-- educational
-- source-grounded
-- theologically careful
-- comprehensive
-- easy to follow
-- detailed without unnecessary repetition
-
-Do not add unrelated Orthodox topics simply to make
-the answer longer.
-
-Depth must come from explaining the user's actual question.
+Depth must come from the evidence and theological
+explanation, not invented material.
 
 ============================================================
-MANDATORY ANSWER STRUCTURE
+FINAL OUTPUT
 ============================================================
 
-# 1. ቀጥተኛ መልስ
-
-Give a clear and direct answer to the question.
-
-Do not begin with vague generalities.
-
-State the central Orthodox teaching first.
-
-# 2. የትምህርቱ ሙሉ ማብራሪያ
-
-Explain the subject carefully.
-
-Define important theological terms.
-
-Explain the meaning, purpose and significance.
-
-Break difficult concepts into understandable parts.
-
-# 3. የመጽሐፍ ቅዱስ ምስክር
-
-Explain the supplied Biblical references.
-
-Do not merely list verses.
-
-Explain:
-
-- what the passage says
-- its context
-- what it teaches
-- how it supports Orthodox understanding
-
-Never invent a reference.
-
-# 4. የቤተ ክርስቲያን ትምህርት
-
-Explain the Ethiopian Orthodox Tewahedo understanding.
-
-Connect the teaching with the worship and sacramental
-life of the Church where relevant.
-
-# 5. የቅዱሳን አባቶች ትምህርት
-
-Use supplied Church Father sources.
-
-If only a general teaching is supplied,
-paraphrase it.
-
-Never invent direct quotations.
-
-# 6. የኢትዮጵያ ትውፊትና ሊቃውንት
-
-Use supplied Ethiopian Orthodox sources when available.
-
-Never invent Ethiopian scholars or books.
-
-If no verified source is supplied,
-say that the specific source was not supplied.
-
-# 7. ጥልቅ ማብራሪያ
-
-Go deeper into the theological meaning.
-
-Explain connections between related doctrines.
-
-Only make such connections when relevant to the question.
-
-# 8. ተግባራዊ ትምህርት
-
-Explain what the teaching means for Christian life.
-
-Explain appropriate spiritual implications.
-
-# 9. የተሳሳቱ ግንዛቤዎች
-
-Where appropriate, identify common misunderstandings.
-
-Correct them according to Orthodox Tewahedo teaching.
-
-Do not invent controversies unrelated to the question.
-
-# 10. መደምደሚያ
-
-Give a clear final conclusion.
-
-Reinforce the central teaching.
-
-Do not reduce the entire answer to only a few sentences.
-
-# 11. ምንጮች
-
-List the actual Biblical and supplied Church sources
-used in the answer.
-
-Do not fabricate sources.
-
-============================================================
-SOURCE INTEGRITY
-============================================================
-
-Never pretend an unverified source was checked.
-
-Never create fake quotations.
-
-Never create fake citations.
-
-Never invent page numbers.
-
-Never invent Ethiopian scholar references.
-
-If a source is unavailable in the supplied evidence,
-do not claim that you used it.
-
-============================================================
-DATABASE USE
-============================================================
-
-The knowledge base is EVIDENCE.
-
-It is NOT the final answer.
-
-Combine multiple relevant records.
-
-Resolve repeated information into a coherent explanation.
-
-Do not simply concatenate database records.
-
-Do not mention the database in the final answer.
-
-============================================================
-FINAL RULE
-============================================================
-
-Return ONLY the final Orthodox teaching.
+Return ONLY the final teaching.
 
 Do not mention:
 
-- Gemini
-- API
-- database
-- prompt
-- software
-- internal instructions
-- model
-- system
+Gemini
+API
+database
+prompt
+software
+model
+internal instructions
+retrieval
 `;
 
   const userPrompt = `
@@ -613,40 +798,35 @@ USER QUESTION:
 
 ${question}
 
-SELECTED LANGUAGE:
+REQUIRED LANGUAGE:
 
 ${languageName}
 
-KNOWLEDGE BASE EVIDENCE:
+============================================================
+SUPPLIED EVIDENCE
+============================================================
 
-${evidence ||
-  "No directly matching knowledge-base record was found."}
+${evidence}
 
 ============================================================
 FINAL TASK
 ============================================================
 
-Produce a complete, detailed and structured Orthodox teaching.
+Create a complete, detailed, coherent Ethiopian Orthodox
+Tewahedo teaching answering the user's exact question.
 
-Use the relevant evidence above.
+Use the supplied evidence.
 
-Do NOT simply copy one database record.
+Do not invent sources.
 
-Combine related evidence where appropriate.
+Do not invent quotations.
 
-Keep the answer focused on the user's actual question.
+Do not mix unrelated subjects.
 
-Write ONLY in ${languageName}.
-
-The final answer must be a substantial teaching,
-not a short chatbot response.
+Write entirely in ${languageName}.
 `;
 
-  // ==========================================================
-  // MODEL ORDER
-  // ==========================================================
-
-  const modelsToTry =
+  const models =
     unique([
       GEMINI_MODEL,
       ...GEMINI_FALLBACK_MODELS
@@ -654,21 +834,15 @@ not a short chatbot response.
 
   let lastError = null;
 
-  // ==========================================================
-  // TRY EACH MODEL
-  // ==========================================================
-
-  for (const model of modelsToTry) {
+  for (
+    const model of models
+  ) {
 
     const endpoint =
       `https://generativelanguage.googleapis.com/v1beta/models/` +
       `${encodeURIComponent(model)}` +
       `:generateContent?key=` +
       encodeURIComponent(GEMINI_API_KEY);
-
-    // ========================================================
-    // REQUEST BODY
-    // ========================================================
 
     const requestBody = {
 
@@ -696,20 +870,13 @@ not a short chatbot response.
 
       generationConfig: {
 
-        // Gemini 3.8 / 3.7:
-        // balanced reasoning for detailed teaching.
         thinkingConfig: {
           thinkingLevel: "medium"
         },
 
-        // Large visible-output allowance.
         maxOutputTokens: 12000
       }
     };
-
-    // ========================================================
-    // RETRY CURRENT MODEL
-    // ========================================================
 
     const MAX_RETRIES = 2;
 
@@ -722,8 +889,8 @@ not a short chatbot response.
       try {
 
         console.log(
-          `Gemini model ${model}, ` +
-          `attempt ${attempt}/${MAX_RETRIES}`
+          `Gemini ${model} attempt ` +
+          `${attempt}/${MAX_RETRIES}`
         );
 
         const response =
@@ -744,11 +911,9 @@ not a short chatbot response.
             }
           );
 
-        // ----------------------------------------------------
-        // SUCCESS
-        // ----------------------------------------------------
-
-        if (response.ok) {
+        if (
+          response.ok
+        ) {
 
           const data =
             await response.json();
@@ -772,15 +937,11 @@ not a short chatbot response.
           }
 
           console.log(
-            `Gemini success using ${model}`
+            `Gemini success: ${model}`
           );
 
           return text;
         }
-
-        // ----------------------------------------------------
-        // ERROR BODY
-        // ----------------------------------------------------
 
         const errorText =
           await response.text();
@@ -791,26 +952,10 @@ not a short chatbot response.
           );
 
         console.error(
-          `Gemini ${model} failed:`,
           lastError.message
         );
 
-        // ----------------------------------------------------
-        // 404 = model unavailable
-        // Move immediately to next model.
-        // ----------------------------------------------------
-
-        if (
-          response.status === 404
-        ) {
-          break;
-        }
-
-        // ----------------------------------------------------
-        // 400 / 401 / 403 = configuration/auth errors
-        // Do not waste retries.
-        // ----------------------------------------------------
-
+        // Permanent configuration errors
         if (
           response.status === 400 ||
           response.status === 401 ||
@@ -819,24 +964,23 @@ not a short chatbot response.
           throw lastError;
         }
 
-        // ----------------------------------------------------
-        // Temporary errors
-        // ----------------------------------------------------
+        // Model unavailable
+        if (
+          response.status === 404
+        ) {
+          break;
+        }
 
-        const temporaryError =
+        const temporary =
           response.status === 429 ||
           response.status === 500 ||
           response.status === 502 ||
           response.status === 503 ||
           response.status === 504;
 
-        if (!temporaryError) {
+        if (!temporary) {
           throw lastError;
         }
-
-        // ----------------------------------------------------
-        // Current model exhausted
-        // ----------------------------------------------------
 
         if (
           attempt === MAX_RETRIES
@@ -844,28 +988,14 @@ not a short chatbot response.
           break;
         }
 
-        // ----------------------------------------------------
-        // Exponential backoff
-        // attempt 1 = 2 sec
-        // ----------------------------------------------------
-
-        const waitTime =
-          Math.pow(
-            2,
-            attempt
-          ) * 1000;
-
-        console.log(
-          `Temporary Gemini error. ` +
-          `Retrying ${model} in ` +
-          `${waitTime / 1000} seconds...`
-        );
+        const wait =
+          Math.pow(2, attempt) * 1000;
 
         await new Promise(
           resolve =>
             setTimeout(
               resolve,
-              waitTime
+              wait
             )
         );
 
@@ -874,7 +1004,7 @@ not a short chatbot response.
         lastError = error;
 
         console.error(
-          `Gemini exception on ${model}:`,
+          `Gemini exception ${model}:`,
           error.message
         );
 
@@ -883,7 +1013,6 @@ not a short chatbot response.
             error?.message || ""
           );
 
-        // Do not retry permanent errors.
         if (
           message.includes(
             "Gemini error 400"
@@ -904,48 +1033,31 @@ not a short chatbot response.
           break;
         }
 
-        const waitTime =
-          Math.pow(
-            2,
-            attempt
-          ) * 1000;
+        const wait =
+          Math.pow(2, attempt) * 1000;
 
         await new Promise(
           resolve =>
             setTimeout(
               resolve,
-              waitTime
+              wait
             )
         );
       }
     }
-
-    // --------------------------------------------------------
-    // Current model failed.
-    // Move to next fallback model.
-    // --------------------------------------------------------
-
-    console.log(
-      `Switching from ${model} ` +
-      `to the next Gemini model.`
-    );
   }
-
-  // ==========================================================
-  // ALL MODELS FAILED
-  // ==========================================================
 
   throw (
     lastError ||
     new Error(
-      "All Gemini models are temporarily unavailable."
+      "All Gemini models failed."
     )
   );
 }
 
-// ------------------------------------------------------------
-// Main API handler
-// ------------------------------------------------------------
+// ============================================================
+// MAIN HANDLER
+// ============================================================
 
 export default async function handler(
   req,
@@ -985,7 +1097,7 @@ export default async function handler(
   }
 
   // ----------------------------------------------------------
-  // POST ONLY
+  // POST
   // ----------------------------------------------------------
 
   if (
@@ -1004,7 +1116,7 @@ export default async function handler(
   try {
 
     // --------------------------------------------------------
-    // Environment validation
+    // ENVIRONMENT
     // --------------------------------------------------------
 
     if (
@@ -1034,7 +1146,7 @@ export default async function handler(
     }
 
     // --------------------------------------------------------
-    // Parse body
+    // BODY
     // --------------------------------------------------------
 
     const body =
@@ -1053,7 +1165,7 @@ export default async function handler(
       ).trim();
 
     // --------------------------------------------------------
-    // Validate question
+    // VALIDATE
     // --------------------------------------------------------
 
     if (!question) {
@@ -1067,105 +1179,90 @@ export default async function handler(
         });
     }
 
-    // --------------------------------------------------------
-    // Selected language
-    // --------------------------------------------------------
-
     const languageName =
       LANGUAGE_NAMES[language] ||
       language;
 
     // ========================================================
-    // 1. SEARCH SELECTED LANGUAGE
+    // FETCH ANSWERS
     // ========================================================
 
-    let languageRows = [];
+    let answers = [];
 
     try {
 
-      languageRows =
-        await fetchKnowledge(
+      answers =
+        await fetchAnswers(
           language
         );
 
     } catch (error) {
 
       console.error(
-        "Selected-language Supabase search failed:",
+        "orthodox_answers failed:",
         error.message
       );
     }
 
     // ========================================================
-    // 2. BROAD SEARCH
+    // FETCH SOURCE CHUNKS
     // ========================================================
 
-    let allRows = [
-      ...languageRows
-    ];
+    let chunks = [];
 
-    if (
-      languageRows.length < 5
-    ) {
+    try {
 
-      try {
-
-        const allKnowledge =
-          await fetchAllKnowledge();
-
-        allRows = [
-          ...languageRows,
-          ...allKnowledge
-        ];
-
-      } catch (error) {
-
-        console.error(
-          "Broad Supabase search failed:",
-          error.message
+      chunks =
+        await fetchSourceChunks(
+          language
         );
-      }
+
+    } catch (error) {
+
+      console.error(
+        "orthodox_source_chunks failed:",
+        error.message
+      );
     }
 
     // ========================================================
-    // 3. REMOVE DUPLICATES
+    // FETCH SOURCE METADATA
     // ========================================================
 
-    const uniqueRows = [];
+    let sources = [];
 
-    const seen =
-      new Set();
+    try {
 
-    for (
-      const row of allRows
-    ) {
+      sources =
+        await fetchSources();
 
-      const key =
-        row.id ||
-        `${row.question}|${row.language}`;
+    } catch (error) {
 
-      if (
-        !seen.has(key)
-      ) {
-
-        seen.add(key);
-
-        uniqueRows.push(row);
-      }
+      console.error(
+        "orthodox_sources failed:",
+        error.message
+      );
     }
 
     // ========================================================
-    // 4. BUILD EVIDENCE
+    // IMPORTANT FALLBACK
+    //
+    // If selected language has no source chunks,
+    // do NOT mix another language's content into the answer.
+    //
+    // This preserves the selected-language requirement.
     // ========================================================
 
     const evidence =
       buildEvidence(
         question,
-        uniqueRows
+        answers,
+        chunks,
+        sources
       );
 
     // ========================================================
-    // 5. GENERATE COMPLETE ANSWER
+    // GENERATE
     // ========================================================
 
     const answer =
@@ -1173,11 +1270,12 @@ export default async function handler(
         question,
         language,
         languageName,
-        evidence
+        evidence:
+          evidence.text
       });
 
     // ========================================================
-    // 6. RETURN ANSWER
+    // RESPONSE
     // ========================================================
 
     return res
@@ -1194,14 +1292,17 @@ export default async function handler(
 
         answer,
 
-        sourcesUsed:
-          uniqueRows.length,
+        knowledgeRecordsUsed:
+          evidence.answerCount,
+
+        sourceChunksUsed:
+          evidence.chunkCount,
 
         model:
           GEMINI_MODEL,
 
         engine:
-          "Supabase Knowledge Base + Gemini Detailed Answer Engine"
+          "Supabase Answers + Source Chunks + Gemini"
       });
 
   } catch (error) {
