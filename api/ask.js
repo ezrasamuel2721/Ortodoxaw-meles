@@ -1837,28 +1837,21 @@ function fallbackAnswer(
   ) {
 
     return "";
-
   }
 
+  // NEVER concatenate multiple database answers.
+  // Return only the highest-ranked same-topic source.
 
-  // Important:
-  // Fallback uses ONLY same-topic selected sources.
-  // It does NOT mix unrelated database answers.
+  const best =
+    selected[0]?.row;
 
-  return selected
+  if (!best) {
+    return "";
+  }
 
-    .map(
-      item =>
-        rowAnswer(
-          item.row
-        )
-    )
-
-    .filter(Boolean)
-
-    .join("\n\n");
-
+  return rowAnswer(best);
 }
+
 
 
 // ============================================================
