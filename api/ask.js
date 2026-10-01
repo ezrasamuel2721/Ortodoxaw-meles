@@ -702,35 +702,123 @@ function sameLanguage(
 // TOPIC DETECTION
 // ============================================================
 
+// ============================================================
+// TOPIC DETECTION — STRICT PRIMARY TOPIC
+// ============================================================
+
 function detectTopics(question) {
 
-  const normalized =
-    normalize(question);
+  const normalized = normalize(question);
 
-  const topics = [];
+  const matches = [];
 
-  for (
-    const [name, terms]
-    of TOPICS
-  ) {
+  for (const [name, terms] of TOPICS) {
 
-    if (
-      terms.some(
-        term =>
-          normalized.includes(
-            normalize(term)
-          )
-      )
-    ) {
+    let bestLength = 0;
 
-      topics.push(name);
+    for (const term of terms) {
+
+      const t = normalize(term);
+
+      if (!t) continue;
+
+      if (normalized.includes(t)) {
+        bestLength = Math.max(
+          bestLength,
+          t.length
+        );
+      }
 
     }
 
+    if (bestLength > 0) {
+
+      matches.push({
+        name,
+        length: bestLength
+      });
+
+    }
   }
 
-  return topics;
+  // Longest / most specific phrase wins.
+  // This prevents secondary words inside the question
+  // from creating unrelated topics.
 
+  matches.sort(
+    (a, b) =>
+      b.length - a.length
+  );
+
+  if (!matches.length) {
+    return [];
+  }
+
+  return [
+    matches[0].name
+  ];
+}
+
+
+// ============================================================
+// STRICT TOPIC MATCH
+//
+// IMPORTANT:
+// NEVER use answer text to determine whether a source
+// belongs to the requested topic.
+// ============================================================
+
+function sourceHasTopic(
+  row,
+  topic
+) {
+
+  if (!topic) {
+    return true;
+  }
+
+  const topicEntry =
+    TOPICS.find(
+      item =>
+        item[0] === topic
+    );
+
+  if (!topicEntry) {
+    return false;
+  }
+
+  const terms =
+    topicEntry[1];
+
+  const sourceQuestion =
+    normalize(
+      rowQuestion(row)
+    );
+
+  const sourceCategory =
+    normalize(
+      rowCategory(row)
+    );
+
+  const sourceComparison =
+    normalize(
+      rowComparison(row)
+    );
+
+  return terms.some(
+    term => {
+
+      const t =
+        normalize(term);
+
+      return (
+        sourceQuestion.includes(t) ||
+        sourceCategory.includes(t) ||
+        sourceComparison.includes(t)
+      );
+
+    }
+  );
 }
 
 
@@ -752,7 +840,7 @@ function scoreSource(
     )
   ) {
 
-    return -100000;
+    return -1000000;
 
   }
 
@@ -762,11 +850,6 @@ function scoreSource(
   const rq =
     normalize(
       rowQuestion(row)
-    );
-
-  const ra =
-    normalize(
-      rowAnswer(row)
     );
 
   const category =
@@ -787,26 +870,66 @@ function scoreSource(
   let score = 0;
 
 
-  // Exact question
+  // ==========================================================
+  // STRICT TOPIC GATE
+  // ==========================================================
+
+  if (topics.length > 0) {
+
+    const primaryTopic =
+      topics[0];
+
+    if (
+      !sourceHasTopic(
+        row,
+        primaryTopic
+      )
+    ) {
+
+      return -1000000;
+
+    }
+
+    // Strong bonus for explicit topic
+    score += 500;
+
+  }
+
+
+  // ==========================================================
+  // EXACT QUESTION
+  // ==========================================================
 
   if (rq === q) {
-    score += 1000;
+
+    score += 2000;
+
   }
 
 
-  // Very similar question
+  // ==========================================================
+  // QUESTION CONTAINMENT
+  // ==========================================================
 
   if (
-    rq.includes(q) ||
-    q.includes(rq)
+    rq &&
+    (
+      rq.includes(q) ||
+      q.includes(rq)
+    )
   ) {
 
-    score += 220;
+    score += 400;
 
   }
 
 
-  // Word matching
+  // ==========================================================
+  // QUESTION WORD MATCH
+  //
+  // IMPORTANT:
+  // We intentionally DO NOT search row.answer here.
+  // ==========================================================
 
   for (
     const word
@@ -817,33 +940,30 @@ function scoreSource(
       rowQuestionWords.has(word)
     ) {
 
-      score += 35;
+      score += 60;
 
     }
     else if (
       rq.includes(word)
     ) {
 
-      score += 12;
-
-    }
-    else if (
-      ra.includes(word)
-    ) {
-
-      score += 4;
+      score += 20;
 
     }
 
   }
 
 
-  // Topic matching
+  // ==========================================================
+  // CATEGORY MATCH
+  // ==========================================================
 
-  for (
-    const topic
-    of topics
+  if (
+    topics.length > 0
   ) {
+
+    const topic =
+      topics[0];
 
     const topicEntry =
       TOPICS.find(
@@ -859,52 +979,28 @@ function scoreSource(
     if (
       terms.some(
         term =>
-          rq.includes(
-            normalize(term)
-          )
-      )
-    ) {
-
-      score += 160;
-
-    }
-
-    if (
-      terms.some(
-        term =>
           category.includes(
             normalize(term)
           )
       )
     ) {
 
-      score += 100;
-
-    }
-
-    if (
-      terms.some(
-        term =>
-          ra.includes(
-            normalize(term)
-          )
-      )
-    ) {
-
-      score += 30;
+      score += 250;
 
     }
 
   }
 
 
-  // Prefer sources that have references
+  // ==========================================================
+  // REFERENCES
+  // ==========================================================
 
   if (
     rowBible(row)
   ) {
 
-    score += 8;
+    score += 10;
 
   }
 
@@ -912,15 +1008,146 @@ function scoreSource(
     rowChurch(row)
   ) {
 
-    score += 8;
+    score += 10;
 
   }
 
 
   return score;
+}
+
+
+// ============================================================
+// SOURCE SELECTION
+// ============================================================
+
+function chooseSources(
+  rows,
+  question,
+  language
+) {
+
+  const topics =
+    detectTopics(
+      question
+    );
+
+  const primaryTopic =
+    topics[0] || null;
+
+
+  const ranked =
+    rows
+
+      .map(
+        row => ({
+
+          row,
+
+          score:
+            scoreSource(
+              row,
+              question,
+              language,
+              topics
+            )
+
+        })
+      )
+
+      .filter(
+        item =>
+          item.score > 0 &&
+          rowAnswer(item.row)
+      )
+
+      .sort(
+        (a, b) =>
+          b.score -
+          a.score
+      );
+
+
+  const selected = [];
+
+
+  for (
+    const item
+    of ranked
+  ) {
+
+    // Extra final safety gate.
+    if (
+      primaryTopic &&
+      !sourceHasTopic(
+        item.row,
+        primaryTopic
+      )
+    ) {
+
+      continue;
+
+    }
+
+
+    const questionText =
+      normalize(
+        rowQuestion(
+          item.row
+        )
+      );
+
+
+    const duplicate =
+      selected.some(
+        selectedItem =>
+          normalize(
+            rowQuestion(
+              selectedItem.row
+            )
+          ) === questionText
+      );
+
+
+    if (
+      !duplicate
+    ) {
+
+      selected.push(
+        item
+      );
+
+    }
+
+
+    if (
+      selected.length >=
+      MAX_SOURCES
+    ) {
+
+      break;
+
+    }
+
+  }
+
+
+  return {
+
+    topics,
+
+    ranked,
+
+    selected
+
+  };
 
 }
 
+  
+    
+
+  
 
 // ============================================================
 // SUPABASE
