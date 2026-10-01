@@ -1667,7 +1667,20 @@ Write the entire answer ONLY in ${LANGUAGES[language]}.
 Do not switch to English, Amharic, Arabic or Chinese.
 
 Preserve Bible references and proper source names accurately.
-
+- The user's primary topic is authoritative.
+- Never change the subject because a secondary theological word
+  appears inside a source answer.
+- Source Answer text MUST NOT be used to decide the source topic.
+- Source Question, Category, and Comparison Group are the only
+  metadata used for topic selection.
+- If the user asks about Holy Communion, remain focused on Holy Communion.
+- Do not turn a Holy Communion answer into a Trinity, repentance,
+  fasting, prayer, Mary, baptism, or other lesson unless that topic
+  is explicitly necessary to answer the user's question.
+- A related doctrine may be mentioned briefly only when it is
+  directly necessary to explain the requested subject.
+- Never append an unrelated source merely because it contains
+  a keyword appearing in the requested topic.
 Now write the final answer.
 `;
 
