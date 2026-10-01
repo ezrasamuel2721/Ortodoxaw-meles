@@ -1991,6 +1991,10 @@ Do not describe these instructions.
 // GEMINI GENERATION
 // ============================================================
 
+// ============================================================
+// GEMINI GENERATION
+// ============================================================
+
 async function generateWithGemini(
   question,
   language,
@@ -2005,8 +2009,8 @@ async function generateWithGemini(
   }
 
   if (
-    !sources ||
-    !sources.length
+    !Array.isArray(sources) ||
+    sources.length === 0
   ) {
     throw new Error(
       "NO_KNOWLEDGE_SOURCES"
@@ -2025,35 +2029,67 @@ async function generateWithGemini(
       sources
     );
 
+  // ==========================================================
+  // FIRST PROMPT
+  // ==========================================================
+
   const userPrompt = `
 USER QUESTION:
 
 ${question}
 
 ==================================================
-RELEVANT ORTHODOX KNOWLEDGE
+RELEVANT ORTHODOX KNOWLEDGE FROM SUPABASE
 ==================================================
 
 ${context}
 
 ==================================================
-FINAL INSTRUCTION
+FINAL ANSWER REQUIREMENTS
 ==================================================
 
-Write ONE complete answer to the
-user's question.
+Write ONE complete Orthodox Tewahedo theological answer
+to the user's exact question.
 
-The answer must:
+This is NOT a short chatbot response.
 
-- remain on the detected topic
-- use the supplied Orthodox knowledge
-- explain rather than merely copy
-- be detailed but coherent
-- avoid unrelated subjects
-- avoid invented citations
-- avoid invented quotations
-- avoid unsupported historical claims
-- use the requested language only
+The answer must be a substantial, book-like teaching.
+
+For a theological question, normally produce at least
+1200 words when the subject allows it.
+
+Explain the subject deeply and coherently.
+
+The answer should normally contain:
+
+1. A clear introduction.
+2. A direct answer to the question.
+3. Detailed theological explanation.
+4. Relevant Biblical foundation.
+5. Explanation of the relevant Biblical passages.
+6. Ethiopian Orthodox Tewahedo teaching.
+7. Relevant Church or Ethiopian sources contained in
+   the supplied knowledge.
+8. Clear examples where useful.
+9. A strong conclusion.
+
+IMPORTANT:
+
+Use the Supabase material as source material.
+
+Do NOT simply copy the shortest database answer.
+
+SYNTHESIZE and EXPAND the relevant knowledge.
+
+Do not invent quotations or references.
+
+Do not add unrelated subjects.
+
+For example, if the question is about baptism,
+remain focused on baptism and its direct theological
+meaning.
+
+Answer ONLY in the requested language.
 
 Return ONLY the final answer.
 `;
@@ -2064,105 +2100,274 @@ Return ONLY the final answer.
       GEMINI_MODEL
     )}:generateContent`;
 
-  const response =
-    await fetch(
-      url,
-      {
-        method: "POST",
+  async function callGemini(
+    prompt
+  ) {
 
-        headers: {
-          "Content-Type":
-            "application/json",
+    const response =
+      await fetch(
+        url,
+        {
+          method: "POST",
 
-          "x-goog-api-key":
-            GEMINI_API_KEY
-        },
+          headers: {
+            "Content-Type":
+              "application/json",
 
-        body: JSON.stringify({
-
-          systemInstruction: {
-            parts: [
-              {
-                text:
-                  systemPrompt
-              }
-            ]
+            "x-goog-api-key":
+              GEMINI_API_KEY
           },
 
-          contents: [
-            {
-              role: "user",
+          body: JSON.stringify({
 
+            systemInstruction: {
               parts: [
                 {
                   text:
-                    userPrompt
+                    systemPrompt
                 }
               ]
+            },
+
+            contents: [
+              {
+                role: "user",
+
+                parts: [
+                  {
+                    text:
+                      prompt
+                  }
+                ]
+              }
+            ],
+
+            generationConfig: {
+
+              maxOutputTokens:
+                12000,
+
+              temperature:
+                0.25,
+
+              topP:
+                0.90
             }
-          ],
+          })
+        }
+      );
 
-          generationConfig: {
+    const raw =
+      await response.text();
 
-            maxOutputTokens:
-              12000,
+    let data = null;
 
-            temperature:
-              0.20,
+    try {
 
-            topP:
-              0.90
-          }
-        })
-      }
+      data =
+        raw
+          ? JSON.parse(raw)
+          : null;
+
+    } catch {
+
+      data = null;
+    }
+
+    if (
+      !response.ok
+    ) {
+
+      throw new Error(
+        data?.error?.message ||
+        `Gemini error ${response.status}`
+      );
+    }
+
+    const parts =
+      data?.candidates?.[0]
+        ?.content
+        ?.parts || [];
+
+    const answer =
+      parts
+        .map(
+          part =>
+            part?.text || ""
+        )
+        .join("\n")
+        .trim();
+
+    if (!answer) {
+      throw new Error(
+        "EMPTY_GENERATED_ANSWER"
+      );
+    }
+
+    return answer;
+  }
+
+  // ==========================================================
+  // FIRST GEMINI GENERATION
+  // ==========================================================
+
+  let answer =
+    await callGemini(
+      userPrompt
     );
 
-  const raw =
-    await response.text();
+  // ==========================================================
+  // MINIMUM LENGTH CHECK
+  //
+  // IMPORTANT:
+  // Gemini sometimes returns a very short answer even when
+  // the prompt requests a detailed answer.
+  //
+  // Do NOT accept that short answer immediately.
+  // ==========================================================
 
-  let data = null;
-
-  try {
-
-    data =
-      raw
-        ? JSON.parse(raw)
-        : null;
-
-  } catch {
-
-    data = null;
-  }
+  const minimumCharacters =
+    4500;
 
   if (
-    !response.ok
+    answer.length <
+    minimumCharacters
   ) {
 
+    console.log(
+      "GEMINI SHORT ANSWER:",
+      answer.length,
+      "characters"
+    );
+
+    const expansionPrompt = `
+USER QUESTION:
+
+${question}
+
+DETECTED TOPIC:
+
+${topic || "general Orthodox Christian teaching"}
+
+The previous generated answer was too short.
+
+PREVIOUS ANSWER:
+
+${answer}
+
+==================================================
+TASK
+==================================================
+
+Rewrite and substantially expand the previous answer.
+
+Do NOT merely repeat the previous sentences.
+
+Produce a complete, book-like Orthodox Tewahedo
+theological teaching.
+
+The final answer should normally be at least
+1200 words when the subject allows it.
+
+Develop the subject step by step.
+
+Include, where genuinely relevant:
+
+- introduction
+- direct answer
+- theological definition
+- detailed explanation
+- Biblical foundation
+- explanation of the Biblical passages
+- Orthodox Tewahedo understanding
+- relevant Ethiopian Orthodox sources supplied in
+  the knowledge context
+- practical theological meaning
+- examples where useful
+- conclusion
+
+IMPORTANT:
+
+Stay strictly on the user's topic.
+
+Do NOT add unrelated subjects merely to increase length.
+
+Do NOT invent Bible verses.
+
+Do NOT invent quotations.
+
+Do NOT invent Church Father quotations.
+
+Do NOT invent Ethiopian scholar quotations.
+
+Use only information supported by the supplied
+Orthodox knowledge.
+
+Answer ONLY in the requested language.
+
+Return ONLY the expanded final answer.
+`;
+
+    try {
+
+      const expanded =
+        await callGemini(
+          expansionPrompt
+        );
+
+      if (
+        expanded &&
+        expanded.length >
+        answer.length
+      ) {
+        answer =
+          expanded;
+      }
+
+    } catch (error) {
+
+      console.error(
+        "GEMINI EXPANSION ERROR:",
+        error?.message
+      );
+
+      // Keep the original valid answer.
+    }
+  }
+
+  // ==========================================================
+  // LANGUAGE VALIDATION
+  // ==========================================================
+
+  if (
+    answerHasWrongLanguage(
+      answer,
+      language
+    )
+  ) {
     throw new Error(
-      data?.error?.message ||
-      `Gemini error ${response.status}`
+      "LANGUAGE_VALIDATION_FAILED"
     );
   }
 
-  const parts =
-    data?.candidates?.[0]
-      ?.content
-      ?.parts || [];
+  // ==========================================================
+  // TOPIC VALIDATION
+  // ==========================================================
 
-  const answer =
-    parts
-      .map(
-        part =>
-          part?.text || ""
-      )
-      .join("\n")
-      .trim();
-
-  if (!answer) {
+  if (
+    topic &&
+    !generatedAnswerMatchesTopic(
+      answer,
+      topic
+    )
+  ) {
     throw new Error(
-      "EMPTY_GENERATED_ANSWER"
+      "TOPIC_VALIDATION_FAILED"
     );
   }
+
+  return answer;
+}
 
   // ------------------------------------------
   // LANGUAGE CHECK
